@@ -1,11 +1,8 @@
 import {
   ACESFilmicToneMapping,
   FogExp2,
-  Mesh,
-  MeshStandardMaterial,
   PCFShadowMap,
   PerspectiveCamera,
-  PlaneGeometry,
   Scene,
   SRGBColorSpace,
   Vector3,
@@ -16,7 +13,7 @@ import { Terrain } from '../world/terrain';
 import { TerrainRenderer } from './terrain/terrainRenderer';
 import { CityPreview } from './cityPreview';
 import { CITY_PREVIEW, MAP_PRESETS } from '../data/terrain';
-import { SEA_LEVEL } from '../data/config';
+import { WaterRenderer } from './water/waterRenderer';
 import { RtsCamera } from './camera';
 import { ENVIRONMENT_PALETTE } from '../data/palette';
 import { CAMERA, LIGHTING, RENDER_PREVIEW } from '../data/rendering';
@@ -60,16 +57,7 @@ export class CityRenderer {
   readonly terrain = new Terrain(MAP_PRESETS[0].seed);
   private readonly land = new TerrainRenderer(this.terrain);
   private readonly town = new CityPreview(this.terrain);
-  private readonly water = new Mesh(
-    new PlaneGeometry(MAP_SIZE, MAP_SIZE),
-    new MeshStandardMaterial({
-      color: ENVIRONMENT_PALETTE.water_shallow,
-      roughness: 0.3,
-      metalness: 0.15,
-      transparent: true,
-      opacity: 0.92,
-    }),
-  );
+  private readonly water = new WaterRenderer(this.terrain);
   private readonly sky = createSky();
   private lighting: Lighting;
   private readonly forced: QualityLevel | null;
@@ -138,9 +126,7 @@ export class CityRenderer {
       },
     });
     this.cameraController.copyFocus(this.focus);
-    this.water.rotation.x = -Math.PI / 2;
-    this.water.position.y = SEA_LEVEL;
-    this.scene.add(this.land.group, this.town.group, this.water, this.sky);
+    this.scene.add(this.land.group, this.town.group, this.water.mesh, this.sky);
     this.canvas.dataset.buildings = String(this.town.buildingCount);
     this.canvas.dataset.chunks = String(this.land.group.children.length - 1);
     this.scene.fog = new FogExp2(
@@ -170,6 +156,9 @@ export class CityRenderer {
     ]);
     this.land.installShader(
       lighting.csm ? this.land.material.onBeforeCompile : undefined,
+    );
+    this.water.installShader(
+      lighting.csm ? this.water.material.onBeforeCompile : undefined,
     );
     return lighting;
   }
@@ -227,6 +216,7 @@ export class CityRenderer {
     const seconds = this.lastFrame === null ? 0 : (now - this.lastFrame) / 1000;
     this.options.onBeforeFrame?.(seconds);
     this.cameraController.update(seconds);
+    this.water.update(seconds);
     this.lastFrame = now;
     this.cameraController.copyFocus(this.focus);
     this.sky.position.copy(this.camera.position);
@@ -263,7 +253,8 @@ export class CityRenderer {
     this.lighting.dispose();
     this.land.dispose();
     this.town.dispose();
-    for (const mesh of [this.water, this.sky]) {
+    this.water.dispose();
+    for (const mesh of [this.sky]) {
       mesh.geometry.dispose();
       mesh.material.dispose();
     }
