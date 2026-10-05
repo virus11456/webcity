@@ -33,7 +33,7 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
       - name: Unit tests
-        run: npm test
+        run: npm run test:coverage
       - name: Build
         run: npm run build
       - name: Install Chromium
@@ -48,5 +48,6 @@ jobs:
           path: |
             test-results/
             playwright-report/
+            coverage/
           retention-days: 14
           if-no-files-found: warn

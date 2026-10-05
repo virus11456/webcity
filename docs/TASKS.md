@@ -118,8 +118,10 @@
 - **參考**：TECH §2（core）
 - **內容**：`core/rng.ts`（mulberry32、`int/float/pick/shuffle`）、`core/math.ts`（Vec2 運算、二次/三次貝茲取樣與長度、線段交點、點到曲線最近點）、`core/events.ts`（型別安全事件匯流排）、`core/grid.ts`、`core/spatial.ts`（空間雜湊）。
 - **驗收標準**：
-  - [ ] 每個函式都有單元測試，覆蓋率 > 90%
-  - [ ] 同一 seed 的 rng 序列可重現
+  - [x] 每個函式都有單元測試，覆蓋率 > 90%
+  - [x] 同一 seed 的 rng 序列可重現
+
+驗證紀錄（2026-10-05）：五個 core 模組完成，API 約定見 `docs/CORE.md`。246 項單元測試通過，core 五檔的 statements、branches、functions、lines 均為 100%；lint、typecheck、build 通過。CI 新增 `test:coverage` 每檔門檻（functions 100%，其餘至少 91%）並上傳覆蓋率報告。
 
 ### M0-07　Three.js 渲染器與畫質
 - **分支**：`feature/m0-07-renderer`｜**相依**：M0-01｜**估時**：1

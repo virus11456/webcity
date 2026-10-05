@@ -7,6 +7,18 @@ export default mergeConfig(
     test: {
       environment: 'node',
       include: ['tests/unit/**/*.test.ts'],
+      coverage: {
+        provider: 'v8',
+        include: ['src/core/**/*.ts'],
+        reporter: ['text', 'json-summary', 'html'],
+        thresholds: {
+          perFile: true,
+          statements: 91,
+          branches: 91,
+          functions: 100,
+          lines: 91,
+        },
+      },
     },
   }),
 );
