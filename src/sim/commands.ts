@@ -57,12 +57,15 @@ export class CommandDispatcher {
       }
       try {
         // createState validates every init field before generating a map.
-        const next = new Simulation({
-          seed: value.seed,
-          mapId: value.mapId,
-          mode: value.mode,
-          cityName: value.cityName,
-        } as CitySettings);
+        const next = new Simulation(
+          {
+            seed: value.seed,
+            mapId: value.mapId,
+            mode: value.mode,
+            cityName: value.cityName,
+          } as CitySettings,
+          this.emit,
+        );
         const snapshot = next.snapshot();
         this.simulation = next;
         this.emit({ t: 'ready', reqId, snapshot });

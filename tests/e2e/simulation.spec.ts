@@ -23,8 +23,15 @@ test('worker clock pauses and changes speed through controls, including offline'
   };
   await press('暫停');
   const paused = await ticks();
+  const date = controls.locator('time');
+  const frozenDate = await date.getAttribute('datetime');
+  const day = Number(await controls.getAttribute('data-day'));
+  expect(frozenDate).toBe(
+    new Date(Date.UTC(2026, 0, 1 + day)).toISOString().slice(0, 10),
+  );
   await page.waitForTimeout(700);
   expect(await ticks()).toBe(paused);
+  await expect(date).toHaveAttribute('datetime', frozenDate!);
   // Camera exploration remains interactive while simulation is paused.
   const before = await page.evaluate(
     () => window.__webcityCamera!.readState().distance,
@@ -41,6 +48,10 @@ test('worker clock pauses and changes speed through controls, including offline'
     const start = await ticks();
     await expect.poll(ticks).toBeGreaterThan(start);
   }
+  const fastDay = Number(await controls.getAttribute('data-day'));
+  await expect
+    .poll(async () => Number(await controls.getAttribute('data-day')))
+    .toBeGreaterThan(fastDay);
   await press('暫停');
   if (info.project.name === 'Desktop') {
     await page.locator('canvas').focus();

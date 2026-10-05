@@ -1,3 +1,6 @@
+import type { SimEvent } from '../bridge/protocol';
+import type { Unsubscribe } from '../core/events';
+import { TimeSystem, type DayBoundary } from './systems/time';
 import { TIME, type SimSpeed } from '../data/config';
 import { SIM_RUNTIME } from '../data/simRuntime';
 import type { CitySettings, SimClock, WorldSnapshot } from '../world/snapshot';
@@ -9,9 +12,25 @@ const tickMs = (TIME.secondsPerDay[1] * 1000) / TIME.ticksPerDay;
 export class Simulation {
   private readonly state: SimState;
   private accumulatedMs = 0;
+  private readonly time = new TimeSystem();
 
-  constructor(settings: CitySettings) {
+  constructor(
+    settings: CitySettings,
+    private readonly emit: (event: SimEvent) => void = () => {},
+  ) {
     this.state = createState(settings);
+  }
+
+  /** Register an authoritative worker system to run at each completed day. */
+  onDay(system: (state: SimState, boundary: DayBoundary) => void): Unsubscribe {
+    return this.time.onDay((boundary) => system(this.state, boundary));
+  }
+
+  /** Register weekly settlement after daily systems, before the day's stats. */
+  onWeek(
+    system: (state: SimState, boundary: DayBoundary) => void,
+  ): Unsubscribe {
+    return this.time.onWeek((boundary) => system(this.state, boundary));
   }
 
   /** Copy just the clock, safe for subscribers to retain. */
@@ -26,11 +45,12 @@ export class Simulation {
 
   /** Advance exactly one simulation step, unless paused. */
   tick(): void {
-    const c = this.state.clock;
-    if (c.speed === 0) return;
-    c.ticks++;
-    c.tickInDay = c.ticks % TIME.ticksPerDay;
-    c.day = Math.floor(c.ticks / TIME.ticksPerDay);
+    if (!this.time.tick(this.state.clock)) return;
+    this.state.stats.day = this.state.clock.day;
+    this.state.stats.money = this.state.money;
+    const stats = structuredClone(this.state.stats);
+    this.state.statsHistory.push(stats);
+    this.emit({ t: 'stats', stats: structuredClone(stats) });
   }
 
   /** Preserve fractional progress when pausing / changing speed. */

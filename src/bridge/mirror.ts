@@ -85,6 +85,7 @@ export class WorldMirror {
         break;
       case 'stats':
         state.money = event.stats.money;
+        state.stats = structuredClone(event.stats);
         state.statsHistory.push(structuredClone(event.stats));
         break;
       case 'fields':

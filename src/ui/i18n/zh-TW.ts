@@ -1,4 +1,7 @@
 export const ZH_TW = {
+  'sim.date': '遊戲日期',
+  'sim.weekPrefix': '第 ',
+  'sim.weekSuffix': ' 週',
   'sim.title': '模擬速度',
   'sim.loading': '城市啟動中…',
   'sim.running': '模擬運行中',

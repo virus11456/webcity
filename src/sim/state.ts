@@ -2,6 +2,7 @@ import { SERVICE_TYPES } from '../data/buildings';
 import { MAP_TILES, WORLD } from '../data/config';
 import { BUDGET_DEPARTMENTS, ECONOMY } from '../data/economy';
 import { MILESTONES } from '../data/milestones';
+import { HAPPINESS } from '../data/simulation';
 import { SIM_RUNTIME } from '../data/simRuntime';
 import { MAP_PRESETS } from '../data/terrain';
 import { ZONES } from '../data/zones';
@@ -25,12 +26,14 @@ export function createState(settings: CitySettings): SimState {
     settings.cityName.length > SIM_RUNTIME.maxCityNameLength
   )
     throw new RangeError('Invalid city settings');
+  const money =
+    ECONOMY.startingMoney[settings.mode === 'easy' ? 'easy' : 'normal'];
   const field = () => new Float32Array(WORLD.fieldCells ** 2);
   return {
     seed: settings.seed,
     settings: { ...settings, cityName: settings.cityName.trim() },
     clock: { day: 0, tickInDay: 0, ticks: 0, speed: SIM_RUNTIME.initialSpeed },
-    money: ECONOMY.startingMoney[settings.mode === 'easy' ? 'easy' : 'normal'],
+    money,
     loans: [],
     taxRates: Object.fromEntries(
       Object.keys(ZONES).map((key) => [key, ECONOMY.taxRate.default]),
@@ -60,6 +63,19 @@ export function createState(settings: CitySettings): SimState {
     districts: [],
     policies: [],
     unlocked: settings.mode === 'sandbox' ? MILESTONES.map((m) => m.id) : [0],
+    stats: {
+      day: 0,
+      money,
+      population: 0,
+      demand: { R: 0, C: 0, I: 0, O: 0 },
+      income: 0,
+      expenses: 0,
+      power: { produced: 0, consumed: 0 },
+      water: { produced: 0, consumed: 0 },
+      sewage: { capacity: 0, produced: 0 },
+      happiness: HAPPINESS.base,
+      milestone: 0,
+    },
     statsHistory: [],
     nextId: 1,
   };

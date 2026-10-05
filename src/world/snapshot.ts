@@ -77,6 +77,7 @@ export interface WorldSnapshot {
   districts: never[];
   policies: PolicyId[];
   unlocked: number[];
+  stats: CityStats;
   statsHistory: CityStats[];
   nextId: Id;
 }
