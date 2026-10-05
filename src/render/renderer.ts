@@ -1,6 +1,5 @@
 import {
   ACESFilmicToneMapping,
-  BoxGeometry,
   FogExp2,
   Mesh,
   MeshStandardMaterial,
@@ -13,8 +12,13 @@ import {
   WebGLRenderer,
 } from 'three';
 import { MAP_SIZE, type QualityLevel } from '../data/config';
+import { Terrain } from '../world/terrain';
+import { TerrainRenderer } from './terrain/terrainRenderer';
+import { CityPreview } from './cityPreview';
+import { CITY_PREVIEW, MAP_PRESETS } from '../data/terrain';
+import { SEA_LEVEL } from '../data/config';
 import { RtsCamera } from './camera';
-import { BUILDING_PALETTE, ENVIRONMENT_PALETTE } from '../data/palette';
+import { ENVIRONMENT_PALETTE } from '../data/palette';
 import { CAMERA, LIGHTING, RENDER_PREVIEW } from '../data/rendering';
 import { Lighting } from './lighting';
 import { createSky } from './sky';
@@ -53,22 +57,17 @@ export class CityRenderer {
   readonly cameraController: RtsCamera;
   private lastFrame: number | null = null;
   private readonly focus = new Vector3();
-  private readonly ground = new Mesh(
-    new PlaneGeometry(RENDER_PREVIEW.groundSizeM, RENDER_PREVIEW.groundSizeM),
+  readonly terrain = new Terrain(MAP_PRESETS[0].seed);
+  private readonly land = new TerrainRenderer(this.terrain);
+  private readonly town = new CityPreview(this.terrain);
+  private readonly water = new Mesh(
+    new PlaneGeometry(MAP_SIZE, MAP_SIZE),
     new MeshStandardMaterial({
-      color: ENVIRONMENT_PALETTE.grass,
-      roughness: 1,
-    }),
-  );
-  private readonly box = new Mesh(
-    new BoxGeometry(
-      RENDER_PREVIEW.boxSizeM,
-      RENDER_PREVIEW.boxSizeM,
-      RENDER_PREVIEW.boxSizeM,
-    ),
-    new MeshStandardMaterial({
-      color: BUILDING_PALETTE.RL.walls[0],
-      roughness: 0.8,
+      color: ENVIRONMENT_PALETTE.water_shallow,
+      roughness: 0.3,
+      metalness: 0.15,
+      transparent: true,
+      opacity: 0.92,
     }),
   );
   private readonly sky = createSky();
@@ -129,15 +128,21 @@ export class CityRenderer {
         minZ: -MAP_SIZE / 2,
         maxZ: MAP_SIZE / 2,
       },
-      heightAt: () => 0,
+      heightAt: (x, z) => this.terrain.heightAt(x, z),
+      initial: {
+        ...CITY_PREVIEW.initial,
+        distance:
+          canvas.clientWidth / Math.max(1, canvas.clientHeight) < 0.7
+            ? 2100
+            : CITY_PREVIEW.initial.distance,
+      },
     });
     this.cameraController.copyFocus(this.focus);
-    this.ground.rotation.x = -Math.PI / 2;
-    this.ground.receiveShadow = true;
-    this.box.position.y = RENDER_PREVIEW.boxSizeM / 2;
-    this.box.castShadow = true;
-    this.box.receiveShadow = true;
-    this.scene.add(this.ground, this.box, this.sky);
+    this.water.rotation.x = -Math.PI / 2;
+    this.water.position.y = SEA_LEVEL;
+    this.scene.add(this.land.group, this.town.group, this.water, this.sky);
+    this.canvas.dataset.buildings = String(this.town.buildingCount);
+    this.canvas.dataset.chunks = String(this.land.group.children.length - 1);
     this.scene.fog = new FogExp2(
       ENVIRONMENT_PALETTE.sky_horizon,
       LIGHTING.fogDensity,
@@ -157,10 +162,16 @@ export class CityRenderer {
     this.stats.shadows =
       level === 'high' ? LIGHTING.cascades : level === 'medium' ? 1 : 0;
     this.canvas.dataset.quality = level;
-    return new Lighting(this.scene, this.camera, level, [
-      this.ground.material,
-      this.box.material,
+    const lighting = new Lighting(this.scene, this.camera, level, [
+      this.land.material,
+      this.town.material,
+      this.town.glass,
+      this.water.material,
     ]);
+    this.land.installShader(
+      lighting.csm ? this.land.material.onBeforeCompile : undefined,
+    );
+    return lighting;
   }
   private readonly resize = (): void => {
     const width = Math.max(1, this.canvas.clientWidth),
@@ -250,7 +261,9 @@ export class CityRenderer {
     this.canvas.removeEventListener('webglcontextlost', this.lost);
     this.canvas.removeEventListener('webglcontextrestored', this.restored);
     this.lighting.dispose();
-    for (const mesh of [this.ground, this.box, this.sky]) {
+    this.land.dispose();
+    this.town.dispose();
+    for (const mesh of [this.water, this.sky]) {
       mesh.geometry.dispose();
       mesh.material.dispose();
     }

@@ -1,6 +1,6 @@
 # RTS 鏡頭（M0-08）
 
-`render/camera.ts` 的 `RtsCamera` 管理 Three.js 相機，輸入為地形高度函式、地圖邊界及可選初始狀態。`CityRenderer` 已在每幀更新鏡頭，再同步光照焦點與天空位置。現在預覽場景使用平地高度 0、以原點為中心的 4.8 km 邊界；M0-10 地形可傳入實際 `heightAt` 與座標邊界。
+`render/camera.ts` 的 `RtsCamera` 管理 Three.js 相機，輸入為地形高度函式、地圖邊界及可選初始狀態。`CityRenderer` 已在每幀更新鏡頭，再同步光照焦點與天空位置。M0-10 已接入真實地形 `heightAt` 與以原點為中心的 4.8 km 邊界；市中心、河岸、全景按鈕透過 `main.ts` 呼叫 `flyTo`。
 
 本任務完成鏡頭模型與程式 API。M0-09 已接入滑鼠／鍵盤、雙指捏合、手勢分流與依距離縮放的輸入速度；操作方式見 `INPUT.md`。
 

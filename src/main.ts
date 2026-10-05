@@ -1,3 +1,4 @@
+import { CITY_PREVIEW, type CityView } from './data/terrain';
 import { CameraController } from './input/cameraController';
 import type { RtsCamera } from './render/camera';
 import { h, render } from 'preact';
@@ -20,8 +21,13 @@ const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('Missing #app element');
 
 let input: CameraController | undefined;
+let city: CityRenderer | undefined;
 render(
   h(App, {
+    onViewChange: (view: CityView) => {
+      const target = CITY_PREVIEW.views[view];
+      city?.cameraController.flyTo(target, target.distance);
+    },
     onEdgeScrollChange: (enabled: boolean) => input?.setEdgeScrolling(enabled),
   }),
   root,
@@ -29,7 +35,6 @@ render(
 
 const canvas = root.querySelector<HTMLCanvasElement>('canvas');
 const status = root.querySelector<HTMLParagraphElement>('.render-status');
-let city: CityRenderer | undefined;
 const debug =
   new URLSearchParams(location.search).get('debug') === '1'
     ? createDebugPanel(root)

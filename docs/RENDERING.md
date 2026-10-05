@@ -1,6 +1,6 @@
 # 渲染基礎（M0-07）
 
-目前進入應用會顯示地面、24 m 測試方塊、白天漸層天空及光照。RTS 相機模型已由 M0-08 接入（見 `CAMERA.md`），正式輸入綁定由 M0-09 提供，地形由 M0-10 提供。預覽尺寸集中在 `src/data/rendering.ts`，色彩來自色板。
+M0-07 最初使用地面與 24 m 方塊測試光照；M0-10 已替換成有山地、河流、街廓與建築的城市展示（見 `TERRAIN.md`）。RTS 相機模型已由 M0-08 接入（見 `CAMERA.md`），正式輸入綁定由 M0-09 提供，地形由 M0-10 提供。預覽尺寸集中在 `src/data/rendering.ts`，色彩來自色板。
 
 - `render/renderer.ts` 管理 Three.js WebGL2、場景、生命週期、resize 與 DPR。使用 sRGB 輸出、ACES tone mapping、曝光 1.0；初始 JS 約 146 KB gzip，低於 TECH §10 的 400 KB 目標。
 - `render/lighting.ts` 使用 ART §4 的白天太陽／半球光。高畫質 3 段 CSM（2048）、中畫質單張 1024（600 m 範圍）、低畫質無陰影。使用此版本 Three.js 支援的 `PCFShadowMap`。
@@ -17,7 +17,7 @@
 
 ## 驗證
 
-`?debug=1` 顯示實際 FPS、draw calls、三角形與目前畫質／DPR。呼叫數與三角形包含陰影 passes：此測試場景低／中／高分別有 3／4／6 次繪製（未受視錐裁切時）。E2E 在 WebGL `drawElements` 另外計數，與面板數值比對。
+`?debug=1` 顯示實際 FPS、draw calls、三角形與目前畫質／DPR。呼叫數與三角形包含陰影 passes：M0-07 方塊測試場景低／中／高分別有 3／4／6 次繪製（未受視錐裁切時）。目前 E2E 在 WebGL 的 indexed／non-indexed、instanced／non-instanced 四種 draw 呼叫另外計數，與面板數值比對。
 
 - 254 項單元測試通過，涵蓋畫質推測、URL override、DPR、五秒採樣、光照建立／清理和天空；既有核心覆蓋率維持 100%。
 - iPhone 15、iPad Pro 11、Desktop 各自通過渲染、尺寸旋轉、畫質覆寫、context 遺失／恢復，以及既有 PWA 安裝、離線重載與更新測試，共 18 項 E2E。

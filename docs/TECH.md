@@ -314,7 +314,7 @@ export type SimEvent =
 
 | 模組 | 做法 | 更新時機 |
 |---|---|---|
-| 地形 | 每 64×64 格一個 Chunk（`BufferGeometry`，16 m 頂點間距），視錐剔除；自訂 `ShaderMaterial`（ART §5.1） | 地形變更時重建該 Chunk |
+| 地形 | 每 64×64 格一個 Chunk（`BufferGeometry`，16 m 頂點間距），視錐剔除；自訂地形 Shader（MVP 以 `MeshStandardMaterial.onBeforeCompile` 注入坡度／高度／雜訊上色，保留 Three.js 光照、霧與 CSM；完整貼圖混合見 M3-02） | 地形變更時重建該 Chunk |
 | 水 | 單一大平面（地圖範圍）+ 水 Shader，用地形高度貼圖算水深 | 每幀更新 uniform 時間 |
 | 道路 | 每個路段產生一個 Mesh 片段，再依地形 Chunk **合併**成一個 `BufferGeometry`（減少 draw call）；路口單獨產生 | 路網變更時重建受影響 Chunk |
 | 分區格 | 一個 `InstancedMesh`（平面方格，per-instance 顏色），只在分區 / 道路工具啟用時或縮放距離 < 600 m 時顯示 | zonesChanged |

@@ -20,6 +20,7 @@
   "dependencies": {
     "@preact/signals": "2.11.3",
     "preact": "11.0.0",
+    "simplex-noise": "4.0.3",
     "three": "0.186.1"
   },
   "devDependencies": {
