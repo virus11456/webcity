@@ -82,10 +82,10 @@
   2. `.github/workflows/deploy.yml`：`main` 有新 commit 時建置並部署到 GitHub Pages（設定 Vite `base` 讓子路徑正常運作）。
   3. README 加上部署網址與 CI 徽章。
 - **驗收標準**：
-  - [ ] PR 上看得到 CI 檢查
+  - [x] PR 上看得到 CI 檢查
   - [ ] 合併後 GitHub Pages 網址可開啟
 
-本機驗證（2026-10-05）：CI／Pages workflow 已實作，actionlint、lint、typecheck、34 項單元測試、build、`/webcity/` 子路徑三裝置 E2E 通過。遠端 CI 與正式 Pages 驗收另待確認；儲存庫尚未啟用 Pages，前置 PR #2、#3 尚未合併。
+驗證紀錄（2026-10-05）：CI／Pages workflow 已實作，actionlint、lint、typecheck、34 項單元測試、build、`/webcity/` 子路徑三裝置 E2E 通過。PR #4 的 [GitHub CI run 37300185734](https://github.com/virus11456/webcity/actions/runs/37300185734) 全數成功，`playwright-results` artifact 已上傳。正式 Pages 驗收仍待啟用 Pages 並合併 main；前置 PR #2、#3 尚未合併。
 
 ### M0-04　PWA 設定
 - **分支**：`feature/m0-04-pwa`｜**相依**：M0-01｜**估時**：1
