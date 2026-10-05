@@ -316,6 +316,10 @@ export class RtsCamera {
   copyFocus(out: Vector3): Vector3 {
     return out.copy(this.focus);
   }
+  /** Copy state into caller-owned storage without allocating in the input loop. */
+  copyState(out: CameraState): void {
+    Object.assign(out, this.current);
+  }
   /** Return a detached snapshot for UI/debug consumers; avoid calling every frame. */
   readState(): CameraState {
     return { ...this.current };

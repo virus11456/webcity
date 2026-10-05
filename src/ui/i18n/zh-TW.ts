@@ -1,4 +1,9 @@
 export const ZH_TW = {
+  'input.title': '鏡頭操作',
+  'input.preview': '3D 操作預覽 · 建造功能開發中',
+  'input.desktop': '拖曳／WASD 移動 · 右鍵／QE 旋轉 · 滾輪縮放 · RF 調整仰角',
+  'input.touch': '單指移動 · 雙指捏合縮放、扭轉旋轉 · 雙指一起上下滑調整仰角',
+  'input.edge': '啟用滑鼠邊緣捲動',
   'app.name': 'WebCity',
   'render.preview': '城市預覽',
   'render.unavailable': '無法啟動 3D 畫面，請使用支援 WebGL2 的瀏覽器。',

@@ -36,6 +36,7 @@ export interface RenderStats {
 }
 export interface RendererOptions {
   search?: string;
+  onBeforeFrame?: (seconds: number) => void;
   onStats?: (stats: Readonly<RenderStats>) => void;
   onContextState?: (lost: boolean) => void;
 }
@@ -212,9 +213,9 @@ export class CityRenderer {
       this.lighting = this.createLighting('low');
       this.resize();
     }
-    this.cameraController.update(
-      this.lastFrame === null ? 0 : (now - this.lastFrame) / 1000,
-    );
+    const seconds = this.lastFrame === null ? 0 : (now - this.lastFrame) / 1000;
+    this.options.onBeforeFrame?.(seconds);
+    this.cameraController.update(seconds);
     this.lastFrame = now;
     this.cameraController.copyFocus(this.focus);
     this.sky.position.copy(this.camera.position);

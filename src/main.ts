@@ -1,3 +1,4 @@
+import { CameraController } from './input/cameraController';
 import type { RtsCamera } from './render/camera';
 import { h, render } from 'preact';
 import { CityRenderer } from './render/renderer';
@@ -18,7 +19,13 @@ const root = document.querySelector<HTMLDivElement>('#app');
 
 if (!root) throw new Error('Missing #app element');
 
-render(h(App, {}), root);
+let input: CameraController | undefined;
+render(
+  h(App, {
+    onEdgeScrollChange: (enabled: boolean) => input?.setEdgeScrolling(enabled),
+  }),
+  root,
+);
 
 const canvas = root.querySelector<HTMLCanvasElement>('canvas');
 const status = root.querySelector<HTMLParagraphElement>('.render-status');
@@ -31,11 +38,13 @@ if (canvas && status) {
   try {
     city = new CityRenderer(canvas, {
       onStats: debug?.update,
+      onBeforeFrame: (seconds) => input?.update(seconds),
       onContextState(lost) {
         status.hidden = !lost;
         status.textContent = lost ? t('render.contextLost') : '';
       },
     });
+    input = new CameraController(canvas, city.cameraController);
     if (debug) window.__webcityCamera = city.cameraController;
   } catch {
     status.hidden = false;
@@ -45,6 +54,7 @@ if (canvas && status) {
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
     delete window.__webcityCamera;
+    input?.dispose();
     city?.dispose();
     debug?.dispose();
   });
