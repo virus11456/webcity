@@ -4,13 +4,35 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "redirects": [
-    { "source": "/", "destination": "/webcity/", "permanent": false }
+    {
+      "source": "/",
+      "destination": "/webcity/",
+      "permanent": false
+    }
   ],
-  "rewrites": [{ "source": "/webcity/:path*", "destination": "/:path*" }],
+  "rewrites": [
+    {
+      "source": "/webcity/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/webcity",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/webcity/:path*",
+      "destination": "/:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/webcity/sw.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
     }
   ]
 }
