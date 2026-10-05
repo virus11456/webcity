@@ -76,7 +76,7 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.{js,mjs}', '*.config.ts', 'tests/**/*.ts'],
+    files: ['**/*.{js,mjs}', '*.config.ts', 'tests/**/*.ts', 'scripts/**/*.ts'],
     languageOptions: { globals: globals.node },
   },
   {

@@ -10,6 +10,10 @@ body,
   margin: 0;
   overflow: hidden;
   overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 body {
@@ -31,4 +35,37 @@ h1 {
   margin: 0;
   font-size: var(--font-size-title);
   font-weight: 600;
+}
+
+.pwa-toast {
+  position: fixed;
+  z-index: 100;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: max(12px, env(safe-area-inset-left));
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--color-background);
+  border: 1px solid var(--color-text);
+}
+
+.pwa-toast button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-text);
+  border-radius: 10px;
+  background: var(--color-background);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.pwa-toast button:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
 }

@@ -7,7 +7,7 @@
 
 一款玩法與美術風格參考《Cities: Skylines》的城市建造模擬遊戲，以 Web 技術開發，支援 PWA 安裝，可在 iPhone、iPad、PC 上遊玩。
 
-目前已完成 **M0-01 專案骨架與 M0-02 測試框架**：顯示全螢幕深色 WebCity 啟動畫面。城市模擬、3D 渲染與 PWA 安裝將依任務卡陸續加入。
+目前提供專案骨架、測試框架、CI／部署流程與 **M0-04 PWA 基礎**：顯示全螢幕深色 WebCity 啟動畫面，正式建置可安裝並離線重開。城市模擬與 3D 渲染將依任務卡陸續加入。
 
 ## 本機開發
 
@@ -27,7 +27,7 @@ npm test           # Node 環境的單元測試與模組邊界回歸測試
 npm run build      # 型別檢查 + 正式建置到 dist/
 npm run preview    # 預覽正式建置
 npm run e2e        # 自動 build、啟動 preview、執行三種 viewport 測試及截圖
-npm run icons      # M0-04 的佔位指令，尚不產生圖示
+npm run icons      # 純 Node 產生四種 PNG 圖示；build 也會自動執行
 ```
 
 ## 測試
@@ -55,6 +55,18 @@ npm run e2e -- --project='iPhone 15'
 每個專案都會產生 `test-results/<測試與專案目錄>/shell.png`，並附在 `playwright-report/` 的 HTML 報告；可用 `npx playwright show-report` 開啟。失敗時另保留截圖與 trace。`CI` 模式禁止 `test.only`，使用一個 worker，失敗重試兩次。GitHub Actions 將截圖、報告與失敗 trace 上傳為 `playwright-results` artifact，保留 14 天。
 
 目前 E2E 範例檢查標題、全螢幕版面、背景與瀏覽器錯誤；遊戲互動測試會隨功能加入。行動裝置是 Chromium 模擬，並非 iOS Safari 實機驗證。
+
+## PWA 安裝、離線與更新
+
+執行 `npm run build && npm run preview`，開啟 `/webcity/` 並等待首次 Service Worker 安裝完成。之後斷網重新整理仍可顯示啟動畫面。PWA 需要 HTTPS（本機 localhost 例外），開發模式不註冊 Service Worker。
+
+- Chrome／Edge 可使用網址列的安裝功能；iPhone／iPad Safari 使用「分享 → 加入主畫面」。實機安裝與 iOS 行為仍需另行驗證。
+- app shell、圖示、字型由 Workbox 預快取；模型和音效採 CacheFirst。第一次瀏覽之前仍需網路。
+- 偵測到新版時顯示「有新版本，點此更新」；點擊後才切換並重新載入。「稍後」可繼續目前版本，重新開啟頁面會再次提示。
+- 會向瀏覽器要求持久儲存；是否核准由瀏覽器決定，拒絕或不支援不影響畫面載入。
+- `scripts/generateIcons.ts` 用 Node 內建 zlib 與 PNG 編碼產生原創天際線：192、512、512 maskable、180 apple-touch-icon。四種圖示皆為不透明深藍底，圖案位於 maskable 安全範圍，無原生圖像套件依賴。
+
+PWA E2E 使用 Chrome DevTools Protocol 檢查 manifest 和可安裝性、實際離線重載，並以兩個真實 Service Worker 版本驗證延後／接受更新。可安裝性測試使用暫存的一般設定檔，避免無痕模式禁止安裝的限制；不會安裝到使用者的瀏覽器設定檔。
 
 跨模組引用可使用 `@/`（對應 `src/`）或相對路徑。ESLint 依 TECH §2.1 檢查相依方向，且限制模擬層使用 DOM、Three.js、`Math.random()` 或 `Date.now()`。
 

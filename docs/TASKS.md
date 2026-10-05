@@ -97,9 +97,11 @@
   4. 全域 CSS：禁止回彈、長按選取、雙擊縮放；safe-area padding。
   5. `navigator.storage.persist()`。
 - **驗收標準**：
-  - [ ] Lighthouse PWA 檢查（或 Chrome DevTools Application 面板）顯示可安裝、manifest 無錯誤
-  - [ ] `npm run preview` 後斷網重新整理仍能開啟
-  - [ ] iPhone viewport 下無橫向捲軸、雙擊不會縮放
+  - [x] Lighthouse PWA 檢查（或 Chrome DevTools Application 面板）顯示可安裝、manifest 無錯誤
+  - [x] `npm run preview` 後斷網重新整理仍能開啟
+  - [x] iPhone viewport 下無橫向捲軸、雙擊不會縮放
+
+驗證紀錄（2026-10-05）：以 Chrome DevTools Protocol 的 manifest／installability 檢查確認無錯誤（一般暫存設定檔），三裝置皆通過真實離線重載與新版等待／延後／確認更新；iPhone 觸控雙擊與橫式亦通過。lint、typecheck、42 項單元測試、build、9 項 E2E 全數通過，更新提示截圖見 `docs/screenshots/m0-04/`。iOS Safari 實機安裝尚未驗證；主選單內的 iOS 安裝教學隨主選單任務整合。
 
 ### M0-05　資料設定檔
 - **分支**：`feature/m0-05-data`｜**相依**：M0-01｜**估時**：1
