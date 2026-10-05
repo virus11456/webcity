@@ -13,7 +13,7 @@
     "lint": "eslint . --max-warnings 0 && prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "e2e": "node scripts/smoke.mjs",
+    "e2e": "playwright test",
     "icons": "node scripts/icons.mjs"
   },
   "dependencies": {

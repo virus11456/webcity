@@ -76,11 +76,11 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.{js,mjs}', 'vite.config.ts', 'tests/**/*.ts'],
+    files: ['**/*.{js,mjs}', '*.config.ts', 'tests/**/*.ts'],
     languageOptions: { globals: globals.node },
   },
   {
-    files: ['scripts/smoke.mjs'],
+    files: ['tests/e2e/**/*.ts', 'tests/unit/i18n.test.ts'],
     languageOptions: { globals: globals.browser },
   },
   {

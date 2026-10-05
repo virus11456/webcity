@@ -62,15 +62,17 @@
   - [x] `npm run dev`、`build`、`lint`、`typecheck` 都成功
   - [x] 在 `src/sim/` 中 import `three` 時 lint 報錯（證明邊界規則生效）
 
-驗證紀錄（2026-10-05）：`npm test` 33 項通過；`npm run e2e` 通過 iPhone 15、iPad Pro 11、Desktop 及 iPhone 橫式的啟動畫面檢查，截圖見 `docs/screenshots/m0-01/`。完整 M0-02 測試框架仍待實作。
+驗證紀錄（2026-10-05）：`npm test` 33 項通過；當時的 `npm run e2e` 骨架檢查通過 iPhone 15、iPad Pro 11、Desktop 及 iPhone 橫式，截圖見 `docs/screenshots/m0-01/`。完整測試框架見 M0-02。
 
 ### M0-02　測試框架
 - **分支**：`feature/m0-02-testing`｜**相依**：M0-01｜**估時**：0.5
 - **參考**：TECH §12
 - **內容**：設定 Vitest（node 環境跑 `tests/unit`）與 Playwright（3 個 viewport 專案：iPhone 15、iPad Pro 11、Desktop 1440×900，使用預裝 Chromium）。各寫 1 個範例測試。
 - **驗收標準**：
-  - [ ] `npm test` 與 `npm run e2e` 通過
-  - [ ] e2e 會在 3 種 viewport 各存一張截圖到 `test-results/`
+  - [x] `npm test` 與 `npm run e2e` 通過
+  - [x] e2e 會在 3 種 viewport 各存一張截圖到 `test-results/`
+
+驗證紀錄（2026-10-05）：Vitest 在 Node 執行 34 項單元測試全數通過；Playwright 三專案在一般與 `CI=1` 模式皆通過，每個專案輸出獨立 `shell.png` 與 HTML 報告附件。使用預裝 Chrome，截圖副本見 `docs/screenshots/m0-02/`；lint、typecheck、build 均通過。
 
 ### M0-03　CI 與自動部署
 - **分支**：`feature/m0-03-ci`｜**相依**：M0-02｜**估時**：0.5
