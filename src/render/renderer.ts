@@ -12,9 +12,10 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
-import { type QualityLevel } from '../data/config';
+import { MAP_SIZE, type QualityLevel } from '../data/config';
+import { RtsCamera } from './camera';
 import { BUILDING_PALETTE, ENVIRONMENT_PALETTE } from '../data/palette';
-import { LIGHTING, RENDER_PREVIEW } from '../data/rendering';
+import { CAMERA, LIGHTING, RENDER_PREVIEW } from '../data/rendering';
 import { Lighting } from './lighting';
 import { createSky } from './sky';
 import {
@@ -43,12 +44,14 @@ export class CityRenderer {
   readonly renderer: WebGLRenderer;
   readonly scene = new Scene();
   readonly camera = new PerspectiveCamera(
-    RENDER_PREVIEW.fovDegrees,
+    CAMERA.fovDegrees,
     1,
     RENDER_PREVIEW.nearM,
     RENDER_PREVIEW.farM,
   );
-  private readonly focus = new Vector3(...RENDER_PREVIEW.cameraTarget);
+  readonly cameraController: RtsCamera;
+  private lastFrame: number | null = null;
+  private readonly focus = new Vector3();
   private readonly ground = new Mesh(
     new PlaneGeometry(RENDER_PREVIEW.groundSizeM, RENDER_PREVIEW.groundSizeM),
     new MeshStandardMaterial({
@@ -118,9 +121,16 @@ export class CityRenderer {
       aspect: 1,
       shadows: 0,
     };
-    this.camera.position.set(...RENDER_PREVIEW.cameraPosition);
-    this.camera.lookAt(this.focus);
-    this.camera.updateMatrixWorld();
+    this.cameraController = new RtsCamera(this.camera, {
+      bounds: {
+        minX: -MAP_SIZE / 2,
+        maxX: MAP_SIZE / 2,
+        minZ: -MAP_SIZE / 2,
+        maxZ: MAP_SIZE / 2,
+      },
+      heightAt: () => 0,
+    });
+    this.cameraController.copyFocus(this.focus);
     this.ground.rotation.x = -Math.PI / 2;
     this.ground.receiveShadow = true;
     this.box.position.y = RENDER_PREVIEW.boxSizeM / 2;
@@ -160,12 +170,12 @@ export class CityRenderer {
     );
     this.renderer.setPixelRatio(this.stats.dpr);
     this.renderer.setSize(width, height, false);
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
+    this.cameraController.resize(width / height);
     this.stats.aspect = this.camera.aspect;
     this.lighting.resize();
   };
   private readonly visibility = (): void => {
+    this.lastFrame = null;
     this.statsStart = 0;
     this.statsFrames = 0;
     this.startup.reset();
@@ -202,6 +212,11 @@ export class CityRenderer {
       this.lighting = this.createLighting('low');
       this.resize();
     }
+    this.cameraController.update(
+      this.lastFrame === null ? 0 : (now - this.lastFrame) / 1000,
+    );
+    this.lastFrame = now;
+    this.cameraController.copyFocus(this.focus);
     this.sky.position.copy(this.camera.position);
     this.camera.updateMatrixWorld();
     this.lighting.update(this.focus);
