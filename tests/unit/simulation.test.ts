@@ -1,3 +1,4 @@
+import { deepStrictEqual } from 'node:assert/strict';
 import { describe, expect, it } from 'vitest';
 import { Simulation } from '../../src/sim/simulation';
 import { CommandDispatcher } from '../../src/sim/commands';
@@ -19,7 +20,8 @@ describe('authoritative simulation in Node', () => {
   it('creates a reproducible empty city, with configuration and owned center tile', () => {
     const a = new Simulation(settings).snapshot();
     const b = new Simulation(settings).snapshot();
-    expect(a).toEqual(b);
+    // Native typed-array byte comparison avoids millions of matcher visits on CI.
+    deepStrictEqual(a, b);
     expect(a.money).toBe(70000);
     expect(a.ownedTiles).toEqual([12]);
     expect(a.buildings).toEqual([]);
