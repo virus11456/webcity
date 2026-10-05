@@ -1,0 +1,66 @@
+import { SERVICE_TYPES } from '../data/buildings';
+import { MAP_TILES, WORLD } from '../data/config';
+import { BUDGET_DEPARTMENTS, ECONOMY } from '../data/economy';
+import { MILESTONES } from '../data/milestones';
+import { SIM_RUNTIME } from '../data/simRuntime';
+import { MAP_PRESETS } from '../data/terrain';
+import { ZONES } from '../data/zones';
+import { Terrain } from '../world/terrain';
+import type { CitySettings, WorldSnapshot } from '../world/snapshot';
+import type { Fields } from '../world/types';
+
+export interface SimState extends Omit<WorldSnapshot, 'terrain'> {
+  terrain: Terrain;
+}
+
+/** Build the authoritative empty city. The visible preview buildings are not gameplay entities. */
+export function createState(settings: CitySettings): SimState {
+  const preset = MAP_PRESETS.find((p) => p.id === settings.mapId);
+  if (
+    !preset ||
+    !Number.isSafeInteger(settings.seed) ||
+    !['normal', 'easy', 'sandbox'].includes(settings.mode) ||
+    typeof settings.cityName !== 'string' ||
+    !settings.cityName.trim() ||
+    settings.cityName.length > SIM_RUNTIME.maxCityNameLength
+  )
+    throw new RangeError('Invalid city settings');
+  const field = () => new Float32Array(WORLD.fieldCells ** 2);
+  return {
+    seed: settings.seed,
+    settings: { ...settings, cityName: settings.cityName.trim() },
+    clock: { day: 0, tickInDay: 0, ticks: 0, speed: SIM_RUNTIME.initialSpeed },
+    money: ECONOMY.startingMoney[settings.mode === 'easy' ? 'easy' : 'normal'],
+    loans: [],
+    taxRates: Object.fromEntries(
+      Object.keys(ZONES).map((key) => [key, ECONOMY.taxRate.default]),
+    ) as WorldSnapshot['taxRates'],
+    budgets: Object.fromEntries(
+      BUDGET_DEPARTMENTS.map((key) => [key, SIM_RUNTIME.defaultBudget]),
+    ) as WorldSnapshot['budgets'],
+    terrain: new Terrain(settings.seed, preset),
+    ownedTiles: [WORLD.startTile[1] * MAP_TILES + WORLD.startTile[0]],
+    nodes: [],
+    segments: [],
+    zoneBlocks: [],
+    buildings: [],
+    networks: { power: [], water: [] },
+    fields: {
+      size: WORLD.fieldCells,
+      pollution: field(),
+      noise: field(),
+      landValue: field(),
+      waterPollution: field(),
+      coverage: Object.fromEntries(
+        SERVICE_TYPES.map((key) => [key, field()]),
+      ) as Fields['coverage'],
+    },
+    citizens: [],
+    transitLines: [],
+    districts: [],
+    policies: [],
+    unlocked: settings.mode === 'sandbox' ? MILESTONES.map((m) => m.id) : [0],
+    statsHistory: [],
+    nextId: 1,
+  };
+}

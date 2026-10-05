@@ -208,8 +208,10 @@
 - **參考**：TECH §3、§5
 - **內容**：`bridge/protocol.ts`（完整型別）、`sim/worker.ts`、`sim/simulation.ts`（固定步長 tick、速度切換）、`sim/state.ts`、`sim/commands.ts`（分派骨架）、`bridge/simClient.ts`（`send()` 回傳 Promise、事件訂閱）、`bridge/mirror.ts`。`init` 指令建立新城市並回傳 `ready`。
 - **驗收標準**：
-  - [ ] 單元測試可在 Node 直接建立 `Simulation` 並執行 tick（不經 Worker）
-  - [ ] 瀏覽器中 `setSpeed` 有效，暫停時 tick 停止
+  - [x] 單元測試可在 Node 直接建立 `Simulation` 並執行 tick（不經 Worker）
+  - [x] 瀏覽器中 `setSpeed` 有效，暫停時 tick 停止
+
+驗證紀錄（2026-10-06）：固定步長 Worker、命令驗證／Promise 回覆、唯讀鏡像與暫停／倍速控制完成。lint、typecheck、314 項單元測試、build、三裝置 36 項 E2E 通過（另 3 項裝置不適用跳過）；手機橫式與離線重載 Worker 已驗證。詳見 `docs/SIMULATION.md`，截圖見 `docs/screenshots/m1-01/`。展示街區尚未成為可經營資產；日期、每天／每週鉤子與統計留待 M1-02。
 
 ### M1-02　遊戲時間
 - **分支**：`feature/m1-02-time`｜**相依**：M1-01｜**估時**：0.5

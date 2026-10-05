@@ -308,3 +308,63 @@ h1 {
     right: max(12px, env(safe-area-inset-right));
   }
 }
+
+.sim-controls {
+  position: absolute;
+  z-index: 3;
+  top: max(18px, env(safe-area-inset-top));
+  right: max(18px, env(safe-area-inset-right));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-panel);
+  backdrop-filter: blur(8px);
+  font-size: 12px;
+}
+.sim-controls div {
+  display: flex;
+  gap: 4px;
+}
+.sim-controls button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.sim-controls button[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-background);
+}
+.sim-controls button:focus-visible {
+  outline: 2px solid var(--color-accent);
+}
+.sim-controls button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+@media (max-width: 720px) {
+  .sim-controls {
+    top: auto;
+    bottom: calc(78px + env(safe-area-inset-bottom));
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    justify-content: space-between;
+  }
+  .input-help {
+    bottom: calc(146px + env(safe-area-inset-bottom));
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .picking-debug {
+    top: max(82px, calc(env(safe-area-inset-top) + 70px));
+  }
+}

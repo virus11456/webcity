@@ -1,7 +1,9 @@
 import { PickingPreview } from './input/pickingPreview';
 import { createPickingDebug } from './ui/pickingDebug';
 import type { TerrainPick } from './world/picking';
-import { CITY_PREVIEW, type CityView } from './data/terrain';
+import { CITY_PREVIEW, MAP_PRESETS, type CityView } from './data/terrain';
+import { SimClient } from './bridge/simClient';
+import { createSimControls } from './ui/simControls';
 import { CameraController } from './input/cameraController';
 import type { RtsCamera } from './render/camera';
 import { h, render } from 'preact';
@@ -45,6 +47,31 @@ const debug =
   new URLSearchParams(location.search).get('debug') === '1'
     ? createDebugPanel(root)
     : undefined;
+let sim: SimClient | undefined;
+let simControls: ReturnType<typeof createSimControls> | undefined;
+try {
+  sim = new SimClient(
+    new Worker(new URL('./sim/worker.ts', import.meta.url), { type: 'module' }),
+  );
+  simControls = createSimControls(root, sim);
+  void sim
+    .send({
+      t: 'init',
+      seed: MAP_PRESETS[0].seed,
+      mapId: MAP_PRESETS[0].id,
+      mode: 'normal',
+      cityName: t('city.name'),
+    })
+    .then((response) => {
+      if (response.t !== 'ready') simControls?.showError();
+    })
+    .catch(() => simControls?.showError());
+} catch {
+  if (status) {
+    status.hidden = false;
+    status.textContent = t('sim.failed');
+  }
+}
 if (canvas && status) {
   try {
     city = new CityRenderer(canvas, {
@@ -76,6 +103,13 @@ if (canvas && status) {
     }
     input = new CameraController(canvas, city.cameraController, {
       onTap: (p) => picking?.tap(p.x, p.y),
+      onShortcut: (action) => {
+        const speed = sim?.mirror.clock?.speed;
+        if (action === 'pause') void simControls?.setSpeed(speed === 0 ? 1 : 0);
+        else if (action === 'speed1') void simControls?.setSpeed(1);
+        else if (action === 'speed2') void simControls?.setSpeed(2);
+        else if (action === 'speed3') void simControls?.setSpeed(4);
+      },
     });
     if (debug) window.__webcityCamera = city.cameraController;
   } catch {
@@ -92,5 +126,7 @@ if (import.meta.hot)
     input?.dispose();
     city?.dispose();
     debug?.dispose();
+    simControls?.dispose();
+    sim?.dispose();
   });
 if (import.meta.env.PROD) void registerPwa();

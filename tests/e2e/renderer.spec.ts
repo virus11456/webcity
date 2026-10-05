@@ -170,9 +170,9 @@ test('recovers after a lost WebGL context', async ({ page }) => {
     extension.loseContext();
     setTimeout(() => extension.restoreContext(), 500);
   });
-  await expect(page.getByRole('status')).toBeVisible();
+  await expect(page.locator('.render-status')).toBeVisible();
   await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'false');
-  await expect(page.getByRole('status')).toBeHidden();
+  await expect(page.locator('.render-status')).toBeHidden();
   await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'true');
   await expect
     .poll(async () =>
