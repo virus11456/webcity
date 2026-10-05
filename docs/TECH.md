@@ -353,6 +353,8 @@ export interface Tool {
   onRotate?(): void;             // R 鍵 / 旋轉鈕
 }
 ```
+M0-12 已提供 `input/picking.ts` 的 `TerrainPicker`。`pick(clientX, clientY, viewport, camera, maxDistance)` 使用 CSS client 座標；`raycast(origin, direction, maxDistance)` 使用世界座標。傳回 `world/picking.ts` 的 `TerrainPick`（world、cell、tile、owned、distance）或 null；結果物件會重用，非同步命令與存檔前必須複製所需數值。此版本只選地形表面，不選建築或水面；擁有權預設中央地塊，之後由 Mirror 查詢函式取代。除錯框由 `main.ts` 在相機更新後呼叫輸入層，再交 render 層繪製，沒有 render → input 依賴。
+
 - 同一時間只有一個工具；預設為 `inspectTool`。
 - 手勢分流（`input/gestures.ts`）：**單指 / 左鍵 → 交給目前工具**；但若目前是 `inspectTool`，單指拖曳 → 平移鏡頭。**雙指 → 永遠給相機**（平移、捏合縮放、旋轉、上下推改仰角）。雙指觸控開始時取消工具進行中的動作。
 - 行動裝置：道路 / 網路工具採「點擊放點」而不是拖曳；完成一段後出現 ✔ / ✕ 浮動按鈕。

@@ -285,3 +285,26 @@ h1 {
     right: auto;
   }
 }
+
+.picking-debug {
+  position: fixed;
+  top: max(212px, calc(env(safe-area-inset-top) + 200px));
+  left: max(24px, env(safe-area-inset-left));
+  z-index: 2;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-panel);
+  color: var(--color-text);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .picking-debug {
+    top: max(12px, env(safe-area-inset-top));
+    left: auto;
+    right: max(12px, env(safe-area-inset-right));
+  }
+}

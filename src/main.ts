@@ -1,3 +1,6 @@
+import { PickingPreview } from './input/pickingPreview';
+import { createPickingDebug } from './ui/pickingDebug';
+import type { TerrainPick } from './world/picking';
 import { CITY_PREVIEW, type CityView } from './data/terrain';
 import { CameraController } from './input/cameraController';
 import type { RtsCamera } from './render/camera';
@@ -13,6 +16,7 @@ import './ui/styles/base.css';
 declare global {
   interface Window {
     __webcityCamera?: RtsCamera;
+    __webcityPick?: (x: number, y: number) => TerrainPick | null;
   }
 }
 
@@ -22,6 +26,8 @@ if (!root) throw new Error('Missing #app element');
 
 let input: CameraController | undefined;
 let city: CityRenderer | undefined;
+let picking: PickingPreview | undefined;
+let pickingDebug: ReturnType<typeof createPickingDebug> | undefined;
 render(
   h(App, {
     onViewChange: (view: CityView) => {
@@ -44,12 +50,33 @@ if (canvas && status) {
     city = new CityRenderer(canvas, {
       onStats: debug?.update,
       onBeforeFrame: (seconds) => input?.update(seconds),
+      onAfterCamera: () => picking?.update(),
       onContextState(lost) {
         status.hidden = !lost;
         status.textContent = lost ? t('render.contextLost') : '';
       },
     });
-    input = new CameraController(canvas, city.cameraController);
+    if (debug) {
+      pickingDebug = createPickingDebug(root);
+      picking = new PickingPreview(
+        canvas,
+        city.camera,
+        city.terrain,
+        city.scene,
+        pickingDebug.update,
+      );
+      window.__webcityPick = (x, y) =>
+        picking!.picker.pick(
+          x,
+          y,
+          canvas.getBoundingClientRect(),
+          city!.camera,
+          city!.camera.far,
+        );
+    }
+    input = new CameraController(canvas, city.cameraController, {
+      onTap: (p) => picking?.tap(p.x, p.y),
+    });
     if (debug) window.__webcityCamera = city.cameraController;
   } catch {
     status.hidden = false;
@@ -59,6 +86,9 @@ if (canvas && status) {
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
     delete window.__webcityCamera;
+    delete window.__webcityPick;
+    picking?.dispose();
+    pickingDebug?.dispose();
     input?.dispose();
     city?.dispose();
     debug?.dispose();

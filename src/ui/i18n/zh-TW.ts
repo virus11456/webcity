@@ -1,4 +1,12 @@
 export const ZH_TW = {
+  'pick.title': '地形選取資訊',
+  'pick.hint': '移動游標或輕點地面查看格子',
+  'pick.position': '座標',
+  'pick.height': '高度',
+  'pick.cell': '格子',
+  'pick.tile': '地塊',
+  'pick.owned': '已擁有',
+  'pick.unowned': '未擁有',
   'input.title': '鏡頭操作',
   'input.preview': '3D 操作預覽 · 建造功能開發中',
   'input.desktop': '拖曳／WASD 移動 · 右鍵／QE 旋轉 · 滾輪縮放 · RF 調整仰角',

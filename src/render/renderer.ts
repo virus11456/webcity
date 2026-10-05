@@ -38,6 +38,7 @@ export interface RenderStats {
 export interface RendererOptions {
   search?: string;
   onBeforeFrame?: (seconds: number) => void;
+  onAfterCamera?: () => void;
   onStats?: (stats: Readonly<RenderStats>) => void;
   onContextState?: (lost: boolean) => void;
 }
@@ -216,6 +217,7 @@ export class CityRenderer {
     const seconds = this.lastFrame === null ? 0 : (now - this.lastFrame) / 1000;
     this.options.onBeforeFrame?.(seconds);
     this.cameraController.update(seconds);
+    this.options.onAfterCamera?.();
     this.water.update(seconds);
     this.lastFrame = now;
     this.cameraController.copyFocus(this.focus);
