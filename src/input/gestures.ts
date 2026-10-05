@@ -90,7 +90,7 @@ export class Gestures {
       this.pairDirty = true;
       return;
     }
-    if (!this.origin || this.held) return;
+    if (!this.origin) return;
     if (
       !this.dragging &&
       Math.hypot(p.x - this.origin.x, p.y - this.origin.y) >= INPUT.dragSlopPx

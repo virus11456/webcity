@@ -53,6 +53,17 @@ describe('gesture ownership', () => {
     expect(sink.end).not.toHaveBeenCalled();
     expect(sink.tap).not.toHaveBeenCalled();
   });
+  it('allows camera dragging after a long press without committing the cancelled tool', () => {
+    const { g, sink } = setup();
+    g.down(p(), 0);
+    g.tick(600);
+    g.move(p(1, 140));
+    g.up(p(1, 140));
+    expect(sink.longPress).toHaveBeenCalledOnce();
+    expect(sink.drag).toHaveBeenCalledWith(p(1, 140), 40, 0);
+    expect(sink.end).not.toHaveBeenCalled();
+    expect(sink.tap).not.toHaveBeenCalled();
+  });
   it('cancels immediately when second finger lands and does not resume a tool after one lifts', () => {
     const { g, sink } = setup();
     g.down(p(), 0);

@@ -82,6 +82,8 @@ test('native touch drag, pinch, rotate, tilt and viewport stability', async ({
   };
   const first = await state(page);
   await send('touchStart', [{ id: 1, x: 120, y: 400 }]);
+  // A held inspection touch must still be draggable after long-press recognition.
+  await page.waitForTimeout(650);
   await send('touchMove', [{ id: 1, x: 165, y: 400 }]);
   await send('touchEnd', []);
   await expect
