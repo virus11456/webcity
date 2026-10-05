@@ -128,9 +128,11 @@
 - **參考**：ART §4、§12；TECH §6、§10
 - **內容**：`render/renderer.ts`（WebGLRenderer、場景、渲染迴圈、resize、DPR 上限）、`render/quality.ts`（ART §12 分級邏輯，可用 `?quality=low|medium|high` 強制）、`render/lighting.ts`（太陽、半球光、陰影依畫質）、簡易漸層天空；`?debug=1` 顯示 FPS / draw calls / 三角形數面板。
 - **驗收標準**：
-  - [ ] 畫面顯示天空與一個測試方塊，有陰影
-  - [ ] 旋轉手機 / 改視窗大小時畫面不變形
-  - [ ] debug 面板數值正確
+  - [x] 畫面顯示天空與一個測試方塊，有陰影
+  - [x] 旋轉手機 / 改視窗大小時畫面不變形
+  - [x] debug 面板數值正確
+
+驗證紀錄（2026-10-05）：Three.js 場景、天空、日間光照與分級陰影完成，細節見 `docs/RENDERING.md`。lint、typecheck、254 項單元測試、build、三裝置 18 項 E2E 通過；debug 繪製數值以 WebGL 呼叫獨立比對，另驗證旋轉與 context 恢復。截圖見 `docs/screenshots/m0-07/`。本任務為固定鏡頭基礎場景，後製與日夜循環留待 M3。
 
 ### M0-08　RTS 相機
 - **分支**：`feature/m0-08-camera`｜**相依**：M0-07｜**估時**：2

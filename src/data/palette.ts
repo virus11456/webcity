@@ -108,3 +108,10 @@ export type ZonePaletteId = keyof typeof ZONE_PALETTE;
 export type EnvironmentColor = keyof typeof ENVIRONMENT_PALETTE;
 export type Palette =
   typeof ENVIRONMENT_PALETTE | typeof ROAD_PALETTE | typeof UI_PALETTE;
+
+// ART §4, daytime light colors.
+export const LIGHT_PALETTE = {
+  sun: '#FFF1DC',
+  sky: '#BBD7F0',
+  ground: '#6B7A4F',
+} as const;

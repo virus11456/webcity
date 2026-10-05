@@ -44,7 +44,7 @@ test('has an installable manifest and works after an offline reload', async ({
     await expect(page.locator('html')).toHaveCSS('touch-action', 'none');
 
     const scale = await page.evaluate(() => visualViewport?.scale);
-    await page.getByRole('heading', { name: 'WebCity' }).dblclick();
+    await page.locator('canvas').dblclick();
     expect(await page.evaluate(() => visualViewport?.scale)).toBe(scale);
     if (testInfo.project.use.hasTouch) {
       await page.touchscreen.tap(100, 100);

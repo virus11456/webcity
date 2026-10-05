@@ -69,3 +69,43 @@ h1 {
   outline: 2px solid var(--color-text);
   outline-offset: 2px;
 }
+
+.city-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.app-shell h1 {
+  position: absolute;
+  top: max(24px, env(safe-area-inset-top));
+  left: max(24px, env(safe-area-inset-left));
+  z-index: 1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--color-background);
+  pointer-events: none;
+}
+.debug-panel {
+  position: fixed;
+  top: max(88px, env(safe-area-inset-top));
+  left: max(24px, env(safe-area-inset-left));
+  z-index: 2;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--color-background);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.render-status {
+  position: relative;
+  z-index: 3;
+  max-width: min(90vw, 480px);
+  padding: 16px;
+  background: var(--color-background);
+  border-radius: 12px;
+}
