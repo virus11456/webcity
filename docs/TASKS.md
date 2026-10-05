@@ -85,6 +85,8 @@
   - [ ] PR 上看得到 CI 檢查
   - [ ] 合併後 GitHub Pages 網址可開啟
 
+本機驗證（2026-10-05）：CI／Pages workflow 已實作，actionlint、lint、typecheck、34 項單元測試、build、`/webcity/` 子路徑三裝置 E2E 通過。遠端 CI 與正式 Pages 驗收另待確認；儲存庫尚未啟用 Pages，前置 PR #2、#3 尚未合併。
+
 ### M0-04　PWA 設定
 - **分支**：`feature/m0-04-pwa`｜**相依**：M0-01｜**估時**：1
 - **參考**：TECH §11

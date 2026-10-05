@@ -1,5 +1,10 @@
 # WebCity
 
+[![CI](https://github.com/virus11456/webcity/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/virus11456/webcity/actions/workflows/ci.yml)
+[![Deploy to GitHub Pages](https://github.com/virus11456/webcity/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/virus11456/webcity/actions/workflows/deploy.yml)
+
+部署網址：[WebCity on GitHub Pages](https://virus11456.github.io/webcity/)（首次合併部署流程並完成 Pages 設定後生效）。
+
 一款玩法與美術風格參考《Cities: Skylines》的城市建造模擬遊戲，以 Web 技術開發，支援 PWA 安裝，可在 iPhone、iPad、PC 上遊玩。
 
 目前已完成 **M0-01 專案骨架與 M0-02 測試框架**：顯示全螢幕深色 WebCity 啟動畫面。城市模擬、3D 渲染與 PWA 安裝將依任務卡陸續加入。
@@ -47,11 +52,19 @@ npm run e2e -- --project='iPhone 15'
 
 若沒有預裝瀏覽器，先自行執行 `npx playwright install chromium`；測試不會自動下載。每次 E2E 都重新建置，管理 `127.0.0.1:4173` 的預覽伺服器生命週期，避免測到其他程序或過期版本；該連接埠必須可用。
 
-每個專案都會產生 `test-results/<測試與專案目錄>/shell.png`，並附在 `playwright-report/` 的 HTML 報告；可用 `npx playwright show-report` 開啟。失敗時另保留截圖與 trace。`CI` 模式禁止 `test.only`，使用一個 worker，失敗重試兩次。未來的 CI artifact 上傳由 M0-03 負責。
+每個專案都會產生 `test-results/<測試與專案目錄>/shell.png`，並附在 `playwright-report/` 的 HTML 報告；可用 `npx playwright show-report` 開啟。失敗時另保留截圖與 trace。`CI` 模式禁止 `test.only`，使用一個 worker，失敗重試兩次。GitHub Actions 將截圖、報告與失敗 trace 上傳為 `playwright-results` artifact，保留 14 天。
 
 目前 E2E 範例檢查標題、全螢幕版面、背景與瀏覽器錯誤；遊戲互動測試會隨功能加入。行動裝置是 Chromium 模擬，並非 iOS Safari 實機驗證。
 
 跨模組引用可使用 `@/`（對應 `src/`）或相對路徑。ESLint 依 TECH §2.1 檢查相依方向，且限制模擬層使用 DOM、Three.js、`Math.random()` 或 `Date.now()`。
+
+## CI 與 GitHub Pages
+
+- 每次 push 與 PR 都執行 `.github/workflows/ci.yml`：`npm ci`、lint、typecheck、unit tests、build、三裝置 E2E，並上傳報告。
+- `main` 有新提交時，`.github/workflows/deploy.yml` 先呼叫相同 CI 驗證，成功後才建置並發布 `dist/` 到 GitHub Pages。可手動重新部署 `main`；其他分支不會發布。
+- Vite 的 `base` 設為 `/webcity/`，本機預覽與 E2E 也使用此子路徑，確保部署後資源網址一致。開發網址為 `http://localhost:5173/webcity/`。
+
+首次部署前，在儲存庫 **Settings → Pages → Build and deployment → Source** 選擇 **GitHub Actions**。合併本任務與前置 PR 後，在 Actions 檢查部署結果；成功的部署會在 `github-pages` environment 顯示正式網址。若更改儲存庫名稱或使用自訂網域，需一併調整 Vite base 與 Playwright baseURL。
 
 ## 開發流程
 
