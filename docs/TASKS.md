@@ -59,8 +59,10 @@
   4. 建立 TECH §14 的所有 npm scripts（e2e、icons 可先放佔位）。
   5. `src/main.ts` 顯示一個全螢幕深色畫面與「WebCity」文字。
 - **驗收標準**：
-  - [ ] `npm run dev`、`build`、`lint`、`typecheck` 都成功
-  - [ ] 在 `src/sim/` 中 import `three` 時 lint 報錯（證明邊界規則生效）
+  - [x] `npm run dev`、`build`、`lint`、`typecheck` 都成功
+  - [x] 在 `src/sim/` 中 import `three` 時 lint 報錯（證明邊界規則生效）
+
+驗證紀錄（2026-10-05）：`npm test` 33 項通過；`npm run e2e` 通過 iPhone 15、iPad Pro 11、Desktop 及 iPhone 橫式的啟動畫面檢查，截圖見 `docs/screenshots/m0-01/`。完整 M0-02 測試框架仍待實作。
 
 ### M0-02　測試框架
 - **分支**：`feature/m0-02-testing`｜**相依**：M0-01｜**估時**：0.5

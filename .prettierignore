@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+test-results/
+playwright-report/
+package-lock.json
+# Preserve the existing design documents as authored.
+docs/PLAN.md
+docs/GDD.md
+docs/ART.md
+docs/TECH.md
+docs/TASKS.md
+AGENTS.md
+CLAUDE.md

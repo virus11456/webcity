@@ -1,0 +1,7 @@
+:root {
+  color-scheme: dark;
+  --color-background: #141a22;
+  --color-text: #f2f5f8;
+  --font-family: 'Noto Sans TC', 'PingFang TC', system-ui, sans-serif;
+  --font-size-title: 18px;
+}
