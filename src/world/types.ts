@@ -36,6 +36,7 @@ export interface RoadSegment {
 // 每個 ZoneBlock = 某路段某一側的一排格子，寬 n 格 × 深 4 格
 export interface ZoneBlock {
   id: Id;
+  createdOrder?: Id; // Original block ID, preserved through road splits for overlap priority.
   segment: Id;
   side: -1 | 1;
   origin: Vec2; // 第一格的前緣中心

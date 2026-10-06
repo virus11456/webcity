@@ -1,3 +1,4 @@
+import { ZONE_CODES } from './data/zones';
 import { RoadTool } from './tools/roadTool';
 import { ToolManager } from './tools/toolManager';
 import { RoadPreviewRenderer } from './render/preview';
@@ -24,6 +25,11 @@ import './ui/styles/base.css';
 declare global {
   interface Window {
     __webcityCamera?: RtsCamera;
+    __webcityZoneStats?: () => {
+      blocks: number;
+      valid: number;
+      invalid: number;
+    };
     __webcityRoadStats?: () => {
       batches: number;
       pending: boolean;
@@ -189,6 +195,17 @@ if (canvas && status) {
     }
     if (debug) {
       window.__webcityCamera = city.cameraController;
+      window.__webcityZoneStats = () => {
+        const blocks = sim?.mirror.readZoneBlocks() ?? [];
+        let valid = 0,
+          invalid = 0;
+        for (const block of blocks)
+          for (const code of block.cells) {
+            if (code === ZONE_CODES.invalid) invalid++;
+            else valid++;
+          }
+        return { blocks: blocks.length, valid, invalid };
+      };
       window.__webcityRoadStats = () => roadPreview!.roads.readStats();
     }
   } catch {
@@ -200,6 +217,7 @@ if (import.meta.hot)
   import.meta.hot.dispose(() => {
     delete window.__webcityCamera;
     delete window.__webcityRoadStats;
+    delete window.__webcityZoneStats;
     delete window.__webcityPick;
     tools?.dispose();
     roadTool?.dispose();

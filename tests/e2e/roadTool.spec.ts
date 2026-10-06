@@ -68,6 +68,10 @@ test('builds, charges, continues and crosses roads through native pointer contro
     await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
   else await tap(page, -80, -80, false);
   await expect(controls).toHaveAttribute('data-segments', '1');
+  await page.waitForFunction(() => window.__webcityZoneStats?.().blocks === 2);
+  expect(
+    await page.evaluate(() => window.__webcityZoneStats!().valid),
+  ).toBeGreaterThan(0);
   await expect(controls).toHaveAttribute('data-money', String(70000 - price));
   await expect(controls).toHaveAttribute('data-phase', 'end');
   await tap(page, -80, -240, touch);
@@ -80,6 +84,10 @@ test('builds, charges, continues and crosses roads through native pointer contro
   if (touch)
     await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
   await expect(controls).toHaveAttribute('data-segments', '5');
+  await page.waitForFunction(() => window.__webcityZoneStats?.().blocks === 10);
+  expect(
+    await page.evaluate(() => window.__webcityZoneStats!().invalid),
+  ).toBeGreaterThan(0);
   await expect(page.locator('.sim-controls')).toHaveAttribute(
     'data-speed',
     '0',
@@ -116,6 +124,10 @@ test('builds, charges, continues and crosses roads through native pointer contro
   );
   await page.getByRole('button', { name: '開始鋪路', exact: true }).click();
   await expect(controls).toHaveAttribute('data-segments', '5');
+  await page.waitForFunction(() => window.__webcityZoneStats?.().blocks === 10);
+  expect(
+    await page.evaluate(() => window.__webcityZoneStats!().invalid),
+  ).toBeGreaterThan(0);
   await expect(controls).toHaveAttribute('data-money', money!);
   expect(errors).toEqual([]);
 });

@@ -1,6 +1,6 @@
 import type { RoadConstructionWorld } from '../world/roadConstruction';
 import type { SimClock, WorldSnapshot } from '../world/snapshot';
-import type { ServiceType } from '../world/types';
+import type { ServiceType, ZoneBlock } from '../world/types';
 import type { SimEvent } from './protocol';
 
 function upsert<T extends { id: number }>(
@@ -48,6 +48,11 @@ export class WorldMirror {
     );
   }
 
+  /** Copy road-owned zoning blocks without cloning unrelated world arrays. */
+  readZoneBlocks(): ZoneBlock[] {
+    return this.state ? structuredClone(this.state.zoneBlocks) : [];
+  }
+
   /** Return the latest copied vehicle stream (M2). */
   readVehicles(): { data: Float32Array; count: number } {
     return structuredClone(this.vehicles);
@@ -90,6 +95,8 @@ export class WorldMirror {
         );
         break;
       case 'zonesChanged':
+        for (const block of event.blocks)
+          state.nextId = Math.max(state.nextId, block.id + 1);
         state.zoneBlocks = upsert(
           state.zoneBlocks,
           structuredClone(event.blocks),

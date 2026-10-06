@@ -1,3 +1,4 @@
+import { rebuildZoneGrid } from '../world/zoneGrid';
 import { roadBedPatch } from '../world/roadBed';
 import { roadHeightAt } from '../world/roadProfile';
 import { GAME_MODES } from '../data/config';
@@ -95,10 +96,25 @@ export class Simulation {
       s.terrain.heights[index] = terrain.heights[i]!;
     });
     if (terrain.indices.length) s.terrain.revision++;
+    const zones = rebuildZoneGrid({ ...s, heights: s.terrain.heights });
+    s.zoneBlocks = zones.blocks;
+    s.segments = zones.segments;
+    s.nextId = zones.nextId;
+    const segmentById = new Map(
+      s.segments.map((segment) => [segment.id, segment]),
+    );
     this.emit({
       t: 'roadsChanged',
       ...structuredClone(change),
+      added: change.added.map((segment) =>
+        structuredClone(segmentById.get(segment.id)!),
+      ),
       terrain: { ...terrain, revision: s.terrain.revision },
+    });
+    this.emit({
+      t: 'zonesChanged',
+      blocks: structuredClone(zones.blocks),
+      removed: zones.removed,
     });
     this.emit({ t: 'fundsChanged', money: s.money });
     return { ok: true, cost };

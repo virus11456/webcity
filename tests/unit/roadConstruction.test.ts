@@ -49,7 +49,11 @@ describe('authoritative road construction', () => {
       ok: true,
       cost: 200,
     });
-    expect(events.map((e) => e.t)).toEqual(['roadsChanged', 'fundsChanged']);
+    expect(events.map((e) => e.t)).toEqual([
+      'roadsChanged',
+      'zonesChanged',
+      'fundsChanged',
+    ]);
     const actual = sim.snapshot(),
       view = mirror.readRoadWorld()!;
     expect(actual.money).toBe(69800);
@@ -58,6 +62,19 @@ describe('authoritative road construction', () => {
     expect(view.nextId).toBe(actual.nextId);
     expect(view.segments).toEqual(actual.segments);
     expect(view.nodes).toEqual(actual.nodes);
+    expect(actual.zoneBlocks).toHaveLength(2);
+    const ids = [...actual.nodes, ...actual.segments, ...actual.zoneBlocks].map(
+      (item) => item.id,
+    );
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(actual.nextId).toBeGreaterThan(Math.max(...ids));
+    expect(mirror.readZoneBlocks()).toEqual(actual.zoneBlocks);
+    const detached = mirror.readZoneBlocks();
+    detached[0]!.cells.fill(255);
+    expect(mirror.readZoneBlocks()).toEqual(actual.zoneBlocks);
+    expect(actual.segments[0]!.zoneBlockIds).toEqual(
+      actual.zoneBlocks.map((b) => b.id),
+    );
     expect(sim.readClock()).toEqual(before);
     expect(mirror.readSnapshot()!.statsHistory).toHaveLength(1);
     const count = events.length;

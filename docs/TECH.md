@@ -211,6 +211,7 @@ export interface RoadSegment {
 // 每個 ZoneBlock = 某路段某一側的一排格子，寬 n 格 × 深 4 格
 export interface ZoneBlock {
   id: Id;
+  createdOrder?: Id;           // 最早來源 block ID；道路切段後繼承重疊優先序
   segment: Id;
   side: -1 | 1;
   origin: Vec2;                 // 第一格的前緣中心
@@ -309,6 +310,7 @@ export type SimEvent =
 - M1-01 實作細節：所有請求（含 init / setSpeed）均自動配置 reqId；ready 回覆也帶 reqId。`send()` 的實際回傳為 `Promise<Response>`（result / ready / saved / inspectResult union），並增加獨立 clock 事件回報速度與固定步數。鏡像於接收訊息時套用，避免依賴 WebGL 是否正常繪製。完整執行、背景節流與未實作型別界線見 `docs/SIMULATION.md`。
 - M1-02：snapshot 增加目前 `stats`，遊戲日完成時依序執行日鉤子、適用的週鉤子、stats snapshot 與事件；day=0 為起始日，第一個週鉤子於完成第 7 天觸發。日期與執行順序詳見 `docs/SIMULATION.md`。
 - M1-05：`buildRoad` 已接入權威驗證、道路圖與扣款；新增 `fundsChanged` 事件立即同步資金而不寫入每日統計歷史。工具鏡像快取、exact 接點與地表路口整合詳見 `docs/ROAD_TOOL.md`。
+- M1-07：成功建路在地形整平後呼叫 `rebuildZoneGrid`，依序送 `roadsChanged`、`zonesChanged`、`fundsChanged`。道路的 `zoneBlockIds` 與分區格共用全域 ID；鏡像提供 `readZoneBlocks()` 防禦性複本，詳細約定見 `docs/ZONE_GRID.md`。
 - 失敗原因 `reason` 用 i18n key（例：`err.notEnoughMoney`、`err.slopeTooSteep`），由 UI 翻譯顯示。
 
 ---
