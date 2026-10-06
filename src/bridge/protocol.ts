@@ -102,7 +102,7 @@ export type SimEvent =
       added: NetworkSegment[];
       removed: Id[];
     }
-  | { t: 'stats'; stats: CityStats }
+  | { t: 'stats'; stats: CityStats; transient?: boolean }
   | { t: 'fields'; which: FieldName; data: Float32Array }
   | { t: 'vehicles'; data: Float32Array; count: number }
   | {

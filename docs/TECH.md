@@ -300,7 +300,7 @@ export type SimEvent =
   | { t: 'zonesChanged'; blocks: ZoneBlock[]; removed: Id[]; occupancyOnly?: boolean }
   | { t: 'buildingsChanged'; added: Building[]; updated: BuildingPatch[]; removed: Id[] }
   | { t: 'networksChanged'; ... }
-  | { t: 'stats'; stats: CityStats }                     // 每遊戲天一次
+  | { t: 'stats'; stats: CityStats; transient?: boolean }                     // 每遊戲天一次
   | { t: 'fields'; which: FieldName; data: Float32Array } // 開啟資訊圖層時才送（Transferable）
   | { t: 'vehicles'; data: Float32Array; count: number } // M2，每 50 ms
   | { t: 'notify'; kind: NotificationKind; pos?: Vec2; params?: Record<string, unknown> }
@@ -479,3 +479,5 @@ M1-10：`main.ts` 延遲載入城市 `game.ts` 或 `?gallery=1` 工坊 `gallery.
 M1-11：`BuildingRenderer` 已接入城市 `ready`／`buildingsChanged`，支援內容雜湊、可擴容 InstancedMesh、受限近景細節、施工／荒廢／拆除。施工 `stateTimer` 暫約定為已施工遊戲天數，等 M1-12 提供。展示與效能驗證、記憶體策略及 LOD 取捨見 `BUILDING_RENDERER.md`。
 
 M1-12：分區成長、施工與重分區三天拆除已接入 Worker。`zonesChanged.occupancyOnly` 僅更新占用，格碼／拓撲不變；工具不因施工進度取消筆畫或重建道路。世界建築以正面中心 `pos`、旋轉後 +local Z 為深度；生成模型深度為 -Z，渲染額外旋轉 π，讓碰撞、占地與外觀一致。詳細演算法、初始需求及界線見 `GROWTH.md`。
+
+M1-13：`Building.housing` 保留五戶量、四教育／年齡層、可工作人口、平均教育與就業群組；`jobEducation`／`workerEducation` 分別記錄職位要求與實際員工。`CityStats.populationDetails` 提供日內搬入搬出與戶數／就業總計。`stats.transient` 更新目前值但不追加每日歷史；`mirror.readStats()` 提供小型防禦性複本。日結與結構變更處理規則見 `POPULATION.md`。

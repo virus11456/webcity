@@ -99,7 +99,7 @@ describe('daily and weekly boundaries', () => {
     const events: SimEvent[] = [];
     const sim = new Simulation(settings, (event) => events.push(event));
     sim.onDay((state) => {
-      state.stats.population++;
+      state.stats.expenses++;
     });
     sim.onWeek((state) => {
       state.money += 123;
@@ -109,10 +109,10 @@ describe('daily and weekly boundaries', () => {
     expect(events).toHaveLength(7);
     expect(events.at(-1)).toMatchObject({
       t: 'stats',
-      stats: { day: 7, population: 7, money: 70123, income: 123 },
+      stats: { day: 7, population: 0, expenses: 7, money: 70123, income: 123 },
     });
     const snapshot = sim.snapshot();
-    expect(snapshot.statsHistory.map((s) => s.population)).toEqual([
+    expect(snapshot.statsHistory.map((s) => s.expenses)).toEqual([
       1, 2, 3, 4, 5, 6, 7,
     ]);
     if (events[6]!.t === 'stats') events[6]!.stats.demand.R = 100;

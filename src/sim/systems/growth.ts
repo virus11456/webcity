@@ -50,7 +50,6 @@ export class GrowthSystem {
     for (const b of s.buildings) {
       if (b.rezoneAtTick !== undefined && s.clock.ticks >= b.rezoneAtTick) {
         removed.push(b.id);
-        s.stats.population = Math.max(0, s.stats.population - b.residents);
         continue;
       }
       if (b.state !== 'construction') continue;

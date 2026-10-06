@@ -1,5 +1,5 @@
 import type { SimClient } from '../bridge/simClient';
-import type { Building } from '../world/types';
+import type { Building, CityStats } from '../world/types';
 import { t } from './i18n/t';
 
 /** A small event-fed summary; no terrain copies or per-frame DOM updates. */
@@ -7,6 +7,7 @@ export function createGrowthControls(
   parent: HTMLElement,
   sim: SimClient,
   view: (b: Building) => void,
+  statsParent: HTMLElement = parent,
 ) {
   const host = document.createElement('div');
   host.className = 'growth-controls';
@@ -17,7 +18,27 @@ export function createGrowthControls(
   button.textContent = t('growth.view');
   const hint = document.createElement('small');
   hint.textContent = t('growth.hint');
+  const people = document.createElement('output');
+  people.className = 'population-summary';
+  const homes = document.createElement('span'),
+    jobs = document.createElement('span'),
+    flow = document.createElement('span');
+  people.append(homes, jobs, flow);
+  const population = (stats: CityStats | undefined) => {
+    const p = stats?.populationDetails;
+    people.dataset.population = String(stats?.population ?? 0);
+    people.dataset.occupied = String(p?.occupiedHouseholds ?? 0);
+    people.dataset.jobs = String(p?.jobs ?? 0);
+    people.dataset.employed = String(p?.employed ?? 0);
+    people.dataset.unemployed = String(p?.unemployed ?? 0);
+    people.dataset.movedOut = String(p?.movedOut ?? 0);
+    homes.textContent = `${t('population.residents')} ${stats?.population ?? 0} · ${t('population.households')} ${p?.occupiedHouseholds ?? 0}/${p?.households ?? 0}`;
+    jobs.textContent = `${t('population.employed')} ${p?.employed ?? 0} · ${t('population.unemployed')} ${p?.unemployed ?? 0} · ${t('population.vacancies')} ${p?.vacancies ?? 0}`;
+    flow.textContent = `${t('population.in')} +${p?.movedIn ?? 0} · ${t('population.out')} −${p?.movedOut ?? 0}`;
+  };
+  population(sim.mirror.readStats());
   host.append(summary, button, hint);
+  statsParent.append(people);
   parent.append(host);
   const buildings = new Map(sim.mirror.readBuildings().map((b) => [b.id, b]));
   const update = () => {
@@ -37,7 +58,9 @@ export function createGrowthControls(
     if (b) view(b);
   });
   const unsubscribe = sim.onEvent((e) => {
+    if (e.t === 'stats') population(e.stats);
     if (e.t === 'ready') {
+      population(e.snapshot.stats);
       buildings.clear();
       for (const b of sim.mirror.readBuildings()) buildings.set(b.id, b);
       update();
@@ -63,6 +86,7 @@ export function createGrowthControls(
     dispose() {
       unsubscribe();
       host.remove();
+      people.remove();
     },
   };
 }

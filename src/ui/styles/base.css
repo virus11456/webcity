@@ -631,3 +631,44 @@ h1 {
   flex-basis: 100%;
   font-size: 12px;
 }
+
+.population-summary {
+  position: absolute;
+  z-index: 4;
+  top: 100px;
+  right: max(18px, env(safe-area-inset-right));
+  width: 318px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-panel);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.population-summary span {
+  white-space: nowrap;
+}
+
+#app:not([data-construction='true']) .population-summary {
+  display: none;
+}
+@media (max-width: 720px) {
+  .population-summary {
+    top: max(166px, calc(154px + env(safe-area-inset-top)));
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    width: auto;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .population-summary {
+    top: 100px;
+    left: max(12px, env(safe-area-inset-left));
+    right: auto;
+    width: 300px;
+  }
+}

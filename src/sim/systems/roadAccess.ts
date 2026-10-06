@@ -41,7 +41,6 @@ export function tickRoadAccess(s: SimState): Building[] {
       continue;
     b.problemTimers.noRoad = s.clock.day - b.roadDisconnectedDay;
     if (b.problemTimers.noRoad >= PROBLEMS.noRoad.days) {
-      s.stats.population = Math.max(0, s.stats.population - b.residents);
       b.state = 'abandoned';
       b.stateTimer = 0;
       b.residents = b.workers = b.jobs = b.households = 0;

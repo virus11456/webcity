@@ -1,3 +1,4 @@
+import { updatePopulation } from './systems/population';
 import { GrowthSystem } from './systems/growth';
 import { planBulldoze, type BulldozeTarget } from '../world/bulldoze';
 import { roadAccess } from '../world/roadAccess';
@@ -18,7 +19,12 @@ import type { Unsubscribe } from '../core/events';
 import { TimeSystem, type DayBoundary } from './systems/time';
 import { TIME, type SimSpeed } from '../data/config';
 import { SIM_RUNTIME } from '../data/simRuntime';
-import type { CitySettings, SimClock, WorldSnapshot } from '../world/snapshot';
+import type {
+  BuildingPatch,
+  CitySettings,
+  SimClock,
+  WorldSnapshot,
+} from '../world/snapshot';
 import { createState, type SimState } from './state';
 
 const tickMs = (TIME.secondsPerDay[1] * 1000) / TIME.ticksPerDay;
@@ -36,7 +42,14 @@ export class Simulation {
   ) {
     this.state = createState(settings);
     this.time.onDay(() => {
-      const updated = tickRoadAccess(this.state);
+      const roads = tickRoadAccess(this.state);
+      const population = updatePopulation(this.state, true);
+      const updates = new Map<number, BuildingPatch>(
+        roads.map((b) => [b.id, { ...b }]),
+      );
+      for (const p of population)
+        updates.set(p.id, { ...updates.get(p.id), ...p });
+      const updated = [...updates.values()];
       if (updated.length)
         this.emit({
           t: 'buildingsChanged',
@@ -162,6 +175,7 @@ export class Simulation {
         removed: [],
         updated: structuredClone(restored),
       });
+    if (s.buildings.length) this.refreshPopulation();
     return { ok: true, cost };
   }
 
@@ -185,14 +199,6 @@ export class Simulation {
     s.zoneBlocks = result.zones.blocks;
     s.nextId = result.zones.nextId;
     const removedBuildings = new Set(result.removedBuildings);
-    s.stats.population = Math.max(
-      0,
-      s.stats.population -
-        s.buildings.reduce(
-          (sum, b) => sum + (removedBuildings.has(b.id) ? b.residents : 0),
-          0,
-        ),
-    );
     s.buildings = result.buildings;
     s.networks = result.networks;
     s.money += result.refund - result.cost;
@@ -231,7 +237,7 @@ export class Simulation {
           removed: result.removedNetworks[net],
         });
     this.emit({ t: 'fundsChanged', money: s.money });
-    if (removedBuildings.size) this.emit({ t: 'stats', stats: { ...s.stats } });
+    if (s.buildings.length || removedBuildings.size) this.refreshPopulation();
     return { ok: true, refund: result.refund, cost: result.cost };
   }
 
@@ -264,6 +270,22 @@ export class Simulation {
     return { ok: true, cost: 0 };
   }
 
+  private refreshPopulation(): void {
+    const updated = updatePopulation(this.state);
+    if (updated.length)
+      this.emit({
+        t: 'buildingsChanged',
+        added: [],
+        removed: [],
+        updated: structuredClone(updated),
+      });
+    this.emit({
+      t: 'stats',
+      stats: structuredClone(this.state.stats),
+      transient: true,
+    });
+  }
+
   /** Advance exactly one simulation step, unless paused. */
   tick(): void {
     if (this.state.clock.speed === 0) return;
@@ -283,6 +305,11 @@ export class Simulation {
         updated: structuredClone(growth.updated),
         removed: growth.removed,
       });
+    if (
+      growth.removed.length ||
+      growth.updated.some((b) => b.state === 'active')
+    )
+      this.refreshPopulation();
     if (!dayCompleted) return;
     this.state.stats.day = this.state.clock.day;
     this.state.stats.money = this.state.money;

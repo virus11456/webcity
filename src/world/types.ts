@@ -48,6 +48,35 @@ export interface ZoneBlock {
 }
 
 // ── 建築 ──
+export type EducationCounts = [number, number, number, number];
+export interface HousingPopulation {
+  sizes: [number, number, number, number, number];
+  occupied: number;
+  education: EducationCounts;
+  ages: EducationCounts;
+  averageEducation: number;
+  availableWorkers: EducationCounts;
+  employed: number;
+  lastMigrationDay?: number;
+  assignments: {
+    workplaceId: Id;
+    education: number;
+    requiredEducation: number;
+    workers: number;
+  }[];
+}
+export interface PopulationDetails {
+  day: number;
+  households: number;
+  occupiedHouseholds: number;
+  availableWorkers: number;
+  employed: number;
+  unemployed: number;
+  jobs: number;
+  vacancies: number;
+  movedIn: number;
+  movedOut: number;
+}
 export interface Building {
   id: Id;
   kind: 'zoned' | 'service' | 'park' | 'utility' | 'unique';
@@ -67,7 +96,10 @@ export interface Building {
   rezoneAtTick?: number; // Complete deadline, removed without a refund after changed zoning.
   flags: number; // 位元旗標：HAS_POWER | HAS_WATER | HAS_SEWAGE | HAS_GARBAGE_SERVICE | ON_FIRE …
   problemTimers: Record<ProblemType, number>;
-  households: number;
+  housing?: HousingPopulation;
+  jobEducation?: EducationCounts;
+  workerEducation?: EducationCounts;
+  households: number; // 住宅容量；實際入住戶數在 housing.occupied。
   residents: number; // 住宅
   jobs: number;
   workers: number; // 工作
@@ -90,6 +122,7 @@ export interface CityStats {
   day: number;
   money: number;
   population: number;
+  populationDetails?: PopulationDetails;
   demand: Record<'R' | 'C' | 'I' | 'O', number>;
   income: number;
   expenses: number; // 上週

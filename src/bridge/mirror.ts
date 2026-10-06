@@ -1,3 +1,4 @@
+import type { CityStats } from '../world/types';
 import type { BulldozeWorld } from '../world/bulldoze';
 import type { RoadConstructionWorld } from '../world/roadConstruction';
 import type { SimClock, WorldSnapshot } from '../world/snapshot';
@@ -23,6 +24,10 @@ export class WorldMirror {
   /** Return an inexpensive frozen clock; undefined until ready. */
   get clock(): Readonly<SimClock> | undefined {
     return this.state && Object.freeze({ ...this.state.clock });
+  }
+
+  readStats(): CityStats | undefined {
+    return this.state && structuredClone(this.state.stats);
   }
 
   /** Request a defensive full snapshot, outside the render loop. */
@@ -151,7 +156,8 @@ export class WorldMirror {
       case 'stats':
         state.money = event.stats.money;
         state.stats = structuredClone(event.stats);
-        state.statsHistory.push(structuredClone(event.stats));
+        if (!event.transient)
+          state.statsHistory.push(structuredClone(event.stats));
         break;
       case 'fields':
         if (event.which.startsWith('coverage.'))

@@ -30,6 +30,7 @@ import { App } from './ui/App';
 
 declare global {
   interface Window {
+    __webcityStats?: () => ReturnType<SimClient['mirror']['readStats']>;
     __webcityBuildings?: () => ReturnType<SimClient['mirror']['readBuildings']>;
     __webcityBuildingStats?: () => ReturnType<BuildingRenderer['readStats']>;
     __webcityCamera?: RtsCamera;
@@ -293,6 +294,7 @@ if (canvas && status) {
           city!.cameraController.flyTo(b.pos, GROWTH_VIEW_DISTANCE);
           canvas.focus({ preventScroll: true });
         },
+        root,
       );
       roadControls.update(roadTool.readState());
       zoneControls = createZoneControls(roadControls.zoneHost, {
@@ -333,6 +335,7 @@ if (canvas && status) {
           ...zoneRenderer!.readStats(),
         };
       };
+      window.__webcityStats = () => sim!.mirror.readStats();
       window.__webcityBuildings = () => sim!.mirror.readBuildings();
       window.__webcityBuildingStats = () => buildings!.readStats();
       window.__webcityRoadStats = () => roadPreview!.roads.readStats();
@@ -346,6 +349,7 @@ if (import.meta.hot)
   import.meta.hot.dispose(() => {
     delete window.__webcityBuildingStats;
     delete window.__webcityBuildings;
+    delete window.__webcityStats;
     delete window.__webcityCamera;
     delete window.__webcityRoadStats;
     delete window.__webcityZoneStats;

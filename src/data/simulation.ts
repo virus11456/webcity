@@ -201,3 +201,11 @@ export type SimulationConfig =
   | typeof TRAFFIC
   | typeof ENVIRONMENT
   | typeof HAPPINESS;
+
+// M1 aggregate incoming population assumptions (GDD §7.1); mean household size = 2.6.
+export const POPULATION_PROFILE = {
+  jobSearchCellM: 64,
+  householdSizePercent: [20, 30, 30, 10, 10],
+  educationPercent: [40, 40, 15, 5],
+  agePercent: [20, 10, 55, 15],
+} as const;
