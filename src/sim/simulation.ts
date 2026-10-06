@@ -1,3 +1,12 @@
+import { updatePower } from './systems/power';
+import {
+  previewPlant,
+  previewLine,
+  plantDefinition,
+  type PowerWorld,
+} from '../world/power';
+import { PROBLEMS } from '../data/simulation';
+import type { Building, Vec2 } from '../world/types';
 import { updateDemand } from './systems/demand';
 import { updatePopulation } from './systems/population';
 import { GrowthSystem } from './systems/growth';
@@ -46,10 +55,11 @@ export class Simulation {
       const roads = tickRoadAccess(this.state);
       const population = updatePopulation(this.state, true);
       updateDemand(this.state);
+      const power = updatePower(this.state);
       const updates = new Map<number, BuildingPatch>(
         roads.map((b) => [b.id, { ...b }]),
       );
-      for (const p of population)
+      for (const p of [...population, ...power])
         updates.set(p.id, { ...updates.get(p.id), ...p });
       const updated = [...updates.values()];
       if (updated.length)
@@ -60,6 +70,118 @@ export class Simulation {
           updated: structuredClone(updated),
         });
     });
+  }
+
+  private powerWorld(): PowerWorld {
+    const s = this.state;
+    return {
+      ...s,
+      heights: s.terrain.heights,
+      mode: s.settings.mode,
+      networks: s.networks.power,
+    };
+  }
+  private refreshPower(): void {
+    const updated = updatePower(this.state);
+    if (updated.length)
+      this.emit({
+        t: 'buildingsChanged',
+        added: [],
+        removed: [],
+        updated: structuredClone(updated),
+      });
+    this.emit({
+      t: 'stats',
+      stats: structuredClone(this.state.stats),
+      transient: true,
+    });
+  }
+  place(
+    defId: string,
+    pos: Vec2,
+    rotation: number,
+  ): Omit<Result, 't' | 'reqId'> {
+    const preview = previewPlant(this.powerWorld(), defId, pos, rotation),
+      d = plantDefinition(defId);
+    if (!preview.valid || !d || !d.footprintCells)
+      return { ok: false, reason: preview.reason ?? 'err.invalidCommand' };
+    const s = this.state,
+      id = s.nextId++;
+    const b: Building = {
+      id,
+      kind: 'utility',
+      defId,
+      level: 1,
+      pos: { ...pos },
+      rotation: rotation % (Math.PI * 2),
+      lotW: d.footprintCells[0],
+      lotD: d.footprintCells[1],
+      seed: (s.seed + id) >>> 0,
+      state: 'active',
+      stateTimer: 0,
+      flags: 0,
+      households: 0,
+      residents: 0,
+      jobs: 0,
+      workers: 0,
+      builtDay: s.clock.day,
+      paidCost: preview.cost,
+      problemTimers: Object.fromEntries(
+        Object.keys(PROBLEMS).map((p) => [p, 0]),
+      ) as Building['problemTimers'],
+    };
+    s.buildings = [...s.buildings, b];
+    s.money -= preview.cost;
+    s.stats.money = s.money;
+    const zones = rebuildZoneGrid({ ...s, heights: s.terrain.heights });
+    s.zoneBlocks = zones.blocks;
+    s.segments = zones.segments;
+    s.nextId = zones.nextId;
+    this.emit({
+      t: 'buildingsChanged',
+      added: [structuredClone(b)],
+      removed: [],
+      updated: [],
+    });
+    this.emit({
+      t: 'zonesChanged',
+      blocks: structuredClone(zones.blocks),
+      removed: zones.removed,
+    });
+    this.emit({
+      t: 'roadsChanged',
+      added: structuredClone(s.segments),
+      removed: [],
+      nodes: [],
+      removedNodes: [],
+    });
+    this.emit({ t: 'fundsChanged', money: s.money });
+    this.refreshPower();
+    return { ok: true, cost: preview.cost };
+  }
+  buildPowerLine(points: Vec2[]): Omit<Result, 't' | 'reqId'> {
+    const p = previewLine(this.powerWorld(), points);
+    if (!p.valid)
+      return { ok: false, reason: p.reason ?? 'err.invalidCommand' };
+    const s = this.state,
+      n = {
+        id: s.nextId++,
+        points: structuredClone(points),
+        builtDay: s.clock.day,
+        paidCost: p.cost,
+      };
+    s.networks.power = [...s.networks.power, n];
+    s.money -= p.cost;
+    s.stats.money = s.money;
+    this.emit({
+      t: 'networksChanged',
+      net: 'power',
+      added: [structuredClone(n)],
+      removed: [],
+    });
+    this.emit({ t: 'fundsChanged', money: s.money });
+    this.refreshPower();
+    return { ok: true, cost: p.cost };
   }
 
   /** Register an authoritative worker system to run at each completed day. */
@@ -240,6 +362,7 @@ export class Simulation {
         });
     this.emit({ t: 'fundsChanged', money: s.money });
     if (s.buildings.length || removedBuildings.size) this.refreshPopulation();
+    else this.refreshPower();
     return { ok: true, refund: result.refund, cost: result.cost };
   }
 
@@ -280,6 +403,14 @@ export class Simulation {
         added: [],
         removed: [],
         updated: structuredClone(updated),
+      });
+    const power = updatePower(this.state);
+    if (power.length)
+      this.emit({
+        t: 'buildingsChanged',
+        added: [],
+        removed: [],
+        updated: power,
       });
     this.emit({
       t: 'stats',

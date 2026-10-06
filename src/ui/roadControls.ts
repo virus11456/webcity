@@ -6,6 +6,7 @@ interface RoadActions {
   enter(): void;
   explore(): void;
   zone(): void;
+  power(): void;
   bulldoze(): void;
   demo(): void;
   confirm(): void;
@@ -30,6 +31,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     zonePending = false;
   let bulldozeActive = false,
     bulldozePending = false;
+  let powerActive = false,
+    powerPending = false;
   let latest: Readonly<RoadToolState> | undefined;
   const enter = button('road.enter', () => {
     construction = true;
@@ -49,9 +52,10 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   money.className = 'road-money';
   heading.append(title, money);
   const tabs = document.createElement('div');
-  tabs.className = 'road-row';
+  tabs.className = 'road-row road-tabs';
   const draw = button('road.draw', actions.enter),
     zones = button('zone.tab', actions.zone),
+    power = button('power.tab', actions.power),
     bulldoze = button('bulldoze.tab', actions.bulldoze),
     explore = button('road.explore', actions.explore),
     demo = button('road.demo', () => {
@@ -61,7 +65,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       enter.hidden = false;
       actions.demo();
     });
-  tabs.append(draw, zones, bulldoze, explore, demo);
+  tabs.append(draw, zones, bulldoze, power, explore, demo);
   const options = document.createElement('div');
   options.className = 'road-row road-options';
   const typeLabel = document.createElement('label');
@@ -104,12 +108,29 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   zoneHost.hidden = true;
   const bulldozeHost = document.createElement('div');
   bulldozeHost.hidden = true;
+  const powerHost = document.createElement('div');
+  powerHost.hidden = true;
   const growthHost = document.createElement('div');
-  body.append(heading, tabs, details, zoneHost, bulldozeHost, growthHost, note);
+  body.append(
+    heading,
+    tabs,
+    details,
+    zoneHost,
+    bulldozeHost,
+    powerHost,
+    growthHost,
+    note,
+  );
   panel.append(enter, body);
   parent.append(panel);
   const format = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 });
   return {
+    powerHost,
+    updatePower(active: boolean, pending: boolean) {
+      powerActive = active;
+      powerPending = pending;
+      if (latest) this.update(latest);
+    },
     zoneHost,
     bulldozeHost,
     growthHost,
@@ -125,22 +146,41 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     },
     update(state: Readonly<RoadToolState>) {
       latest = state;
-      details.hidden = zoneActive || bulldozeActive;
+      details.hidden = zoneActive || bulldozeActive || powerActive;
+      powerHost.hidden = !powerActive;
+      growthHost.hidden = powerActive;
+      power.setAttribute('aria-pressed', String(powerActive));
+      power.disabled =
+        !state.ready ||
+        state.pending ||
+        zonePending ||
+        bulldozePending ||
+        powerPending;
       bulldozeHost.hidden = !bulldozeActive;
       bulldoze.setAttribute('aria-pressed', String(bulldozeActive));
       bulldoze.disabled =
-        !state.ready || state.pending || zonePending || bulldozePending;
+        !state.ready ||
+        state.pending ||
+        zonePending ||
+        bulldozePending ||
+        powerPending;
       zoneHost.hidden = !zoneActive;
       title.textContent = t(
-        bulldozeActive
-          ? 'bulldoze.title'
-          : zoneActive
-            ? 'zone.title'
-            : 'road.title',
+        powerActive
+          ? 'power.title'
+          : bulldozeActive
+            ? 'bulldoze.title'
+            : zoneActive
+              ? 'zone.title'
+              : 'road.title',
       );
       zones.setAttribute('aria-pressed', String(zoneActive));
       zones.disabled =
-        !state.ready || state.pending || zonePending || bulldozePending;
+        !state.ready ||
+        state.pending ||
+        zonePending ||
+        bulldozePending ||
+        powerPending;
       panel.dataset.ready = String(state.ready);
       panel.dataset.phase = state.phase;
       panel.dataset.pending = String(state.pending);
@@ -153,12 +193,16 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       draw.setAttribute('aria-pressed', String(state.active));
       explore.setAttribute(
         'aria-pressed',
-        String(!state.active && !zoneActive && !bulldozeActive),
+        String(!state.active && !zoneActive && !bulldozeActive && !powerActive),
       );
       draw.disabled =
-        !state.ready || state.pending || zonePending || bulldozePending;
+        !state.ready ||
+        state.pending ||
+        zonePending ||
+        bulldozePending ||
+        powerPending;
       explore.disabled = demo.disabled =
-        state.pending || zonePending || bulldozePending;
+        state.pending || zonePending || bulldozePending || powerPending;
       options.hidden = !state.active;
       select.disabled = state.pending;
       angle.disabled = state.pending;

@@ -126,7 +126,13 @@ export interface CityStats {
   demand: Record<'R' | 'C' | 'I' | 'O', number>;
   income: number;
   expenses: number; // 上週
-  power: { produced: number; consumed: number };
+  power: {
+    produced: number;
+    consumed: number;
+    served?: number;
+    unpowered?: number;
+    groups?: number;
+  };
   water: { produced: number; consumed: number };
   sewage: { capacity: number; produced: number };
   happiness: number;

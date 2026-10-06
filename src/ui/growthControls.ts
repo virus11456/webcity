@@ -22,10 +22,14 @@ export function createGrowthControls(
   people.className = 'population-summary';
   const homes = document.createElement('span'),
     jobs = document.createElement('span'),
-    flow = document.createElement('span');
-  people.append(homes, jobs, flow);
+    flow = document.createElement('span'),
+    power = document.createElement('span');
+  people.append(homes, jobs, flow, power);
   const population = (stats: CityStats | undefined) => {
     const p = stats?.populationDetails;
+    const e = stats?.power;
+    power.textContent = `${t('power.summary')} ${(e?.produced ?? 0).toFixed(2)} / ${(e?.consumed ?? 0).toFixed(2)} / ${(e?.served ?? 0).toFixed(2)} · ${t('power.unpowered')} ${e?.unpowered ?? 0}`;
+    power.className = 'power-summary';
     people.dataset.population = String(stats?.population ?? 0);
     people.dataset.occupied = String(p?.occupiedHouseholds ?? 0);
     people.dataset.jobs = String(p?.jobs ?? 0);

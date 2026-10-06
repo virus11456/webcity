@@ -672,3 +672,33 @@ h1 {
     width: 300px;
   }
 }
+
+.power-controls .road-row {
+  flex-wrap: wrap;
+}
+.power-controls select {
+  max-width: 100%;
+  font-size: 12px;
+}
+.power-metrics,
+.power-hint {
+  font-size: 12px;
+}
+.power-hint {
+  margin: 6px 0;
+}
+.power-hint[data-invalid='true'] {
+  color: var(--color-negative);
+}
+.population-summary .power-summary {
+  white-space: normal;
+}
+@media (max-width: 720px), (max-height: 500px) and (orientation: landscape) {
+  .road-tabs {
+    gap: 4px;
+  }
+  .road-tabs button {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+}

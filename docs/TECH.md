@@ -484,3 +484,6 @@ M1-13：`Building.housing` 保留五戶量、四教育／年齡層、可工作�
 
 
 M1-14：`sim/systems/demand.ts` 在 `createState` 初始化及每日人口結算後計算 RCIO，寫入既有 `stats.demand`；無新協定或主執行緒寫入。`calculateDemand` 是可單獨測試的純公式，`updateDemand` 僅讀取 active 建築與 settings/taxRates/happiness。需求每日一次，即時人口刷新不重算需求；鏡像與每日歷史沿用原 stats 事件。詳見 `DEMAND.md`。
+
+
+M1-15：`place` 支援兩種開局電力設施，`buildNetwork` 支援 power；共用 `world/power.ts` 驗證。`stats.power` 增加 optional served／unpowered／groups，flags bit 1 為 HAS_POWER。供電 BFS 與空間索引在 Worker，建造及人口變化觸發更新；鏡像新增 `readPowerWorld`，電線事件推進 nextId。獨立 PowerRenderer 接收已確認事件，PlaceTool／NetworkTool 使用既有工具管理器、雙指取消與明確確認；不跨模組直接改世界。詳見 `POWER.md`。

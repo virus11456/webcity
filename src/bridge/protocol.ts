@@ -1,3 +1,4 @@
+import type { PowerReason } from '../world/power';
 import type { BulldozeReason, BulldozeTarget } from '../world/bulldoze';
 import type { ZoningReason } from '../world/zoning';
 import type { TerrainPatch } from '../world/roadBed';
@@ -54,6 +55,7 @@ export type CommandInput =
   | { t: 'inspect'; target: { kind: string; id: Id } };
 export type Command = CommandInput & { reqId: number };
 export type FailureReason =
+  | PowerReason
   | ConstructionReason
   | ZoningReason
   | BulldozeReason

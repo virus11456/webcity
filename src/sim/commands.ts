@@ -1,3 +1,4 @@
+import { finitePoint } from '../world/power';
 import { isBulldozeTargets } from '../world/bulldoze';
 import { isZonePayload } from '../world/zoning';
 import type { ZoneType } from '../world/types';
@@ -90,7 +91,43 @@ export class CommandDispatcher {
       fail('err.notReady');
       return;
     }
-    if (value.t === 'bulldoze') {
+    if (value.t === 'place') {
+      if (
+        !('defId' in value) ||
+        typeof value.defId !== 'string' ||
+        !('pos' in value) ||
+        !finitePoint(value.pos) ||
+        !('rotation' in value) ||
+        typeof value.rotation !== 'number' ||
+        !Number.isFinite(value.rotation)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.place(value.defId, value.pos, value.rotation),
+      });
+    } else if (value.t === 'buildNetwork') {
+      if (!('net' in value) || value.net !== 'power') {
+        fail('err.notImplemented');
+        return;
+      }
+      if (
+        !('points' in value) ||
+        !Array.isArray(value.points) ||
+        !value.points.every(finitePoint)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.buildPowerLine(value.points),
+      });
+    } else if (value.t === 'bulldoze') {
       const targets =
         'targets' in value
           ? value.targets

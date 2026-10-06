@@ -1,3 +1,7 @@
+import { PlaceTool } from './tools/placeTool';
+import { NetworkTool } from './tools/networkTool';
+import { PowerRenderer } from './render/power';
+import { createPowerControls } from './ui/powerControls';
 import { createGrowthControls } from './ui/growthControls';
 import { GROWTH_VIEW_DISTANCE } from './data/buildingRendering';
 import { BuildingRenderer } from './render/buildings/buildingRenderer';
@@ -56,6 +60,11 @@ const root = document.querySelector<HTMLDivElement>('#app');
 
 if (!root) throw new Error('Missing #app element');
 
+let placeTool: PlaceTool | undefined;
+let networkTool: NetworkTool | undefined;
+let powerRenderer: PowerRenderer | undefined;
+let powerControls: ReturnType<typeof createPowerControls> | undefined;
+let unsubscribePower: (() => void) | undefined;
 let bulldozeTool: BulldozeTool | undefined;
 let bulldozePreview: BulldozePreview | undefined;
 let bulldozeControls: ReturnType<typeof createBulldozeControls> | undefined;
@@ -129,6 +138,7 @@ if (canvas && status) {
       onAfterCamera: () => {
         picking?.update();
         buildings?.update(frameSeconds, city?.camera);
+        powerRenderer?.update(frameSeconds);
       },
       onContextState(lost) {
         status.hidden = !lost;
@@ -242,6 +252,41 @@ if (canvas && status) {
           roadControls?.updateBulldoze(state.active, state.pending);
         },
       );
+      powerRenderer = new PowerRenderer(city.scene, (x, z) =>
+        city!.terrain.heightAt(x, z),
+      );
+      powerRenderer.group.visible = false;
+      const powerSnapshot = sim.mirror.readSnapshot();
+      if (powerSnapshot)
+        powerRenderer.accept({ t: 'ready', reqId: 0, snapshot: powerSnapshot });
+      unsubscribePower = sim.onEvent((e) => powerRenderer!.accept(e));
+      const powerContext = {
+        sim,
+        pick(x: number, y: number) {
+          const h = picker.pick(
+            x,
+            y,
+            canvas.getBoundingClientRect(),
+            city!.camera,
+            city!.camera.far,
+          );
+          return h ? { x: h.world.x, z: h.world.z } : null;
+        },
+        preview: (p: Parameters<PowerRenderer['show']>[0]) =>
+          powerRenderer?.show(p),
+      };
+      const powerChanged = () => {
+        const p = placeTool?.readState(),
+          n = networkTool?.readState();
+        roadControls?.updatePower(
+          !!(p?.active || n?.active),
+          !!(p?.pending || n?.pending),
+        );
+        if (n?.active) powerControls?.update(n);
+        else if (p?.active) powerControls?.update(p);
+      };
+      placeTool = new PlaceTool(powerContext, powerChanged);
+      networkTool = new NetworkTool(powerContext, powerChanged);
       tools = new ToolManager((tool) => input?.setTool(tool));
       const mode = (construction: boolean) => {
         const first = construction && root.dataset.construction !== 'true';
@@ -250,6 +295,7 @@ if (canvas && status) {
         roadPreview!.group.visible = construction;
         zoneRenderer!.group.visible = construction;
         buildings!.group.visible = construction;
+        powerRenderer!.group.visible = construction;
         if (first)
           city!.cameraController.flyTo(
             ROAD_TOOL_RENDER.focus,
@@ -265,6 +311,11 @@ if (canvas && status) {
         zone() {
           mode(true);
           tools!.select(zoneTool!);
+          canvas.focus({ preventScroll: true });
+        },
+        power() {
+          mode(true);
+          tools!.select(placeTool!);
           canvas.focus({ preventScroll: true });
         },
         bulldoze() {
@@ -284,6 +335,24 @@ if (canvas && status) {
         cancel: () => roadTool!.onCancel(),
         type: (type) => roadTool!.setType(type),
         angle: (enabled) => roadTool!.setAngleSnap(enabled),
+      });
+      powerControls = createPowerControls(roadControls.powerHost, {
+        plant(id) {
+          tools!.select(placeTool!);
+          placeTool!.setDefinition(id);
+        },
+        line() {
+          tools!.select(networkTool!);
+        },
+        rotate: () => placeTool!.rotate(),
+        confirm: () =>
+          networkTool!.readState().active
+            ? networkTool!.onConfirm()
+            : placeTool!.onConfirm(),
+        cancel: () =>
+          networkTool!.readState().active
+            ? networkTool!.onCancel()
+            : placeTool!.onCancel(),
       });
       growthControls = createGrowthControls(
         roadControls.growthHost,
@@ -355,6 +424,11 @@ if (import.meta.hot)
     delete window.__webcityZoneStats;
     delete window.__webcityPick;
     tools?.dispose();
+    unsubscribePower?.();
+    placeTool?.dispose();
+    networkTool?.dispose();
+    powerControls?.dispose();
+    powerRenderer?.dispose();
     bulldozeTool?.dispose();
     bulldozeControls?.dispose();
     bulldozePreview?.dispose();

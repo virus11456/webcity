@@ -1,3 +1,4 @@
+import type { PowerWorld } from '../world/power';
 import type { CityStats } from '../world/types';
 import type { BulldozeWorld } from '../world/bulldoze';
 import type { RoadConstructionWorld } from '../world/roadConstruction';
@@ -52,6 +53,17 @@ export class WorldMirror {
         unlocked: s.unlocked,
       })
     );
+  }
+
+  readPowerWorld(): PowerWorld | undefined {
+    const road = this.readRoadWorld();
+    return road && this.state
+      ? {
+          ...road,
+          seed: this.state.seed,
+          networks: structuredClone(this.state.networks.power),
+        }
+      : undefined;
   }
 
   /** Cache the demolition view between world events, without fields or stats history. */
@@ -147,6 +159,8 @@ export class WorldMirror {
         break;
       }
       case 'networksChanged':
+        for (const n of event.added)
+          state.nextId = Math.max(state.nextId, n.id + 1);
         state.networks[event.net] = upsert(
           state.networks[event.net],
           structuredClone(event.added),
