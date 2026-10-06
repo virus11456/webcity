@@ -104,6 +104,30 @@ export class TerrainRenderer {
     this.geometries.push(boundary);
     this.group.add(new LineSegments(boundary, this.boundaryMaterial));
   }
+  /** Refresh only chunks whose authoritative heights changed, including shared border vertices. */
+  sync(): void {
+    for (const child of this.group.children) {
+      if (!(child instanceof Mesh)) continue;
+      const geometry = child.geometry as BufferGeometry,
+        position = geometry.getAttribute('position');
+      let changed = false;
+      for (let i = 0; i < position.count; i++) {
+        const h = this.terrain.heightAt(
+          position.getX(i) + child.position.x,
+          position.getZ(i) + child.position.z,
+        );
+        if (position.getY(i) !== Math.fround(h)) {
+          position.setY(i, h);
+          changed = true;
+        }
+      }
+      if (changed) {
+        position.needsUpdate = true;
+        geometry.computeVertexNormals();
+        geometry.computeBoundingSphere();
+      }
+    }
+  }
   /** Compose terrain shading after the optional CSM hook, preserving Three lighting and fog. */
   installShader(lightingHook?: Material['onBeforeCompile']): void {
     this.material.onBeforeCompile = (shader, renderer) => {

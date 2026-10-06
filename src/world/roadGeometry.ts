@@ -10,6 +10,7 @@ import { ROAD_GRAPH_PRECISION as EPS } from '../data/roadGraph';
 import { ROAD_GEOMETRY_PRECISION } from '../data/roadGeometry';
 import { ROADS, ROAD_RULES, type RoadTypeId } from '../data/roads';
 import { closestPointOnSegment, distance, lerp } from '../core/math';
+import { roadHeightAt } from './roadProfile';
 import { meshHeightAt } from './heightField';
 import { RoadGraph, RoadGraphError, type RoadGraphSnapshot } from './roadGraph';
 import type { Building, Vec2 } from './types';
@@ -89,7 +90,10 @@ export function snapRoadPoint(
     // This MVP only connects ground roads; bridge picking belongs to M2-04.
     if (
       d < nearest &&
-      Math.abs(node.height - height(world, node.pos)) <= EPS.heightM
+      (world.segments.some(
+        (s) => !s.elevated && (s.start === node.id || s.end === node.id),
+      ) ||
+        Math.abs(node.height - height(world, node.pos)) <= EPS.heightM)
     ) {
       nearest = d;
       best = {
@@ -391,8 +395,6 @@ export function previewStraightRoad(
     end = snapRoadPoint(pos, world, request.snap?.connections ?? true);
   }
   // Ground roads follow the sampled surface, including the interior of existing roads.
-  if (start.kind === 'segment') start.height = height(world, start.pos);
-  if (end.kind === 'segment') end.height = height(world, end.pos);
   const length = distance(start.pos, end.pos);
   if (![start.height, end.height, length].every(Number.isFinite))
     return reject('err.invalidCommand');
@@ -457,7 +459,8 @@ export function previewStraightRoad(
         type: request.type,
         builtDay: 0,
       },
-      (point) => height(world, point),
+      (point) =>
+        roadHeightAt(world.nodes, world.segments, world.heights, point),
     );
   } catch (error) {
     if (!(error instanceof RoadGraphError)) throw error;

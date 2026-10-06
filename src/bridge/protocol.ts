@@ -1,3 +1,4 @@
+import type { TerrainPatch } from '../world/roadBed';
 import type { ConstructionReason } from '../world/roadConstruction';
 import type { BuildingDefId } from '../data/buildings';
 import type { SimSpeed } from '../data/config';
@@ -69,6 +70,7 @@ export type SimEvent =
   | { t: 'fundsChanged'; money: number }
   | {
       t: 'roadsChanged';
+      terrain?: TerrainPatch & { revision: number };
       added: RoadSegment[];
       removed: Id[];
       nodes: RoadNode[];

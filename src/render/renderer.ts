@@ -7,6 +7,7 @@ import {
   SRGBColorSpace,
   Vector3,
   WebGLRenderer,
+  type Material,
 } from 'three';
 import { MAP_SIZE, type QualityLevel } from '../data/config';
 import { Terrain } from '../world/terrain';
@@ -55,6 +56,7 @@ export class CityRenderer {
   readonly cameraController: RtsCamera;
   private lastFrame: number | null = null;
   private readonly focus = new Vector3();
+  private readonly extraMaterials = new Set<Material>();
   readonly terrain = new Terrain(MAP_PRESETS[0].seed);
   private readonly land = new TerrainRenderer(this.terrain);
   private readonly town = new CityPreview(this.terrain);
@@ -149,6 +151,24 @@ export class CityRenderer {
     this.town.group.visible = !enabled;
     this.canvas.dataset.construction = String(enabled);
   }
+  /** Copy worker-owned heights into rendering/picking terrain and refresh changed terrain chunks. */
+  syncTerrain(heights: Float32Array): void {
+    let changed = false;
+    for (let i = 0; i < heights.length; i++)
+      if (this.terrain.heights[i] !== heights[i]) {
+        this.terrain.heights[i] = heights[i]!;
+        changed = true;
+      }
+    if (changed) {
+      this.terrain.revision++;
+      this.land.sync();
+    }
+  }
+  /** Register late-created world materials with current and future shadow quality tiers. */
+  registerMaterial(material: Material): void {
+    this.extraMaterials.add(material);
+    this.lighting.csm?.setupMaterial(material);
+  }
   private createLighting(level: QualityLevel): Lighting {
     this.renderer.shadowMap.enabled = level !== 'low';
     this.stats.shadows =
@@ -159,6 +179,7 @@ export class CityRenderer {
       this.town.material,
       this.town.glass,
       this.water.material,
+      ...this.extraMaterials,
     ]);
     this.land.installShader(
       lighting.csm ? this.land.material.onBeforeCompile : undefined,

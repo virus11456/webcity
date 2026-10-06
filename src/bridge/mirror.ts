@@ -70,6 +70,12 @@ export class WorldMirror {
         state.money = state.stats.money = event.money;
         break;
       case 'roadsChanged':
+        if (event.terrain) {
+          event.terrain.indices.forEach((index, i) => {
+            state.terrain.heights[index] = event.terrain!.heights[i]!;
+          });
+          state.terrain.revision = event.terrain.revision;
+        }
         for (const item of [...event.added, ...event.nodes])
           state.nextId = Math.max(state.nextId, item.id + 1);
         state.segments = upsert(

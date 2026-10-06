@@ -1,4 +1,4 @@
-/** Temporary construction ribbons; detailed junction/curb meshes belong to M1-06. */
+/** Construction preview dimensions; committed meshes use roadMesh.ts. */
 export const ROAD_TOOL_RENDER = {
   sampleM: 4,
   surfaceLiftM: 0.25,

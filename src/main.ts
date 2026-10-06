@@ -24,6 +24,11 @@ import './ui/styles/base.css';
 declare global {
   interface Window {
     __webcityCamera?: RtsCamera;
+    __webcityRoadStats?: () => {
+      batches: number;
+      pending: boolean;
+      generation: number;
+    };
     __webcityPick?: (x: number, y: number) => TerrainPick | null;
   }
 }
@@ -86,7 +91,10 @@ if (canvas && status) {
   try {
     city = new CityRenderer(canvas, {
       onStats: debug?.update,
-      onBeforeFrame: (seconds) => input?.update(seconds),
+      onBeforeFrame: (seconds) => {
+        input?.update(seconds);
+        roadPreview?.roads.update();
+      },
       onAfterCamera: () => picking?.update(),
       onContextState(lost) {
         status.hidden = !lost;
@@ -124,6 +132,7 @@ if (canvas && status) {
     if (sim) {
       const picker = new TerrainPicker(city.terrain);
       roadPreview = new RoadPreviewRenderer(city.scene);
+      city.registerMaterial(roadPreview.roads.material);
       roadTool = new RoadTool(
         {
           sim,
@@ -138,7 +147,10 @@ if (canvas && status) {
             return hit ? { x: hit.world.x, z: hit.world.z } : null;
           },
           preview: (result, anchor) => roadPreview?.show(result, anchor),
-          worldChanged: (world) => roadPreview?.sync(world),
+          worldChanged: (world) => {
+            city?.syncTerrain(world.heights);
+            roadPreview?.sync(world);
+          },
         },
         (state) => roadControls?.update(state),
       );
@@ -175,7 +187,10 @@ if (canvas && status) {
       });
       roadControls.update(roadTool.readState());
     }
-    if (debug) window.__webcityCamera = city.cameraController;
+    if (debug) {
+      window.__webcityCamera = city.cameraController;
+      window.__webcityRoadStats = () => roadPreview!.roads.readStats();
+    }
   } catch {
     status.hidden = false;
     status.textContent = t('render.unavailable');
@@ -184,6 +199,7 @@ if (canvas && status) {
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
     delete window.__webcityCamera;
+    delete window.__webcityRoadStats;
     delete window.__webcityPick;
     tools?.dispose();
     roadTool?.dispose();

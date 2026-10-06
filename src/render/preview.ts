@@ -8,9 +8,9 @@ import {
   DoubleSide,
   type Scene,
 } from 'three';
+import { RoadRenderer } from './roads/roadRenderer';
 import { ROAD_TOOL_RENDER as CONFIG } from '../data/roadTool';
-import { ROAD_PALETTE, UI_PALETTE } from '../data/palette';
-import { ROADS } from '../data/roads';
+import { UI_PALETTE } from '../data/palette';
 import { distance, lerp } from '../core/math';
 import { meshHeightAt } from '../world/heightField';
 import type {
@@ -52,14 +52,10 @@ function ribbon(
   geometry.computeBoundingSphere();
   return geometry;
 }
-/** Ground-following preview and committed-road ribbons, replaced by detailed road meshes in M1-06. */
+/** Ground-following tool overlay and batched committed road meshes. */
 export class RoadPreviewRenderer {
   readonly group = new Group();
-  private readonly roads = new Map<number, Mesh>();
-  private readonly asphalt = new MeshBasicMaterial({
-    color: ROAD_PALETTE.asphalt,
-    side: DoubleSide,
-  });
+  readonly roads = new RoadRenderer();
   private readonly ghostMaterial = new MeshBasicMaterial({
     color: UI_PALETTE.accent,
     transparent: true,
@@ -79,7 +75,7 @@ export class RoadPreviewRenderer {
   );
   private world: RoadConstructionWorld | undefined;
   constructor(private readonly scene: Scene) {
-    this.group.add(this.ghost, this.marker);
+    this.group.add(this.roads.group, this.ghost, this.marker);
     this.marker.rotation.x = -Math.PI / 2;
     this.ghost.visible = this.marker.visible = false;
     this.group.visible = false;
@@ -88,30 +84,9 @@ export class RoadPreviewRenderer {
   /** Synchronize only changed road objects, outside the render loop. */
   sync(world: RoadConstructionWorld): void {
     this.world = world;
-    const ids = new Set(world.segments.map((segment) => segment.id));
-    for (const [id, mesh] of this.roads)
-      if (!ids.has(id)) {
-        mesh.geometry.dispose();
-        this.group.remove(mesh);
-        this.roads.delete(id);
-      }
-    const nodes = new Map(world.nodes.map((node) => [node.id, node]));
-    for (const segment of world.segments)
-      if (!this.roads.has(segment.id)) {
-        const mesh = new Mesh(
-          ribbon(
-            nodes.get(segment.start)!.pos,
-            nodes.get(segment.end)!.pos,
-            ROADS[segment.type].widthM,
-            world.heights,
-            CONFIG.surfaceLiftM,
-          ),
-          this.asphalt,
-        );
-        this.roads.set(segment.id, mesh);
-        this.group.add(mesh);
-      }
+    this.roads.sync(world);
   }
+
   /** Show one tentative road and its origin; invalid geometry is red. */
   show(result: ConstructionPreview | null, anchor: Vec2 | null): void {
     const heights = this.world?.heights;
@@ -139,10 +114,9 @@ export class RoadPreviewRenderer {
   }
   /** Release CPU/GPU resources owned by the construction overlay. */
   dispose(): void {
-    for (const mesh of this.roads.values()) mesh.geometry.dispose();
+    this.roads.dispose();
     this.ghost.geometry.dispose();
     this.marker.geometry.dispose();
-    this.asphalt.dispose();
     this.ghostMaterial.dispose();
     this.markerMaterial.dispose();
     this.scene.remove(this.group);

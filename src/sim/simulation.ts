@@ -1,4 +1,5 @@
-import { meshHeightAt } from '../world/heightField';
+import { roadBedPatch } from '../world/roadBed';
+import { roadHeightAt } from '../world/roadProfile';
 import { GAME_MODES } from '../data/config';
 import type { RoadTypeId } from '../data/roads';
 import { RoadGraph } from '../world/roadGraph';
@@ -71,7 +72,7 @@ export class Simulation {
         endHeight: p.end.height,
         builtDay: s.clock.day,
       },
-      (point) => meshHeightAt(s.terrain.heights, point.x, point.z),
+      (point) => roadHeightAt(s.nodes, s.segments, s.terrain.heights, point),
     );
     const removed = new Set(change.removed),
       removedNodes = new Set(change.removedNodes);
@@ -89,7 +90,16 @@ export class Simulation {
     const cost = GAME_MODES[s.settings.mode].unlimitedMoney ? 0 : p.cost;
     s.money -= cost;
     s.stats.money = s.money;
-    this.emit({ t: 'roadsChanged', ...structuredClone(change) });
+    const terrain = roadBedPatch(s.terrain.heights, s.nodes, s.segments);
+    terrain.indices.forEach((index, i) => {
+      s.terrain.heights[index] = terrain.heights[i]!;
+    });
+    if (terrain.indices.length) s.terrain.revision++;
+    this.emit({
+      t: 'roadsChanged',
+      ...structuredClone(change),
+      terrain: { ...terrain, revision: s.terrain.revision },
+    });
     this.emit({ t: 'fundsChanged', money: s.money });
     return { ok: true, cost };
   }

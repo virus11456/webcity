@@ -108,12 +108,14 @@ describe('authoritative road construction', () => {
       junction = s.nodes.find((n) => n.segments.length === 4)!;
     expect(junction).toBeDefined();
     expect(s.segments).toHaveLength(4);
-    expect(junction.height).toBeCloseTo(
+    expect(junction.height).toBeGreaterThan(
       meshHeightAt(s.terrain.heights, -120, -80),
     );
+    expect(s.terrain.revision).toBeGreaterThan(0);
+    expect(mirror.readSnapshot()!.terrain.heights).toEqual(s.terrain.heights);
     expect(mirror.readRoadWorld()!.nextId).toBe(s.nextId);
     const result = sim.buildRoad('road_small', draft(p(-40, -80), p(40, -80)));
-    expect(result.ok).toBe(true);
+    expect(result).toMatchObject({ ok: true });
     expect(
       new Set(
         [...sim.snapshot().nodes, ...sim.snapshot().segments].map((x) => x.id),

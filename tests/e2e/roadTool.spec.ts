@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-async function ready(page: Page) {
-  await page.goto('./?quality=low&debug=1');
+async function ready(page: Page, quality = 'low') {
+  await page.goto(`./?quality=${quality}&debug=1`);
   await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'true');
   await expect(page.locator('.road-controls')).toHaveAttribute(
     'data-ready',
@@ -84,6 +84,9 @@ test('builds, charges, continues and crosses roads through native pointer contro
     'data-speed',
     '0',
   );
+  await page.waitForFunction(
+    () => window.__webcityRoadStats?.().pending === false,
+  );
   await page.screenshot({
     path: info.outputPath('road-built.png'),
     scale: 'css',
@@ -94,6 +97,15 @@ test('builds, charges, continues and crosses roads through native pointer contro
     expect(box.width).toBeGreaterThanOrEqual(44);
     expect(box.height).toBeGreaterThanOrEqual(44);
   }
+  await page.waitForFunction(
+    () => window.__webcityRoadStats?.().pending === false,
+  );
+  expect(
+    await page.evaluate(() => window.__webcityRoadStats!().batches),
+  ).toBeGreaterThan(0);
+  expect(
+    await page.evaluate(() => window.__webcityRoadStats!().batches),
+  ).toBeLessThan(30);
   const money = await controls.getAttribute('data-money');
   await page.getByRole('button', { name: '探索城市', exact: true }).click();
   await expect(controls).toHaveAttribute('data-active', 'false');
@@ -200,4 +212,46 @@ test('rejects unowned land, cancels drafts and keeps touch camera gestures separ
   }
   await page.getByRole('button', { name: '✕ 取消路段', exact: true }).click();
   await expect(controls).toHaveAttribute('data-phase', 'start');
+});
+
+test('keeps detailed roads after restoring the WebGL context with shadows enabled', async ({
+  page,
+}, info) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text());
+  });
+  const touch = Boolean(info.project.use.hasTouch);
+  await ready(page, touch ? 'medium' : 'high');
+  await tap(page, -240, -80, touch);
+  await tap(page, -80, -80, touch);
+  if (touch)
+    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+  await expect(page.locator('.road-controls')).toHaveAttribute(
+    'data-segments',
+    '1',
+  );
+  await page.waitForFunction(
+    () => window.__webcityRoadStats?.().pending === false,
+  );
+  expect(
+    await page.evaluate(() => window.__webcityRoadStats!().batches),
+  ).toBeGreaterThan(0);
+  await page.evaluate(() => {
+    const extension = document
+      .querySelector('canvas')!
+      .getContext('webgl2')!
+      .getExtension('WEBGL_lose_context')!;
+    extension.loseContext();
+    setTimeout(() => extension.restoreContext(), 500);
+  });
+  await expect(page.locator('.render-status')).toBeVisible();
+  await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'true');
+  await expect(page.locator('.render-status')).toBeHidden();
+  await page.screenshot({
+    path: info.outputPath('road-shadows.png'),
+    scale: 'css',
+  });
+  expect(errors).toEqual([]);
 });
