@@ -29,7 +29,7 @@ export function districtFixture(count: number): Building[] {
               x: ((i % columns) - columns / 2) * R.demoSpacing,
               z: (Math.floor(i / columns) - columns / 2) * R.demoSpacing,
             },
-      rotation: 0,
+      rotation: Math.PI,
       state: 'active',
       stateTimer: 0,
       flags: 0,

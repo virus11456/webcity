@@ -615,3 +615,19 @@ h1 {
     font-size: 18px;
   }
 }
+
+.growth-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 4px;
+}
+.growth-summary {
+  flex: 1;
+  font-size: 12px;
+}
+.growth-controls small {
+  flex-basis: 100%;
+  font-size: 12px;
+}

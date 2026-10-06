@@ -56,15 +56,8 @@ export class ZoneTool implements Tool {
     private readonly changed: (s: Readonly<ZoneToolState>) => void,
   ) {
     this.unsubscribe = ctx.sim.onEvent((e) => {
-      if (
-        [
-          'ready',
-          'roadsChanged',
-          'zonesChanged',
-          'buildingsChanged',
-          'milestone',
-        ].includes(e.t)
-      )
+      if (e.t === 'zonesChanged' && e.occupancyOnly) return;
+      if (['ready', 'roadsChanged', 'zonesChanged', 'milestone'].includes(e.t))
         this.refresh();
       else if (e.t === 'error') {
         this.failed = true;

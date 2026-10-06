@@ -232,7 +232,9 @@ export interface Building {
   lotW: number; lotD: number;   // 占地格數
   seed: number;                 // 外觀用
   state: 'construction' | 'active' | 'abandoned' | 'burned';
-  stateTimer: number;
+  stateTimer: number; // construction 時為已施工遊戲天數
+  constructionStartedTick?: number; // 開工的絕對 tick
+  rezoneAtTick?: number; // 改分區後自動拆除的絕對 tick
   flags: number;                // 位元旗標：HAS_POWER | HAS_WATER | HAS_SEWAGE | HAS_GARBAGE_SERVICE | ON_FIRE …
   problemTimers: Record<ProblemType, number>;
   households: number; residents: number;   // 住宅
@@ -295,7 +297,7 @@ export type SimEvent =
   | { t: 'ready'; snapshot: WorldSnapshot }               // 初始化或讀檔後的完整狀態
   | { t: 'result'; reqId: number; ok: boolean; reason?: string; cost?: number; refund?: number }
   | { t: 'roadsChanged'; added: RoadSegment[]; removed: Id[]; nodes: RoadNode[]; removedNodes: Id[] }
-  | { t: 'zonesChanged'; blocks: ZoneBlock[]; removed: Id[] }
+  | { t: 'zonesChanged'; blocks: ZoneBlock[]; removed: Id[]; occupancyOnly?: boolean }
   | { t: 'buildingsChanged'; added: Building[]; updated: BuildingPatch[]; removed: Id[] }
   | { t: 'networksChanged'; ... }
   | { t: 'stats'; stats: CityStats }                     // 每遊戲天一次
@@ -475,3 +477,5 @@ M1-09：原子拆除、實付退款、路口／分區清理及失去道路的建
 M1-10：`main.ts` 延遲載入城市 `game.ts` 或 `?gallery=1` 工坊 `gallery.ts`。六分區原創幾何、共用 Canvas Atlas、施工視覺介面與單 canvas 多視圖管理見 `BUILDING_GENERATOR.md`；城市建築 InstancedMesh 管理仍屬 M1-11。
 
 M1-11：`BuildingRenderer` 已接入城市 `ready`／`buildingsChanged`，支援內容雜湊、可擴容 InstancedMesh、受限近景細節、施工／荒廢／拆除。施工 `stateTimer` 暫約定為已施工遊戲天數，等 M1-12 提供。展示與效能驗證、記憶體策略及 LOD 取捨見 `BUILDING_RENDERER.md`。
+
+M1-12：分區成長、施工與重分區三天拆除已接入 Worker。`zonesChanged.occupancyOnly` 僅更新占用，格碼／拓撲不變；工具不因施工進度取消筆畫或重建道路。世界建築以正面中心 `pos`、旋轉後 +local Z 為深度；生成模型深度為 -Z，渲染額外旋轉 π，讓碰撞、占地與外觀一致。詳細演算法、初始需求及界線見 `GROWTH.md`。

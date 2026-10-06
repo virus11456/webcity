@@ -58,10 +58,7 @@ export class ZoneSelection {
     return result;
   }
   private allows(cell: Cell, zone: ZoneType | null): boolean {
-    return (
-      zoneRoadAllows(this.roads.get(cell.block.segment), zone) &&
-      cell.block.buildingAt[cell.ref[1]] === -1
-    );
+    return zoneRoadAllows(this.roads.get(cell.block.segment), zone);
   }
   /** Return the oriented cell under a point, not just the closest grid center. */
   hit(p: Vec2): Cell | undefined {
@@ -80,7 +77,7 @@ export class ZoneSelection {
       );
     });
   }
-  /** Four-neighbor flood fill never crosses invalid, occupied or differently zoned cells. */
+  /** Four-neighbor flood fill never crosses invalid or differently zoned cells. */
   fill(p: Vec2, zone: ZoneType | null): ZoneCell[] {
     const start = this.hit(p);
     if (!start || !this.allows(start, zone)) return [];

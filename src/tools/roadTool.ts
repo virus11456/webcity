@@ -1,3 +1,4 @@
+import { buildingsChangeFootprints } from '../bridge/buildingChanges';
 import type { FailureReason } from '../bridge/protocol';
 import { ROADS, type RoadTypeId } from '../data/roads';
 import { previewStraightRoad, snapRoadPoint } from '../world/roadGeometry';
@@ -51,11 +52,15 @@ export class RoadTool implements Tool {
     private readonly changed: (state: Readonly<RoadToolState>) => void,
   ) {
     this.unsubscribe = ctx.sim.onEvent((event) => {
+      if (event.t === 'buildingsChanged') {
+        if (buildingsChangeFootprints(event)) this.refreshWorld(false);
+        return;
+      }
+      if (event.t === 'zonesChanged' && event.occupancyOnly) return;
       if (
         event.t === 'ready' ||
         event.t === 'roadsChanged' ||
         event.t === 'zonesChanged' ||
-        event.t === 'buildingsChanged' ||
         event.t === 'milestone'
       )
         this.refreshWorld();
@@ -80,14 +85,14 @@ export class RoadTool implements Tool {
   readState(): Readonly<RoadToolState> {
     return { ...this.state };
   }
-  private refreshWorld(): void {
+  private refreshWorld(render = true): void {
     this.world = this.ctx.sim.mirror.readRoadWorld();
     if (!this.world) return;
     this.state.ready = true;
     this.state.money = this.world.money;
     this.state.segments = this.world.segments.length;
     this.state.unlocked = [...this.world.unlocked];
-    this.ctx.worldChanged(this.world);
+    if (render) this.ctx.worldChanged(this.world);
     this.recalculate();
   }
   private publish(): void {

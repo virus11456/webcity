@@ -131,9 +131,6 @@ export function paintZones(
     if (!zoneCellOwned(b, index, world.ownedTiles)) return fail('err.zoneLand');
     if (!zoneRoadAllows(roads.get(b.segment), zone))
       return fail('err.zoneRoad');
-    // Growth / timed demolition is introduced in M1-12; do not corrupt occupied lots meanwhile.
-    if (b.buildingAt[index] !== -1 && b.cells[index] !== code)
-      return fail('err.zoneOccupied');
   }
   const changed = new Map<Id, ZoneBlock>();
   for (const [id, index] of cells) {

@@ -1,3 +1,4 @@
+import { buildingsChangeFootprints } from '../bridge/buildingChanges';
 import type { SimClient } from '../bridge/simClient';
 import type { FailureReason } from '../bridge/protocol';
 import { BULLDOZE } from '../data/bulldoze';
@@ -64,14 +65,15 @@ export class BulldozeTool implements Tool {
     private readonly changed: (s: Readonly<BulldozeToolState>) => void,
   ) {
     this.unsubscribe = ctx.sim.onEvent((e) => {
+      if (e.t === 'buildingsChanged') {
+        if (buildingsChangeFootprints(e)) this.refresh(true);
+        return;
+      }
+      if (e.t === 'zonesChanged' && e.occupancyOnly) return;
       if (
-        [
-          'ready',
-          'roadsChanged',
-          'zonesChanged',
-          'buildingsChanged',
-          'networksChanged',
-        ].includes(e.t)
+        ['ready', 'roadsChanged', 'zonesChanged', 'networksChanged'].includes(
+          e.t,
+        )
       )
         this.refresh();
       else if (
@@ -94,13 +96,14 @@ export class BulldozeTool implements Tool {
   readState(): Readonly<BulldozeToolState> {
     return { ...this.state };
   }
-  private refresh(): void {
+  private refresh(preserveGesture = false): void {
     if (this.failed) return;
     this.world = this.ctx.sim.mirror.readBulldozeWorld();
     if (!this.world) return;
     this.selection = new BulldozeSelection(this.world);
     this.state.ready = true;
-    this.onCancel();
+    if (!preserveGesture) this.onCancel();
+    else this.publish();
   }
   private publish(): void {
     if (this.disposed) return;

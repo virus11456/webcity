@@ -1,3 +1,4 @@
+import { INITIAL_DEMAND } from '../../src/data/zones';
 import { describe, expect, it } from 'vitest';
 import { dateForDay } from '../../src/world/calendar';
 import { TimeSystem } from '../../src/sim/systems/time';
@@ -117,8 +118,8 @@ describe('daily and weekly boundaries', () => {
     if (events[6]!.t === 'stats') events[6]!.stats.demand.R = 100;
     snapshot.statsHistory[0]!.power.produced = 500;
     sim.tick();
-    expect(sim.snapshot().stats.demand.R).toBe(0);
-    expect(sim.snapshot().statsHistory[6]!.demand.R).toBe(0);
+    expect(sim.snapshot().stats.demand.R).toBe(INITIAL_DEMAND.R);
+    expect(sim.snapshot().statsHistory[6]!.demand.R).toBe(INITIAL_DEMAND.R);
     expect(sim.snapshot().statsHistory[0]!.power.produced).toBe(0);
   });
   it('runs 100 deterministic days with exactly 100 daily and 14 weekly hooks', () => {

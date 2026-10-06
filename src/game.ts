@@ -1,3 +1,5 @@
+import { createGrowthControls } from './ui/growthControls';
+import { GROWTH_VIEW_DISTANCE } from './data/buildingRendering';
 import { BuildingRenderer } from './render/buildings/buildingRenderer';
 import { BulldozeTool } from './tools/bulldozeTool';
 import { BulldozePreview } from './render/bulldozePreview';
@@ -28,6 +30,7 @@ import { App } from './ui/App';
 
 declare global {
   interface Window {
+    __webcityBuildings?: () => ReturnType<SimClient['mirror']['readBuildings']>;
     __webcityBuildingStats?: () => ReturnType<BuildingRenderer['readStats']>;
     __webcityCamera?: RtsCamera;
     __webcityZoneStats?: () => {
@@ -59,6 +62,7 @@ let zoneTool: ZoneTool | undefined;
 let zoneRenderer: ZoneRenderer | undefined;
 let zoneControls: ReturnType<typeof createZoneControls> | undefined;
 let roadTool: RoadTool | undefined;
+let growthControls: ReturnType<typeof createGrowthControls> | undefined;
 let roadControls: ReturnType<typeof createRoadControls> | undefined;
 let roadPreview: RoadPreviewRenderer | undefined;
 let tools: ToolManager | undefined;
@@ -280,6 +284,16 @@ if (canvas && status) {
         type: (type) => roadTool!.setType(type),
         angle: (enabled) => roadTool!.setAngleSnap(enabled),
       });
+      growthControls = createGrowthControls(
+        roadControls.growthHost,
+        sim,
+        (b) => {
+          tools!.select(null);
+          buildings!.focus(b.id);
+          city!.cameraController.flyTo(b.pos, GROWTH_VIEW_DISTANCE);
+          canvas.focus({ preventScroll: true });
+        },
+      );
       roadControls.update(roadTool.readState());
       zoneControls = createZoneControls(roadControls.zoneHost, {
         zone: (zone) => zoneTool!.setZone(zone),
@@ -319,6 +333,7 @@ if (canvas && status) {
           ...zoneRenderer!.readStats(),
         };
       };
+      window.__webcityBuildings = () => sim!.mirror.readBuildings();
       window.__webcityBuildingStats = () => buildings!.readStats();
       window.__webcityRoadStats = () => roadPreview!.roads.readStats();
     }
@@ -330,6 +345,7 @@ if (canvas && status) {
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
     delete window.__webcityBuildingStats;
+    delete window.__webcityBuildings;
     delete window.__webcityCamera;
     delete window.__webcityRoadStats;
     delete window.__webcityZoneStats;
@@ -343,6 +359,7 @@ if (import.meta.hot)
     zoneRenderer?.dispose();
     roadTool?.dispose();
     roadControls?.dispose();
+    growthControls?.dispose();
     roadPreview?.dispose();
     picking?.dispose();
     pickingDebug?.dispose();

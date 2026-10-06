@@ -252,3 +252,25 @@ it('returns a defensive building-only mirror and renderer resets on ready', () =
   expect(s.renderer.readStats().buildings).toBe(0);
   s.dispose();
 });
+
+it('prioritizes the inspected construction inside the four-model detail budget', () => {
+  const s = setup(),
+    fixture = districtFixture(1);
+  const buildings = Array.from({ length: 8 }, (_, i) => ({
+    ...fixture[0]!,
+    id: 100 + i,
+    pos: { x: i * 8, z: 100 },
+    rotation: 0,
+    state: 'construction' as const,
+    stateTimer: 1.5,
+  }));
+  buildings[7]!.pos = { x: 0, z: -100 };
+  s.renderer.reset(buildings);
+  s.settle(180);
+  expect(s.renderer.inspect(107)!.detail).toBe(false);
+  s.renderer.focus(107);
+  s.settle(180);
+  expect(s.renderer.inspect(107)!.detail).toBe(true);
+  expect(s.renderer.readStats().detail).toBeLessThanOrEqual(4);
+  s.dispose();
+});

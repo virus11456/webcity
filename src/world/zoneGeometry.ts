@@ -47,7 +47,9 @@ export function zonePolygonsOverlap(a: Polygon, b: Polygon): boolean {
   return area(clip(a, b)) > C.areaEpsilonM2;
 }
 /** The building origin is front-centre, matching TECH and the road collision convention. */
-export function zoneBuildingFootprint(b: Building): Vec2[] {
+export function zoneBuildingFootprint(
+  b: Pick<Building, 'pos' | 'rotation' | 'lotW' | 'lotD'>,
+): Vec2[] {
   const ux = Math.cos(b.rotation),
     uz = -Math.sin(b.rotation),
     nx = -uz,
@@ -62,7 +64,12 @@ export function zoneBuildingFootprint(b: Building): Vec2[] {
   ];
 }
 /** Reject map overflow, water slivers and steep triangle planes anywhere under the cell. */
-export function zoneTerrainValid(p: Polygon, heights: Float32Array): boolean {
+export function zoneTerrainValid(
+  p: Polygon,
+  heights: Float32Array,
+  maxSlope: number = GROWTH.invalidSlopeAbove,
+  exclusive = false,
+): boolean {
   const half = MAP_SIZE / 2,
     step = WORLD.heightmapSpacingM,
     size = WORLD.heightmapVertices;
@@ -116,7 +123,9 @@ export function zoneTerrainValid(p: Polygon, heights: Float32Array): boolean {
         if (area(hit) <= C.areaEpsilonM2) continue;
         if (
           ![t.h, t.gx, t.gz].every(Number.isFinite) ||
-          Math.hypot(t.gx, t.gz) > GROWTH.invalidSlopeAbove + C.slopeEpsilon
+          (exclusive
+            ? Math.hypot(t.gx, t.gz) >= maxSlope
+            : Math.hypot(t.gx, t.gz) > maxSlope + C.slopeEpsilon)
         )
           return false;
         if (

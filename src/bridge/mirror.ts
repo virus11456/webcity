@@ -129,6 +129,8 @@ export class WorldMirror {
         );
         break;
       case 'buildingsChanged': {
+        for (const b of event.added)
+          state.nextId = Math.max(state.nextId, b.id + 1);
         const patches = new Map(
           event.updated.map((p) => [p.id, structuredClone(p)]),
         );

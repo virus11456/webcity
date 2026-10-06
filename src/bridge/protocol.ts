@@ -84,7 +84,12 @@ export type SimEvent =
       nodes: RoadNode[];
       removedNodes: Id[];
     }
-  | { t: 'zonesChanged'; blocks: ZoneBlock[]; removed: Id[] }
+  | {
+      t: 'zonesChanged';
+      blocks: ZoneBlock[];
+      removed: Id[];
+      occupancyOnly?: boolean;
+    }
   | {
       t: 'buildingsChanged';
       added: Building[];

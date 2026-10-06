@@ -16,3 +16,5 @@ export const BUILDING_RENDER = {
   demoCount: 5000,
   demoSpacing: 48,
 } as const;
+
+export const GROWTH_VIEW_DISTANCE = 220;

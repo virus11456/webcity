@@ -1,3 +1,4 @@
+import { GrowthSystem } from './systems/growth';
 import { planBulldoze, type BulldozeTarget } from '../world/bulldoze';
 import { roadAccess } from '../world/roadAccess';
 import { refreshRoadAccess, tickRoadAccess } from './systems/roadAccess';
@@ -27,6 +28,7 @@ export class Simulation {
   private readonly state: SimState;
   private accumulatedMs = 0;
   private readonly time = new TimeSystem();
+  private readonly growth = new GrowthSystem();
 
   constructor(
     settings: CitySettings,
@@ -133,7 +135,26 @@ export class Simulation {
       removed: zones.removed,
     });
     this.emit({ t: 'fundsChanged', money: s.money });
-    const restored = refreshRoadAccess(s);
+    const anchors = new Map<number, { zoneBlock: number; blockCell: number }>();
+    for (const block of s.zoneBlocks)
+      block.buildingAt.forEach((id, index) => {
+        if (id !== -1 && !anchors.has(id))
+          anchors.set(id, { zoneBlock: block.id, blockCell: index });
+      });
+    const relinked = s.buildings.filter((b) => {
+      if (b.kind !== 'zoned') return false;
+      const a = anchors.get(b.id);
+      if (b.zoneBlock === a?.zoneBlock && b.blockCell === a?.blockCell)
+        return false;
+      b.zoneBlock = a?.zoneBlock;
+      b.blockCell = a?.blockCell;
+      return true;
+    });
+    const restored = [
+      ...new Map(
+        [...relinked, ...refreshRoadAccess(s)].map((b) => [b.id, b]),
+      ).values(),
+    ];
     if (restored.length)
       this.emit({
         t: 'buildingsChanged',
@@ -232,12 +253,37 @@ export class Simulation {
         blocks: structuredClone(result.blocks),
         removed: [],
       });
+    const updated = this.growth.zoningChanged(this.state);
+    if (updated.length)
+      this.emit({
+        t: 'buildingsChanged',
+        added: [],
+        removed: [],
+        updated: structuredClone(updated),
+      });
     return { ok: true, cost: 0 };
   }
 
   /** Advance exactly one simulation step, unless paused. */
   tick(): void {
-    if (!this.time.tick(this.state.clock)) return;
+    if (this.state.clock.speed === 0) return;
+    const dayCompleted = this.time.tick(this.state.clock);
+    const growth = this.growth.tick(this.state);
+    if (growth.blocks.length)
+      this.emit({
+        t: 'zonesChanged',
+        blocks: structuredClone(growth.blocks),
+        removed: [],
+        occupancyOnly: true,
+      });
+    if (growth.added.length || growth.updated.length || growth.removed.length)
+      this.emit({
+        t: 'buildingsChanged',
+        added: structuredClone(growth.added),
+        updated: structuredClone(growth.updated),
+        removed: growth.removed,
+      });
+    if (!dayCompleted) return;
     this.state.stats.day = this.state.clock.day;
     this.state.stats.money = this.state.money;
     const stats = structuredClone(this.state.stats);

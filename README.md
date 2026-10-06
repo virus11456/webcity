@@ -3,11 +3,13 @@
 [![CI](https://github.com/virus11456/webcity/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/virus11456/webcity/actions/workflows/ci.yml)
 [![Deploy to GitHub Pages](https://github.com/virus11456/webcity/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/virus11456/webcity/actions/workflows/deploy.yml)
 
-部署網址：[WebCity on GitHub Pages](https://virus11456.github.io/webcity/)（首次合併部署流程並完成 Pages 設定後生效）。
+部署網址：[WebCity on Vercel](https://webcity-theta.vercel.app/webcity/)。
 
 一款玩法與美術風格參考《Cities: Skylines》的城市建造模擬遊戲，以 Web 技術開發，支援 PWA 安裝，可在 iPhone、iPad、PC 上遊玩。
 
-目前提供專案骨架、測試框架、CI／部署流程與 **M0-04 PWA 基礎**：顯示全螢幕深色 WebCity 啟動畫面，正式建置可安裝並離線重開。城市模擬與 3D 渲染將依任務卡陸續加入。
+目前完成至 **M1-12 分區建築成長**：進入「開始鋪路」，在道路兩側塗住宅、商業或工業分區，播放時間後會開工，三個遊戲天後完工。「查看建築」可移近觀看地基、結構與收尾；改分區後三天拆除重建。另有建築工坊與街區施工展示。
+
+城市人口、就業與每日需求接續 M1-13／M1-14；尚未加入存檔，重新整理會清除試建城市。正式版本可安裝為 PWA 並離線試建。詳細規則與驗證見 [分區成長紀錄](docs/GROWTH.md)。
 
 ## 本機開發
 

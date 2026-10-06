@@ -111,6 +111,12 @@ export class BuildingRenderer {
   private processed = 0;
   private maxWorkMs = 0;
   private night = false;
+  private focusedId: number | undefined;
+  /** Keep the building selected by the inspection control inside the existing detail budget. */
+  focus(id: number): void {
+    this.focusedId = id;
+    this.lodAge = R.lodInterval;
+  }
   constructor(
     parent: Scene | Group,
     private readonly options: BuildingRendererOptions,
@@ -289,11 +295,12 @@ export class BuildingRenderer {
         (e.base + e.shape.height / 2 - camera.y) ** 2 +
         (p.z - camera.z) ** 2;
       if (distance > detailDistance ** 2) continue;
+      const priority = e.data.id === this.focusedId ? -1 : distance;
       let i = 0;
-      while (i < this.distances.length && this.distances[i]! <= distance) i++;
+      while (i < this.distances.length && this.distances[i]! <= priority) i++;
       if (i >= R.detailLimit) continue;
       this.candidates.splice(i, 0, e);
-      this.distances.splice(i, 0, distance);
+      this.distances.splice(i, 0, priority);
       if (this.candidates.length > R.detailLimit) {
         this.candidates.pop();
         this.distances.pop();
@@ -404,7 +411,7 @@ export class BuildingRenderer {
       ? (e.shape.height * e.removal) / R.demolitionSeconds
       : 0;
     this.matrix
-      .makeRotationY(b.rotation)
+      .makeRotationY(b.rotation + Math.PI)
       .scale(this.scale.set(bounce, bounce, bounce));
     this.matrix.setPosition(b.pos.x, e.base - sink, b.pos.z);
     const condition =
@@ -561,6 +568,7 @@ export class BuildingRenderer {
       : null;
   }
   private clear(): void {
+    this.focusedId = undefined;
     for (const e of this.entries.values()) this.release(e);
     this.entries.clear();
     this.authoritative.clear();

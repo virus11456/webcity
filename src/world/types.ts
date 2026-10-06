@@ -57,12 +57,14 @@ export interface Building {
   defId: string; // zoned 為 zone（如 'RL'），其他為 data/buildings.ts 的 id
   level: number; // 1～5
   pos: Vec2;
-  rotation: number; // 地塊正面中心、朝向（弧度）
+  rotation: number; // 正面中心為 pos；深度沿旋轉後 +local Z，模型需額外轉 π。
   lotW: number;
   lotD: number; // 占地格數
   seed: number; // 外觀用
   state: 'construction' | 'active' | 'abandoned' | 'burned';
   stateTimer: number;
+  constructionStartedTick?: number;
+  rezoneAtTick?: number; // Complete deadline, removed without a refund after changed zoning.
   flags: number; // 位元旗標：HAS_POWER | HAS_WATER | HAS_SEWAGE | HAS_GARBAGE_SERVICE | ON_FIRE …
   problemTimers: Record<ProblemType, number>;
   households: number;

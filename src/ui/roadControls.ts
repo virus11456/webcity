@@ -104,13 +104,15 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   zoneHost.hidden = true;
   const bulldozeHost = document.createElement('div');
   bulldozeHost.hidden = true;
-  body.append(heading, tabs, details, zoneHost, bulldozeHost, note);
+  const growthHost = document.createElement('div');
+  body.append(heading, tabs, details, zoneHost, bulldozeHost, growthHost, note);
   panel.append(enter, body);
   parent.append(panel);
   const format = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 });
   return {
     zoneHost,
     bulldozeHost,
+    growthHost,
     updateBulldoze(active: boolean, pending: boolean) {
       bulldozeActive = active;
       bulldozePending = pending;

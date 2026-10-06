@@ -93,6 +93,27 @@ function setup() {
   return { tool, transport, preview, e, respond };
 }
 describe('zone tool gesture transactions', () => {
+  it('keeps a held brush alive across construction progress and occupancy updates', () => {
+    const { tool, transport, e } = setup();
+    tool.setMode('small');
+    tool.onPointerDown(e());
+    transport.emit({
+      t: 'buildingsChanged',
+      added: [],
+      removed: [],
+      updated: [{ id: 100, stateTimer: 1.2 }],
+    });
+    transport.emit({
+      t: 'zonesChanged',
+      blocks: [],
+      removed: [],
+      occupancyOnly: true,
+    });
+    tool.onPointerMove(e(60, 12));
+    tool.onPointerUp(e(60, 12));
+    expect(transport.sent).toHaveLength(1);
+    expect(transport.sent[0]).toMatchObject({ t: 'zone' });
+  });
   it('previews a continuous brush, submits once on release and locks duplicate input', async () => {
     const { tool, transport, e, respond } = setup();
     tool.setMode('small');

@@ -75,7 +75,7 @@ describe('atomic authoritative zoning', () => {
       expect(cleared.blocks[0]!.cells[1]).toBe(ZONE_CODES[zone]);
     },
   );
-  it('rejects the whole batch if any cell is stale, invalid, outside, or occupied', () => {
+  it('rejects the whole batch if any cell is stale, invalid, or outside', () => {
     const w = fixture();
     w.zoneBlocks[0]!.cells[2] = 255;
     w.zoneBlocks[0]!.buildingAt[3] = 100;
@@ -83,7 +83,6 @@ describe('atomic authoritative zoning', () => {
       [4, 2],
       [8, 0],
       [4, 32],
-      [4, 3],
     ] as [number, number][]) {
       const r = paintZones(w, [[4, 0], cell], 'RL');
       expect(r.reason).not.toBeNull();
@@ -173,16 +172,16 @@ describe('roadside selection algorithms', () => {
       s.brush({ x: 28, z: 20 }, { x: 28, z: 20 }, 8, 'CL').length,
     );
   });
-  it('handles rotated grids, excludes occupied cells / unowned land / incompatible roads', () => {
+  it('handles rotated grids, allows occupied cells but excludes unowned land / incompatible roads', () => {
     const w = fixture(),
       b = w.zoneBlocks[0]!;
     b.dir = { x: 0, z: 1 };
     b.buildingAt[0] = 100;
     const s = new ZoneSelection(w);
     expect(s.hit(zoneCellCenter(b, 2))!.ref).toEqual([4, 2]);
-    expect(
-      s.brush({ x: 0, z: 0 }, { x: 0, z: 64 }, 100, 'RL'),
-    ).not.toContainEqual([4, 0]);
+    expect(s.brush({ x: 0, z: 0 }, { x: 0, z: 64 }, 100, 'RL')).toContainEqual([
+      4, 0,
+    ]);
     expect(
       new ZoneSelection({ ...w, ownedTiles: [] }).fill(
         zoneCellCenter(b, 2),

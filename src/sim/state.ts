@@ -5,7 +5,7 @@ import { MILESTONES } from '../data/milestones';
 import { HAPPINESS } from '../data/simulation';
 import { SIM_RUNTIME } from '../data/simRuntime';
 import { MAP_PRESETS } from '../data/terrain';
-import { ZONES } from '../data/zones';
+import { INITIAL_DEMAND, ZONES } from '../data/zones';
 import { Terrain } from '../world/terrain';
 import type { CitySettings, WorldSnapshot } from '../world/snapshot';
 import type { Fields } from '../world/types';
@@ -67,7 +67,7 @@ export function createState(settings: CitySettings): SimState {
       day: 0,
       money,
       population: 0,
-      demand: { R: 0, C: 0, I: 0, O: 0 },
+      demand: { ...INITIAL_DEMAND },
       income: 0,
       expenses: 0,
       power: { produced: 0, consumed: 0 },
