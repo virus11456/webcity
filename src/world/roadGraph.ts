@@ -227,6 +227,21 @@ function overlaps(a: RoadNode, b: RoadNode, c: RoadNode, d: RoadNode): boolean {
 /** Transactional straight-road topology. Returned values never expose mutable authority. */
 export class RoadGraph {
   private data: GraphData;
+  /** Dry-run a road on a trusted world snapshot without modifying it or consuming IDs. */
+  static previewRoad(
+    snapshot: RoadGraphSnapshot,
+    road: StraightRoad,
+  ): RoadGraphChange {
+    const graph = new RoadGraph(snapshot.nextId);
+    graph.data = structuredClone({
+      nodes: new Map(snapshot.nodes.map((node) => [node.id, node])),
+      segments: new Map(
+        snapshot.segments.map((segment) => [segment.id, segment]),
+      ),
+      nextId: snapshot.nextId,
+    });
+    return graph.addRoad(road);
+  }
   constructor(firstId = 1) {
     if (!Number.isSafeInteger(firstId) || firstId <= 0) fail('invalidInput');
     this.data = { nodes: new Map(), segments: new Map(), nextId: firstId };
