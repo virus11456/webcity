@@ -116,6 +116,8 @@ export const ROAD_RULES = {
   nodeSnapDistanceM: 8,
   minSegmentM: 16,
   minJunctionAngleDegrees: 30,
+  signalMinLanes: 4,
+  signalMinWideArms: 3,
   greenLightGameSeconds: 12,
   refundDays: 7,
   refundFraction: 1,
