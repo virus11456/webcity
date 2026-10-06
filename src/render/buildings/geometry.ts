@@ -22,6 +22,7 @@ export function atlasUV(zone?: ZoneType, variant = 0): [UV, UV, UV, UV] {
 }
 /** Small non-indexed builder: flat normals and a single vertex-color/atlas material. */
 export class BuildingGeometry {
+  constructor(private readonly enabled = true) {}
   private positions: number[] = [];
   private colors: number[] = [];
   private uvs: number[] = [];
@@ -33,6 +34,7 @@ export class BuildingGeometry {
     hex: string,
     uv: readonly UV[] = atlasUV(),
   ): void {
+    if (!this.enabled) return;
     this.color.set(hex);
     for (const [i, p] of [a, b, c].entries()) {
       this.positions.push(...p);
@@ -48,6 +50,7 @@ export class BuildingGeometry {
     hex: string,
     uv = atlasUV(),
   ): void {
+    if (!this.enabled) return;
     this.triangle(a, b, c, hex, [uv[0], uv[1], uv[2]]);
     this.triangle(a, c, d, hex, [uv[0], uv[2], uv[3]]);
   }
@@ -65,6 +68,7 @@ export class BuildingGeometry {
     zone?: ZoneType,
     variant = 0,
   ): void {
+    if (!this.enabled) return;
     const l = x - w / 2,
       r = x + w / 2,
       f = z + d / 2,
@@ -91,6 +95,7 @@ export class BuildingGeometry {
     color: string,
     hip: boolean,
   ): void {
+    if (!this.enabled) return;
     const l = x - w / 2,
       r = x + w / 2,
       f = z + d / 2,
@@ -112,6 +117,7 @@ export class BuildingGeometry {
     color: string,
     top = color,
   ): void {
+    if (!this.enabled) return;
     const n = F.cylinderSides;
     for (let i = 0; i < n; i++) {
       const a = (i * 2 * Math.PI) / n,

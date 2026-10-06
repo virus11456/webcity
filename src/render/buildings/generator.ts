@@ -21,6 +21,7 @@ export function generateBuilding(
   w: number,
   d: number,
   seed: number,
+  detail = true,
 ): BufferGeometry {
   const rules = ZONES[zone];
   if (
@@ -35,7 +36,7 @@ export function generateBuilding(
   )
     throw new RangeError('Invalid building specification');
   const rng = new Rng(seed),
-    g = new BuildingGeometry(),
+    g = new BuildingGeometry(detail),
     width = w * CELL_SIZE,
     depth = d * CELL_SIZE;
   const range = F.floors[zone][level - 1]!,

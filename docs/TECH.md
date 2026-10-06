@@ -473,3 +473,5 @@ M1-08：分區權威驗證、空間選取、交易式工具與 InstancedMesh 貼
 M1-09：原子拆除、實付退款、路口／分區清理及失去道路的建築狀態見 `BULLDOZE.md`。Building 與 NetworkSegment 支援可選 `builtDay`／`paidCost`；Building 另以 `roadDisconnectedDay` 與 `problemTimers.noRoad` 記錄斷路，不占用未定義的 flags 位元。
 
 M1-10：`main.ts` 延遲載入城市 `game.ts` 或 `?gallery=1` 工坊 `gallery.ts`。六分區原創幾何、共用 Canvas Atlas、施工視覺介面與單 canvas 多視圖管理見 `BUILDING_GENERATOR.md`；城市建築 InstancedMesh 管理仍屬 M1-11。
+
+M1-11：`BuildingRenderer` 已接入城市 `ready`／`buildingsChanged`，支援內容雜湊、可擴容 InstancedMesh、受限近景細節、施工／荒廢／拆除。施工 `stateTimer` 暫約定為已施工遊戲天數，等 M1-12 提供。展示與效能驗證、記憶體策略及 LOD 取捨見 `BUILDING_RENDERER.md`。

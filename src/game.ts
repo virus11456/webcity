@@ -1,3 +1,4 @@
+import { BuildingRenderer } from './render/buildings/buildingRenderer';
 import { BulldozeTool } from './tools/bulldozeTool';
 import { BulldozePreview } from './render/bulldozePreview';
 import { createBulldozeControls } from './ui/bulldozeControls';
@@ -27,6 +28,7 @@ import { App } from './ui/App';
 
 declare global {
   interface Window {
+    __webcityBuildingStats?: () => ReturnType<BuildingRenderer['readStats']>;
     __webcityCamera?: RtsCamera;
     __webcityZoneStats?: () => {
       blocks: number;
@@ -62,6 +64,9 @@ let roadPreview: RoadPreviewRenderer | undefined;
 let tools: ToolManager | undefined;
 let input: CameraController | undefined;
 let city: CityRenderer | undefined;
+let buildings: BuildingRenderer | undefined;
+let frameSeconds = 0;
+let unsubscribeBuildings: (() => void) | undefined;
 let picking: PickingPreview | undefined;
 let pickingDebug: ReturnType<typeof createPickingDebug> | undefined;
 render(
@@ -111,11 +116,15 @@ if (canvas && status) {
     city = new CityRenderer(canvas, {
       onStats: debug?.update,
       onBeforeFrame: (seconds) => {
+        frameSeconds = seconds;
         input?.update(seconds);
         roadPreview?.roads.update();
         zoneRenderer?.update();
       },
-      onAfterCamera: () => picking?.update(),
+      onAfterCamera: () => {
+        picking?.update();
+        buildings?.update(frameSeconds, city?.camera);
+      },
       onContextState(lost) {
         status.hidden = !lost;
         status.textContent = lost ? t('render.contextLost') : '';
@@ -150,6 +159,15 @@ if (canvas && status) {
       },
     });
     if (sim) {
+      buildings = new BuildingRenderer(city.scene, {
+        heightAt: (x, z) => city!.terrain.heightAt(x, z),
+        registerMaterial: (material, install) =>
+          city!.registerMaterial(material, install),
+        unregisterMaterial: (material) => city!.unregisterMaterial(material),
+      });
+      buildings.group.visible = false;
+      buildings.reset(sim.mirror.readBuildings());
+      unsubscribeBuildings = sim.onEvent((event) => buildings!.accept(event));
       const picker = new TerrainPicker(city.terrain);
       roadPreview = new RoadPreviewRenderer(city.scene);
       city.registerMaterial(roadPreview.roads.material);
@@ -226,6 +244,7 @@ if (canvas && status) {
         city!.setConstructionMode(construction);
         roadPreview!.group.visible = construction;
         zoneRenderer!.group.visible = construction;
+        buildings!.group.visible = construction;
         if (first)
           city!.cameraController.flyTo(
             ROAD_TOOL_RENDER.focus,
@@ -300,6 +319,7 @@ if (canvas && status) {
           ...zoneRenderer!.readStats(),
         };
       };
+      window.__webcityBuildingStats = () => buildings!.readStats();
       window.__webcityRoadStats = () => roadPreview!.roads.readStats();
     }
   } catch {
@@ -309,6 +329,7 @@ if (canvas && status) {
 }
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
+    delete window.__webcityBuildingStats;
     delete window.__webcityCamera;
     delete window.__webcityRoadStats;
     delete window.__webcityZoneStats;
@@ -326,6 +347,8 @@ if (import.meta.hot)
     picking?.dispose();
     pickingDebug?.dispose();
     input?.dispose();
+    unsubscribeBuildings?.();
+    buildings?.dispose();
     city?.dispose();
     debug?.dispose();
     simControls?.dispose();

@@ -29,7 +29,10 @@ export function createBuildingGallery(root: HTMLElement, actions: Actions) {
   const home = document.createElement('a');
   home.href = location.pathname;
   home.textContent = t('gallery.home');
-  header.append(title, home);
+  const district = document.createElement('a');
+  district.href = '?district=1';
+  district.textContent = t('district.title');
+  header.append(title, district, home);
   const stage = document.createElement('section');
   stage.className = 'gallery-stage';
   const canvas = document.createElement('canvas');

@@ -9,6 +9,7 @@ import {
   WebGLRenderer,
   type Material,
 } from 'three';
+import type { ShaderHook } from './buildings/buildingMaterial';
 import { MAP_SIZE, type QualityLevel } from '../data/config';
 import { Terrain } from '../world/terrain';
 import { TerrainRenderer } from './terrain/terrainRenderer';
@@ -56,7 +57,10 @@ export class CityRenderer {
   readonly cameraController: RtsCamera;
   private lastFrame: number | null = null;
   private readonly focus = new Vector3();
-  private readonly extraMaterials = new Set<Material>();
+  private readonly extraMaterials = new Map<
+    Material,
+    ((previous?: ShaderHook) => void) | undefined
+  >();
   readonly terrain = new Terrain(MAP_PRESETS[0].seed);
   private readonly land = new TerrainRenderer(this.terrain);
   private readonly town = new CityPreview(this.terrain);
@@ -86,6 +90,7 @@ export class CityRenderer {
     this.renderer.toneMapping = ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1;
     this.renderer.shadowMap.type = PCFShadowMap;
+    this.renderer.localClippingEnabled = true;
     // Include shadow passes in draw-call/triangle counters.
     this.renderer.info.autoReset = false;
     const gl = this.renderer.getContext();
@@ -165,9 +170,17 @@ export class CityRenderer {
     }
   }
   /** Register late-created world materials with current and future shadow quality tiers. */
-  registerMaterial(material: Material): void {
-    this.extraMaterials.add(material);
+  registerMaterial(
+    material: Material,
+    install?: (previous?: ShaderHook) => void,
+  ): void {
+    this.extraMaterials.set(material, install);
     this.lighting.csm?.setupMaterial(material);
+    install?.(this.lighting.csm ? material.onBeforeCompile : undefined);
+  }
+  unregisterMaterial(material: Material): void {
+    this.extraMaterials.delete(material);
+    this.lighting.csm?.shaders.delete(material);
   }
   private createLighting(level: QualityLevel): Lighting {
     this.renderer.shadowMap.enabled = level !== 'low';
@@ -179,7 +192,7 @@ export class CityRenderer {
       this.town.material,
       this.town.glass,
       this.water.material,
-      ...this.extraMaterials,
+      ...this.extraMaterials.keys(),
     ]);
     this.land.installShader(
       lighting.csm ? this.land.material.onBeforeCompile : undefined,
@@ -187,6 +200,8 @@ export class CityRenderer {
     this.water.installShader(
       lighting.csm ? this.water.material.onBeforeCompile : undefined,
     );
+    for (const [material, install] of this.extraMaterials)
+      install?.(lighting.csm ? material.onBeforeCompile : undefined);
     return lighting;
   }
   private readonly resize = (): void => {
