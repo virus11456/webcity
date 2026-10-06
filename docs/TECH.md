@@ -466,3 +466,5 @@ M0-12 已提供 `input/picking.ts` 的 `TerrainPicker`。`pick(clientX, clientY,
 | `npm run icons` | 由 `scripts/` 產生 PWA 圖示 |
 
 M1-06 道路模型與 Worker 地形整平：見 `docs/ROAD_MESH.md`。`roadsChanged` 可攜帶 `terrain: { indices, heights, revision }`，鏡像在同一事件中先更新高度，再通知渲染及選取；道路高度與地形路基分開處理。
+
+M1-08：分區權威驗證、空間選取、交易式工具與 InstancedMesh 貼地格線見 `ZONE_TOOL.md`；Worker `zone` 已啟用，保持 `zonesChanged` 增量區塊同步。

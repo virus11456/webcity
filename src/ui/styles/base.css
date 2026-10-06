@@ -457,12 +457,14 @@ h1 {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
-.road-status {
+.road-status,
+.zone-status {
   margin: 8px 0;
   min-height: 18px;
   font-size: 12px;
 }
-.road-status[data-invalid='true'] {
+.road-status[data-invalid='true'],
+.zone-status[data-invalid='true'] {
   color: var(--color-negative);
 }
 .road-controls small {
@@ -518,7 +520,8 @@ h1 {
   .road-row {
     margin: 4px 0;
   }
-  .road-status {
+  .road-status,
+  .zone-status {
     margin: 4px 0;
   }
   .road-options label {
@@ -527,4 +530,41 @@ h1 {
 }
 [hidden] {
   display: none !important;
+}
+
+.zone-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin: 8px 0;
+}
+.zone-options label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+.zone-options select {
+  width: 100%;
+  min-width: 0;
+  font-size: 12px;
+}
+.zone-metrics {
+  flex: 1;
+  font-size: 12px;
+}
+.zone-swatch {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--color-text);
+  border-radius: 3px;
+}
+
+.road-row > button {
+  white-space: nowrap;
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .road-controls button {
+    font-size: 12px;
+    padding: 8px;
+  }
 }

@@ -1,3 +1,5 @@
+import { paintZones, type ZoneCell } from '../world/zoning';
+import type { ZoneType } from '../world/types';
 import { rebuildZoneGrid } from '../world/zoneGrid';
 import { roadBedPatch } from '../world/roadBed';
 import { roadHeightAt } from '../world/roadProfile';
@@ -118,6 +120,27 @@ export class Simulation {
     });
     this.emit({ t: 'fundsChanged', money: s.money });
     return { ok: true, cost };
+  }
+
+  /** Apply free zoning atomically; the renderer receives only acknowledged block copies. */
+  zone(cells: ZoneCell[], zone: ZoneType | null): Omit<Result, 't' | 'reqId'> {
+    const result = paintZones(
+      { ...this.state, mode: this.state.settings.mode },
+      cells,
+      zone,
+    );
+    if (result.reason) return { ok: false, reason: result.reason };
+    const changed = new Map(result.blocks.map((b) => [b.id, b]));
+    this.state.zoneBlocks = this.state.zoneBlocks.map(
+      (b) => changed.get(b.id) ?? b,
+    );
+    if (result.blocks.length)
+      this.emit({
+        t: 'zonesChanged',
+        blocks: structuredClone(result.blocks),
+        removed: [],
+      });
+    return { ok: true, cost: 0 };
   }
 
   /** Advance exactly one simulation step, unless paused. */

@@ -1,3 +1,4 @@
+import type { ZoningReason } from '../world/zoning';
 import type { TerrainPatch } from '../world/roadBed';
 import type { ConstructionReason } from '../world/roadConstruction';
 import type { BuildingDefId } from '../data/buildings';
@@ -51,7 +52,7 @@ export type CommandInput =
   | { t: 'inspect'; target: { kind: string; id: Id } };
 export type Command = CommandInput & { reqId: number };
 export type FailureReason =
-  ConstructionReason | 'err.notReady' | 'err.notImplemented';
+  ConstructionReason | ZoningReason | 'err.notReady' | 'err.notImplemented';
 export type Result = {
   t: 'result';
   reqId: number;

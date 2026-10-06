@@ -1,3 +1,6 @@
+import { ZoneTool } from './tools/zoneTool';
+import { ZoneRenderer } from './render/zones';
+import { createZoneControls } from './ui/zoneControls';
 import { ZONE_CODES } from './data/zones';
 import { RoadTool } from './tools/roadTool';
 import { ToolManager } from './tools/toolManager';
@@ -29,6 +32,10 @@ declare global {
       blocks: number;
       valid: number;
       invalid: number;
+      painted: number;
+      codes: Record<number, number>;
+      instances: number;
+      pending: boolean;
     };
     __webcityRoadStats?: () => {
       batches: number;
@@ -43,6 +50,9 @@ const root = document.querySelector<HTMLDivElement>('#app');
 
 if (!root) throw new Error('Missing #app element');
 
+let zoneTool: ZoneTool | undefined;
+let zoneRenderer: ZoneRenderer | undefined;
+let zoneControls: ReturnType<typeof createZoneControls> | undefined;
 let roadTool: RoadTool | undefined;
 let roadControls: ReturnType<typeof createRoadControls> | undefined;
 let roadPreview: RoadPreviewRenderer | undefined;
@@ -100,6 +110,7 @@ if (canvas && status) {
       onBeforeFrame: (seconds) => {
         input?.update(seconds);
         roadPreview?.roads.update();
+        zoneRenderer?.update();
       },
       onAfterCamera: () => picking?.update(),
       onContextState(lost) {
@@ -160,12 +171,37 @@ if (canvas && status) {
         },
         (state) => roadControls?.update(state),
       );
+      zoneRenderer = new ZoneRenderer(city.scene);
+      zoneTool = new ZoneTool(
+        {
+          sim,
+          pick(x, y) {
+            const hit = picker.pick(
+              x,
+              y,
+              canvas.getBoundingClientRect(),
+              city!.camera,
+              city!.camera.far,
+            );
+            return hit ? { x: hit.world.x, z: hit.world.z } : null;
+          },
+          preview: (cells, zone) => zoneRenderer?.preview(cells, zone),
+          worldChanged: (blocks, heights, owned) =>
+            zoneRenderer?.sync(blocks, heights, owned),
+        },
+        (state) => {
+          zoneControls?.update(state);
+          roadControls?.updateZone(state.active, state.pending);
+          zoneRenderer?.setActive(state.active);
+        },
+      );
       tools = new ToolManager((tool) => input?.setTool(tool));
       const mode = (construction: boolean) => {
         const first = construction && root.dataset.construction !== 'true';
         root.dataset.construction = String(construction);
         city!.setConstructionMode(construction);
         roadPreview!.group.visible = construction;
+        zoneRenderer!.group.visible = construction;
         if (first)
           city!.cameraController.flyTo(
             ROAD_TOOL_RENDER.focus,
@@ -176,6 +212,11 @@ if (canvas && status) {
         enter() {
           mode(true);
           tools!.select(roadTool!);
+          canvas.focus({ preventScroll: true });
+        },
+        zone() {
+          mode(true);
+          tools!.select(zoneTool!);
           canvas.focus({ preventScroll: true });
         },
         explore() {
@@ -192,19 +233,38 @@ if (canvas && status) {
         angle: (enabled) => roadTool!.setAngleSnap(enabled),
       });
       roadControls.update(roadTool.readState());
+      zoneControls = createZoneControls(roadControls.zoneHost, {
+        zone: (zone) => zoneTool!.setZone(zone),
+        mode: (mode) => zoneTool!.setMode(mode),
+        cancel: () => zoneTool!.onCancel(),
+      });
+      zoneControls.update(zoneTool.readState());
     }
     if (debug) {
       window.__webcityCamera = city.cameraController;
       window.__webcityZoneStats = () => {
         const blocks = sim?.mirror.readZoneBlocks() ?? [];
+        const codes: Record<number, number> = {};
+        let painted = 0;
         let valid = 0,
           invalid = 0;
         for (const block of blocks)
           for (const code of block.cells) {
             if (code === ZONE_CODES.invalid) invalid++;
-            else valid++;
+            else {
+              valid++;
+              if (code) painted++;
+              codes[code] = (codes[code] ?? 0) + 1;
+            }
           }
-        return { blocks: blocks.length, valid, invalid };
+        return {
+          blocks: blocks.length,
+          valid,
+          invalid,
+          painted,
+          codes,
+          ...zoneRenderer!.readStats(),
+        };
       };
       window.__webcityRoadStats = () => roadPreview!.roads.readStats();
     }
@@ -220,6 +280,9 @@ if (import.meta.hot)
     delete window.__webcityZoneStats;
     delete window.__webcityPick;
     tools?.dispose();
+    zoneTool?.dispose();
+    zoneControls?.dispose();
+    zoneRenderer?.dispose();
     roadTool?.dispose();
     roadControls?.dispose();
     roadPreview?.dispose();

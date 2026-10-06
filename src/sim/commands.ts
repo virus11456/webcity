@@ -1,3 +1,5 @@
+import { isZonePayload } from '../world/zoning';
+import type { ZoneType } from '../world/types';
 import { ROADS, type RoadTypeId } from '../data/roads';
 import { isStraightRoadDraft } from '../world/roadConstruction';
 import type { Response, SimEvent } from '../bridge/protocol';
@@ -8,7 +10,6 @@ const futureCommands = new Set([
   'load',
   'save',
   'upgradeRoad',
-  'zone',
   'place',
   'buildNetwork',
   'bulldoze',
@@ -78,6 +79,7 @@ export class CommandDispatcher {
     if (
       value.t !== 'setSpeed' &&
       value.t !== 'buildRoad' &&
+      value.t !== 'zone' &&
       !futureCommands.has(value.t)
     ) {
       fail('err.invalidCommand');
@@ -87,7 +89,21 @@ export class CommandDispatcher {
       fail('err.notReady');
       return;
     }
-    if (value.t === 'buildRoad') {
+    if (value.t === 'zone') {
+      if (
+        !('cells' in value) ||
+        !('zone' in value) ||
+        !isZonePayload(value.cells, value.zone)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.zone(value.cells, value.zone as ZoneType | null),
+      });
+    } else if (value.t === 'buildRoad') {
       if (
         !('type' in value) ||
         typeof value.type !== 'string' ||
