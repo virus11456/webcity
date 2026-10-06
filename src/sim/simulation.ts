@@ -1,3 +1,4 @@
+import { updateDemand } from './systems/demand';
 import { updatePopulation } from './systems/population';
 import { GrowthSystem } from './systems/growth';
 import { planBulldoze, type BulldozeTarget } from '../world/bulldoze';
@@ -44,6 +45,7 @@ export class Simulation {
     this.time.onDay(() => {
       const roads = tickRoadAccess(this.state);
       const population = updatePopulation(this.state, true);
+      updateDemand(this.state);
       const updates = new Map<number, BuildingPatch>(
         roads.map((b) => [b.id, { ...b }]),
       );

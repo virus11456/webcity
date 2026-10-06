@@ -35,6 +35,12 @@ test('actual residents move in, find work, pause, and leave demolished housing',
     'true',
   );
   await page.getByRole('button', { name: '暫停', exact: true }).click();
+  expect(await page.evaluate(() => window.__webcityStats!()!.demand)).toEqual({
+    R: 70,
+    C: 20,
+    I: 20,
+    O: 0,
+  });
   await page.getByRole('button', { name: '開始鋪路', exact: true }).click();
   await expect
     .poll(() =>
@@ -87,6 +93,8 @@ test('actual residents move in, find work, pause, and leave demolished housing',
     stats: window.__webcityStats!()!,
     buildings: window.__webcityBuildings!(),
   }));
+  expect(before.stats.demand.R).toBeGreaterThan(70);
+  expect(before.stats.demand.C).toBeLessThan(20);
   const details = before.stats.populationDetails!;
   expect(before.stats.population).toBe(
     before.buildings.reduce((sum, b) => sum + b.residents, 0),
@@ -159,7 +167,12 @@ test('actual residents move in, find work, pause, and leave demolished housing',
   await page.waitForFunction(
     () => !window.__webcityBuildings!().some((b) => b.defId === 'CL'),
   );
+  // Demand settles on the next day after structural removal.
+  await page.waitForFunction(() => window.__webcityStats!()!.demand.C > 20);
   await page.getByRole('button', { name: '暫停', exact: true }).click();
+  expect(
+    await page.evaluate(() => window.__webcityStats!()!.demand.R),
+  ).toBeLessThan(before.stats.demand.R);
   await expect(page.locator('.population-summary')).toHaveAttribute(
     'data-employed',
     '0',

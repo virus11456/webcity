@@ -149,5 +149,5 @@ export const GROWTH = {
   downgradeDays: 30,
 } as const;
 
-// GDD §6 at zero residents/jobs, 50 happiness and neutral taxes; dynamic demand is M1-14.
+// GDD §6 baseline for normal mode; createState and daily settlement calculate actual demand.
 export const INITIAL_DEMAND = { R: 70, C: 20, I: 20, O: 0 } as const;

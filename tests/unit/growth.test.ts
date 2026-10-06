@@ -1,3 +1,4 @@
+import { updateDemand } from '../../src/sim/systems/demand';
 import { describe, it, expect } from 'vitest';
 import { Rng } from '../../src/core/rng';
 import { WORLD, MAP_SIZE } from '../../src/data/config';
@@ -90,6 +91,27 @@ function tick(s: ReturnType<typeof fixture>, g: GrowthSystem, count = 1) {
   }
 }
 describe('legal roadside lots', () => {
+  it('stops new construction when calculated commercial demand is zero and resumes after jobs are removed', () => {
+    const s = fixture('CL'),
+      g = new GrowthSystem();
+    tick(s, g);
+    expect(s.buildings.length).toBeGreaterThan(0);
+    for (const b of s.buildings) {
+      b.state = 'active';
+      b.jobs = 200;
+    }
+    updateDemand(s);
+    expect(s.stats.demand.C).toBe(0);
+    const count = s.buildings.length;
+    tick(s, g, 5);
+    expect(s.buildings).toHaveLength(count);
+    s.buildings = [];
+    s.zoneBlocks[0]!.buildingAt.fill(-1);
+    updateDemand(s);
+    expect(s.stats.demand.C).toBe(20);
+    tick(s, g);
+    expect(s.buildings.length).toBeGreaterThan(0);
+  });
   it.each(Object.keys(ZONES) as ZoneType[])(
     'grows only legal %s sizes and never overlaps',
     (zone) => {

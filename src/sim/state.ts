@@ -1,3 +1,4 @@
+import { updateDemand } from './systems/demand';
 import { SERVICE_TYPES } from '../data/buildings';
 import { MAP_TILES, WORLD } from '../data/config';
 import { BUDGET_DEPARTMENTS, ECONOMY } from '../data/economy';
@@ -29,7 +30,7 @@ export function createState(settings: CitySettings): SimState {
   const money =
     ECONOMY.startingMoney[settings.mode === 'easy' ? 'easy' : 'normal'];
   const field = () => new Float32Array(WORLD.fieldCells ** 2);
-  return {
+  const state: SimState = {
     seed: settings.seed,
     settings: { ...settings, cityName: settings.cityName.trim() },
     clock: { day: 0, tickInDay: 0, ticks: 0, speed: SIM_RUNTIME.initialSpeed },
@@ -79,4 +80,6 @@ export function createState(settings: CitySettings): SimState {
     statsHistory: [],
     nextId: 1,
   };
+  updateDemand(state);
+  return state;
 }
