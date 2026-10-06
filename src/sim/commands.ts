@@ -1,3 +1,4 @@
+import { isBulldozeTargets } from '../world/bulldoze';
 import { isZonePayload } from '../world/zoning';
 import type { ZoneType } from '../world/types';
 import { ROADS, type RoadTypeId } from '../data/roads';
@@ -12,7 +13,6 @@ const futureCommands = new Set([
   'upgradeRoad',
   'place',
   'buildNetwork',
-  'bulldoze',
   'undo',
   'setTax',
   'setBudget',
@@ -80,6 +80,7 @@ export class CommandDispatcher {
       value.t !== 'setSpeed' &&
       value.t !== 'buildRoad' &&
       value.t !== 'zone' &&
+      value.t !== 'bulldoze' &&
       !futureCommands.has(value.t)
     ) {
       fail('err.invalidCommand');
@@ -89,7 +90,22 @@ export class CommandDispatcher {
       fail('err.notReady');
       return;
     }
-    if (value.t === 'zone') {
+    if (value.t === 'bulldoze') {
+      const targets =
+        'targets' in value
+          ? value.targets
+          : 'target' in value
+            ? [value.target]
+            : undefined;
+      if (
+        !isBulldozeTargets(targets) ||
+        ('targets' in value && 'target' in value)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({ t: 'result', reqId, ...this.simulation.bulldoze(targets) });
+    } else if (value.t === 'zone') {
       if (
         !('cells' in value) ||
         !('zone' in value) ||

@@ -204,6 +204,7 @@ export interface RoadSegment {
   length: number;
   elevated: boolean;
   builtDay: number;             // 用於 7 天內全額退款
+  paidCost?: number;            // 實付整數費用，切段守恆；缺少時不退款
   zoneBlockIds: Id[];
 }
 
@@ -280,7 +281,7 @@ export type Command =
   | { t: 'zone'; reqId: number; cells: Array<[blockId: Id, cellIndex: number]>; zone: ZoneType | null }
   | { t: 'place'; reqId: number; defId: string; pos: Vec2; rotation: number }
   | { t: 'buildNetwork'; reqId: number; net: 'power' | 'water'; points: Vec2[] }
-  | { t: 'bulldoze'; reqId: number; target: { kind: 'segment' | 'building' | 'network'; id: Id } }
+  | { t: 'bulldoze'; reqId: number; targets: Array<{ kind: 'segment' | 'building' | 'network'; id: Id }> } // 仍接受舊單筆 target，兩者不可並存
   | { t: 'undo'; reqId: number }
   | { t: 'setTax'; zone: ZoneType; rate: number }
   | { t: 'setBudget'; dept: Department; value: number }
@@ -292,7 +293,7 @@ export type Command =
 // Worker → 主執行緒
 export type SimEvent =
   | { t: 'ready'; snapshot: WorldSnapshot }               // 初始化或讀檔後的完整狀態
-  | { t: 'result'; reqId: number; ok: boolean; reason?: string; cost?: number }
+  | { t: 'result'; reqId: number; ok: boolean; reason?: string; cost?: number; refund?: number }
   | { t: 'roadsChanged'; added: RoadSegment[]; removed: Id[]; nodes: RoadNode[]; removedNodes: Id[] }
   | { t: 'zonesChanged'; blocks: ZoneBlock[]; removed: Id[] }
   | { t: 'buildingsChanged'; added: Building[]; updated: BuildingPatch[]; removed: Id[] }
@@ -468,3 +469,5 @@ M0-12 已提供 `input/picking.ts` 的 `TerrainPicker`。`pick(clientX, clientY,
 M1-06 道路模型與 Worker 地形整平：見 `docs/ROAD_MESH.md`。`roadsChanged` 可攜帶 `terrain: { indices, heights, revision }`，鏡像在同一事件中先更新高度，再通知渲染及選取；道路高度與地形路基分開處理。
 
 M1-08：分區權威驗證、空間選取、交易式工具與 InstancedMesh 貼地格線見 `ZONE_TOOL.md`；Worker `zone` 已啟用，保持 `zonesChanged` 增量區塊同步。
+
+M1-09：原子拆除、實付退款、路口／分區清理及失去道路的建築狀態見 `BULLDOZE.md`。Building 與 NetworkSegment 支援可選 `builtDay`／`paidCost`；Building 另以 `roadDisconnectedDay` 與 `problemTimers.noRoad` 記錄斷路，不占用未定義的 flags 位元。

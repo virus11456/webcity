@@ -1,3 +1,4 @@
+import type { BulldozeWorld } from '../world/bulldoze';
 import type { RoadConstructionWorld } from '../world/roadConstruction';
 import type { SimClock, WorldSnapshot } from '../world/snapshot';
 import type { ServiceType, ZoneBlock } from '../world/types';
@@ -44,6 +45,25 @@ export class WorldMirror {
         money: s.money,
         mode: s.settings.mode,
         unlocked: s.unlocked,
+      })
+    );
+  }
+
+  /** Cache the demolition view between world events, without fields or stats history. */
+  readBulldozeWorld(): BulldozeWorld | undefined {
+    const s = this.state;
+    return (
+      s &&
+      structuredClone({
+        nodes: s.nodes,
+        segments: s.segments,
+        zoneBlocks: s.zoneBlocks,
+        buildings: s.buildings,
+        networks: s.networks,
+        heights: s.terrain.heights,
+        nextId: s.nextId,
+        day: s.clock.day,
+        mode: s.settings.mode,
       })
     );
   }

@@ -1,3 +1,6 @@
+import { BulldozeTool } from './tools/bulldozeTool';
+import { BulldozePreview } from './render/bulldozePreview';
+import { createBulldozeControls } from './ui/bulldozeControls';
 import { ZoneTool } from './tools/zoneTool';
 import { ZoneRenderer } from './render/zones';
 import { createZoneControls } from './ui/zoneControls';
@@ -50,6 +53,9 @@ const root = document.querySelector<HTMLDivElement>('#app');
 
 if (!root) throw new Error('Missing #app element');
 
+let bulldozeTool: BulldozeTool | undefined;
+let bulldozePreview: BulldozePreview | undefined;
+let bulldozeControls: ReturnType<typeof createBulldozeControls> | undefined;
 let zoneTool: ZoneTool | undefined;
 let zoneRenderer: ZoneRenderer | undefined;
 let zoneControls: ReturnType<typeof createZoneControls> | undefined;
@@ -195,6 +201,27 @@ if (canvas && status) {
           zoneRenderer?.setActive(state.active);
         },
       );
+      bulldozePreview = new BulldozePreview(city.scene);
+      bulldozeTool = new BulldozeTool(
+        {
+          sim,
+          pick(x, y) {
+            const hit = picker.pick(
+              x,
+              y,
+              canvas.getBoundingClientRect(),
+              city!.camera,
+              city!.camera.far,
+            );
+            return hit ? { x: hit.world.x, z: hit.world.z } : null;
+          },
+          preview: (shapes, heights) => bulldozePreview?.show(shapes, heights),
+        },
+        (state) => {
+          bulldozeControls?.update(state);
+          roadControls?.updateBulldoze(state.active, state.pending);
+        },
+      );
       tools = new ToolManager((tool) => input?.setTool(tool));
       const mode = (construction: boolean) => {
         const first = construction && root.dataset.construction !== 'true';
@@ -219,6 +246,11 @@ if (canvas && status) {
           tools!.select(zoneTool!);
           canvas.focus({ preventScroll: true });
         },
+        bulldoze() {
+          mode(true);
+          tools!.select(bulldozeTool!);
+          canvas.focus({ preventScroll: true });
+        },
         explore() {
           tools!.select(null);
           canvas.focus({ preventScroll: true });
@@ -239,6 +271,11 @@ if (canvas && status) {
         cancel: () => zoneTool!.onCancel(),
       });
       zoneControls.update(zoneTool.readState());
+      bulldozeControls = createBulldozeControls(roadControls.bulldozeHost, {
+        kind: (k) => bulldozeTool!.setKind(k),
+        cancel: () => bulldozeTool!.onCancel(),
+      });
+      bulldozeControls.update(bulldozeTool.readState());
     }
     if (debug) {
       window.__webcityCamera = city.cameraController;
@@ -280,6 +317,9 @@ if (import.meta.hot)
     delete window.__webcityZoneStats;
     delete window.__webcityPick;
     tools?.dispose();
+    bulldozeTool?.dispose();
+    bulldozeControls?.dispose();
+    bulldozePreview?.dispose();
     zoneTool?.dispose();
     zoneControls?.dispose();
     zoneRenderer?.dispose();

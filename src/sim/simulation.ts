@@ -1,3 +1,6 @@
+import { planBulldoze, type BulldozeTarget } from '../world/bulldoze';
+import { roadAccess } from '../world/roadAccess';
+import { refreshRoadAccess, tickRoadAccess } from './systems/roadAccess';
 import { paintZones, type ZoneCell } from '../world/zoning';
 import type { ZoneType } from '../world/types';
 import { rebuildZoneGrid } from '../world/zoneGrid';
@@ -30,6 +33,16 @@ export class Simulation {
     private readonly emit: (event: SimEvent) => void = () => {},
   ) {
     this.state = createState(settings);
+    this.time.onDay(() => {
+      const updated = tickRoadAccess(this.state);
+      if (updated.length)
+        this.emit({
+          t: 'buildingsChanged',
+          added: [],
+          removed: [],
+          updated: structuredClone(updated),
+        });
+    });
   }
 
   /** Register an authoritative worker system to run at each completed day. */
@@ -65,6 +78,7 @@ export class Simulation {
     if (!result.canBuild || !result.preview)
       return { ok: false, reason: result.reason ?? 'err.invalidCommand' };
     const p = result.preview;
+    const cost = GAME_MODES[s.settings.mode].unlimitedMoney ? 0 : p.cost;
     const change = RoadGraph.previewRoad(
       s,
       {
@@ -74,6 +88,7 @@ export class Simulation {
         startHeight: p.start.height,
         endHeight: p.end.height,
         builtDay: s.clock.day,
+        paidCost: cost,
       },
       (point) => roadHeightAt(s.nodes, s.segments, s.terrain.heights, point),
     );
@@ -90,7 +105,6 @@ export class Simulation {
     ];
     for (const item of [...change.nodes, ...change.added])
       s.nextId = Math.max(s.nextId, item.id + 1);
-    const cost = GAME_MODES[s.settings.mode].unlimitedMoney ? 0 : p.cost;
     s.money -= cost;
     s.stats.money = s.money;
     const terrain = roadBedPatch(s.terrain.heights, s.nodes, s.segments);
@@ -119,7 +133,85 @@ export class Simulation {
       removed: zones.removed,
     });
     this.emit({ t: 'fundsChanged', money: s.money });
+    const restored = refreshRoadAccess(s);
+    if (restored.length)
+      this.emit({
+        t: 'buildingsChanged',
+        added: [],
+        removed: [],
+        updated: structuredClone(restored),
+      });
     return { ok: true, cost };
+  }
+
+  /** Delete an entire acknowledged stroke and settle the authoritative quote exactly once. */
+  bulldoze(targets: BulldozeTarget[]): Omit<Result, 't' | 'reqId'> {
+    const s = this.state;
+    const result = planBulldoze(
+      {
+        ...s,
+        heights: s.terrain.heights,
+        day: s.clock.day,
+        mode: s.settings.mode,
+      },
+      targets,
+    );
+    if (!result.ok) return { ok: false, reason: result.reason };
+    const hadAccess = roadAccess(s.nodes, s.segments);
+    const connected = new Set(s.buildings.filter(hadAccess).map((b) => b.id));
+    s.nodes = result.nodes;
+    s.segments = result.zones.segments;
+    s.zoneBlocks = result.zones.blocks;
+    s.nextId = result.zones.nextId;
+    const removedBuildings = new Set(result.removedBuildings);
+    s.stats.population = Math.max(
+      0,
+      s.stats.population -
+        s.buildings.reduce(
+          (sum, b) => sum + (removedBuildings.has(b.id) ? b.residents : 0),
+          0,
+        ),
+    );
+    s.buildings = result.buildings;
+    s.networks = result.networks;
+    s.money += result.refund - result.cost;
+    s.stats.money = s.money;
+    const updated = [
+      ...new Map(
+        [...result.relinked, ...refreshRoadAccess(s, connected)].map((b) => [
+          b.id,
+          b,
+        ]),
+      ).values(),
+    ];
+    // Include surviving segments because their zoneBlockIds may have changed during rebuild.
+    this.emit({
+      t: 'roadsChanged',
+      ...structuredClone(result.change),
+      added: structuredClone(s.segments),
+    });
+    this.emit({
+      t: 'zonesChanged',
+      blocks: structuredClone(s.zoneBlocks),
+      removed: result.zones.removed,
+    });
+    this.emit({
+      t: 'buildingsChanged',
+      added: [],
+      removed: result.removedBuildings,
+      updated: structuredClone(updated),
+    });
+    for (const net of ['power', 'water'] as const)
+      if (result.removedNetworks[net].length)
+        this.emit({
+          t: 'networksChanged',
+          net,
+          added: [],
+          removed: result.removedNetworks[net],
+        });
+    this.emit({ t: 'fundsChanged', money: s.money });
+    if (removedBuildings.size) this.emit({ t: 'stats', stats: { ...s.stats } });
+    return { ok: true, refund: result.refund, cost: result.cost };
   }
 
   /** Apply free zoning atomically; the renderer receives only acknowledged block copies. */

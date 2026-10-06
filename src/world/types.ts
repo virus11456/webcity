@@ -29,6 +29,7 @@ export interface RoadSegment {
   length: number;
   elevated: boolean;
   builtDay: number; // 用於 7 天內全額退款
+  paidCost?: number; // Actual paid cost, apportioned exactly when roads split.
   zoneBlockIds: Id[];
 }
 
@@ -50,6 +51,9 @@ export interface ZoneBlock {
 export interface Building {
   id: Id;
   kind: 'zoned' | 'service' | 'park' | 'utility' | 'unique';
+  builtDay?: number;
+  paidCost?: number;
+  roadDisconnectedDay?: number; // Undefined means no demolition-induced access problem.
   defId: string; // zoned 為 zone（如 'RL'），其他為 data/buildings.ts 的 id
   level: number; // 1～5
   pos: Vec2;

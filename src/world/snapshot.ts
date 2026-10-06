@@ -35,6 +35,8 @@ export interface RoadDraft {
 }
 export interface NetworkSegment {
   id: Id;
+  builtDay?: number;
+  paidCost?: number;
   points: Vec2[];
 }
 export type NetworkKind = 'power' | 'water';

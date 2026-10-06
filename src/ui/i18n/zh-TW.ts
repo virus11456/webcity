@@ -1,4 +1,23 @@
 export const ZH_TW = {
+  'bulldoze.title': '拆除工具',
+  'bulldoze.tab': '拆除',
+  'bulldoze.filter': '拆除種類',
+  'bulldoze.segment': '道路',
+  'bulldoze.building': '建築',
+  'bulldoze.network': '管線',
+  'bulldoze.cancel': '取消選取',
+  'bulldoze.selected': '已選取',
+  'bulldoze.refund': '預計退款',
+  'bulldoze.cost': '費用',
+  'bulldoze.removed': '上次拆除',
+  'bulldoze.returned': '實退',
+  'bulldoze.pending': '正在拆除…',
+  'bulldoze.hint': '點擊或拖曳，放開拆除紅色物件；雙指／Esc 取消',
+  'bulldoze.rule':
+    '未滿 7 天退還實付金額；點路口會選取相連路段。建築與管線建造尚未開放。',
+  'err.bulldozeMissing': '物件已改變，請重新選取',
+  'err.bulldozeLimit': '一次最多拆除 256 個物件，請分次操作',
+
   'zone.title': '土地分區',
   'zone.locked': '🔒 未解鎖',
   'zone.tab': '分區',

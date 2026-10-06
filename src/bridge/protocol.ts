@@ -1,3 +1,4 @@
+import type { BulldozeReason, BulldozeTarget } from '../world/bulldoze';
 import type { ZoningReason } from '../world/zoning';
 import type { TerrainPatch } from '../world/roadBed';
 import type { ConstructionReason } from '../world/roadConstruction';
@@ -40,8 +41,9 @@ export type CommandInput =
   | { t: 'buildNetwork'; net: NetworkKind; points: Vec2[] }
   | {
       t: 'bulldoze';
-      target: { kind: 'segment' | 'building' | 'network'; id: Id };
+      target: BulldozeTarget;
     }
+  | { t: 'bulldoze'; targets: BulldozeTarget[] }
   | { t: 'undo' }
   | { t: 'setTax'; zone: ZoneType; rate: number }
   | { t: 'setBudget'; dept: BudgetDepartment; value: number }
@@ -52,13 +54,18 @@ export type CommandInput =
   | { t: 'inspect'; target: { kind: string; id: Id } };
 export type Command = CommandInput & { reqId: number };
 export type FailureReason =
-  ConstructionReason | ZoningReason | 'err.notReady' | 'err.notImplemented';
+  | ConstructionReason
+  | ZoningReason
+  | BulldozeReason
+  | 'err.notReady'
+  | 'err.notImplemented';
 export type Result = {
   t: 'result';
   reqId: number;
   ok: boolean;
   reason?: FailureReason;
   cost?: number;
+  refund?: number;
 };
 export type Response =
   | Result

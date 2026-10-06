@@ -568,3 +568,29 @@ h1 {
     padding: 8px;
   }
 }
+
+.bulldoze-controls label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  flex: 1;
+}
+.bulldoze-controls select {
+  font-size: 12px;
+}
+.bulldoze-metrics,
+.bulldoze-status,
+.bulldoze-note {
+  font-size: 12px;
+}
+.bulldoze-status {
+  margin: 8px 0;
+}
+.bulldoze-note {
+  color: var(--color-secondary);
+  margin: 8px 0;
+}
+.bulldoze-status[data-invalid='true'] {
+  color: var(--color-negative);
+}

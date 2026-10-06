@@ -6,6 +6,7 @@ interface RoadActions {
   enter(): void;
   explore(): void;
   zone(): void;
+  bulldoze(): void;
   demo(): void;
   confirm(): void;
   cancel(): void;
@@ -27,6 +28,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   let construction = false;
   let zoneActive = false,
     zonePending = false;
+  let bulldozeActive = false,
+    bulldozePending = false;
   let latest: Readonly<RoadToolState> | undefined;
   const enter = button('road.enter', () => {
     construction = true;
@@ -49,6 +52,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   tabs.className = 'road-row';
   const draw = button('road.draw', actions.enter),
     zones = button('zone.tab', actions.zone),
+    bulldoze = button('bulldoze.tab', actions.bulldoze),
     explore = button('road.explore', actions.explore),
     demo = button('road.demo', () => {
       construction = false;
@@ -57,7 +61,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       enter.hidden = false;
       actions.demo();
     });
-  tabs.append(draw, zones, explore, demo);
+  tabs.append(draw, zones, bulldoze, explore, demo);
   const options = document.createElement('div');
   options.className = 'road-row road-options';
   const typeLabel = document.createElement('label');
@@ -98,12 +102,20 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   details.append(options, metrics, status, confirmRow);
   const zoneHost = document.createElement('div');
   zoneHost.hidden = true;
-  body.append(heading, tabs, details, zoneHost, note);
+  const bulldozeHost = document.createElement('div');
+  bulldozeHost.hidden = true;
+  body.append(heading, tabs, details, zoneHost, bulldozeHost, note);
   panel.append(enter, body);
   parent.append(panel);
   const format = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 });
   return {
     zoneHost,
+    bulldozeHost,
+    updateBulldoze(active: boolean, pending: boolean) {
+      bulldozeActive = active;
+      bulldozePending = pending;
+      if (latest) this.update(latest);
+    },
     updateZone(active: boolean, pending: boolean) {
       zoneActive = active;
       zonePending = pending;
@@ -111,11 +123,22 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     },
     update(state: Readonly<RoadToolState>) {
       latest = state;
-      details.hidden = zoneActive;
+      details.hidden = zoneActive || bulldozeActive;
+      bulldozeHost.hidden = !bulldozeActive;
+      bulldoze.setAttribute('aria-pressed', String(bulldozeActive));
+      bulldoze.disabled =
+        !state.ready || state.pending || zonePending || bulldozePending;
       zoneHost.hidden = !zoneActive;
-      title.textContent = t(zoneActive ? 'zone.title' : 'road.title');
+      title.textContent = t(
+        bulldozeActive
+          ? 'bulldoze.title'
+          : zoneActive
+            ? 'zone.title'
+            : 'road.title',
+      );
       zones.setAttribute('aria-pressed', String(zoneActive));
-      zones.disabled = !state.ready || state.pending || zonePending;
+      zones.disabled =
+        !state.ready || state.pending || zonePending || bulldozePending;
       panel.dataset.ready = String(state.ready);
       panel.dataset.phase = state.phase;
       panel.dataset.pending = String(state.pending);
@@ -128,10 +151,12 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       draw.setAttribute('aria-pressed', String(state.active));
       explore.setAttribute(
         'aria-pressed',
-        String(!state.active && !zoneActive),
+        String(!state.active && !zoneActive && !bulldozeActive),
       );
-      draw.disabled = !state.ready || state.pending || zonePending;
-      explore.disabled = demo.disabled = state.pending || zonePending;
+      draw.disabled =
+        !state.ready || state.pending || zonePending || bulldozePending;
+      explore.disabled = demo.disabled =
+        state.pending || zonePending || bulldozePending;
       options.hidden = !state.active;
       select.disabled = state.pending;
       angle.disabled = state.pending;

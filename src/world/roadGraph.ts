@@ -26,6 +26,7 @@ export class RoadGraphError extends Error {
 export interface RoadOptions {
   type: RoadTypeId;
   builtDay: number;
+  paidCost?: number;
   elevated?: boolean;
 }
 export interface StraightRoad extends RoadOptions {
@@ -96,7 +97,7 @@ function makeSegment(
   start: Id,
   end: Id,
   options: RoadOptions,
-): void {
+): Id {
   const a = data.nodes.get(start)!,
     b = data.nodes.get(end)!;
   const length = distance(a.pos, b.pos);
@@ -116,6 +117,29 @@ function makeSegment(
   });
   a.segments.push(id);
   b.segments.push(id);
+  return id;
+}
+/** Prefix allocation keeps integer refunds conserved across arbitrarily many splits. */
+function allocateCost(
+  data: GraphData,
+  ids: Id[],
+  cost: number | undefined,
+): void {
+  if (cost === undefined) return;
+  const length = ids.reduce(
+    (sum, id) => sum + data.segments.get(id)!.length,
+    0,
+  );
+  let travelled = 0,
+    assigned = 0;
+  ids.forEach((id, i) => {
+    const s = data.segments.get(id)!;
+    travelled += s.length;
+    const total =
+      i === ids.length - 1 ? cost : Math.floor((cost * travelled) / length);
+    s.paidCost = total - assigned;
+    assigned = total;
+  });
 }
 function detach(data: GraphData, id: Id): void {
   const segment = data.segments.get(id)!;
@@ -152,8 +176,10 @@ function split(
   );
   if (ids.length === 2) return;
   detach(data, segment.id);
+  const children: Id[] = [];
   for (let i = 1; i < ids.length; i++)
-    makeSegment(data, ids[i - 1]!, ids[i]!, segment);
+    children.push(makeSegment(data, ids[i - 1]!, ids[i]!, segment));
+  allocateCost(data, children, segment.paidCost);
 }
 function checkJunctions(data: GraphData): void {
   for (const node of data.nodes.values()) {
@@ -252,6 +278,31 @@ export class RoadGraph {
     });
     return graph.addRoad(road);
   }
+  /** Atomically remove a validated group of road IDs, pruning isolated endpoints. */
+  static previewRemoval(
+    snapshot: RoadGraphSnapshot,
+    ids: readonly Id[],
+  ): RoadGraphChange {
+    const graph = new RoadGraph(snapshot.nextId);
+    graph.data = structuredClone({
+      nodes: new Map(snapshot.nodes.map((n) => [n.id, n])),
+      segments: new Map(snapshot.segments.map((s) => [s.id, s])),
+      nextId: snapshot.nextId,
+    });
+    for (const id of ids)
+      if (!graph.data.segments.has(id)) fail('missingSegment');
+    return graph.transact((data) => {
+      const endpoints = new Set<Id>();
+      for (const id of new Set(ids)) {
+        const s = data.segments.get(id)!;
+        endpoints.add(s.start);
+        endpoints.add(s.end);
+        detach(data, id);
+      }
+      for (const id of endpoints)
+        if (!data.nodes.get(id)!.segments.length) data.nodes.delete(id);
+    });
+  }
   constructor(firstId = 1) {
     if (!Number.isSafeInteger(firstId) || firstId <= 0) fail('invalidInput');
     this.data = { nodes: new Map(), segments: new Map(), nextId: firstId };
@@ -344,6 +395,8 @@ export class RoadGraph {
       !Object.hasOwn(ROADS, road.type) ||
       !Number.isSafeInteger(road.builtDay) ||
       road.builtDay < 0 ||
+      (road.paidCost !== undefined &&
+        (!Number.isSafeInteger(road.paidCost) || road.paidCost < 0)) ||
       (road.elevated !== undefined && typeof road.elevated !== 'boolean')
     )
       fail('invalidInput');
@@ -392,8 +445,10 @@ export class RoadGraph {
       }
       for (const [id, ids] of oldCuts) split(data, data.segments.get(id)!, ids);
       const ids = sortedNodes(data, cuts, a.pos, b.pos);
+      const added: Id[] = [];
       for (let i = 1; i < ids.length; i++)
-        makeSegment(data, ids[i - 1]!, ids[i]!, road);
+        added.push(makeSegment(data, ids[i - 1]!, ids[i]!, road));
+      allocateCost(data, added, road.paidCost);
     });
   }
 
