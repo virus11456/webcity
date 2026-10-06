@@ -471,3 +471,5 @@ M1-06 道路模型與 Worker 地形整平：見 `docs/ROAD_MESH.md`。`roadsChan
 M1-08：分區權威驗證、空間選取、交易式工具與 InstancedMesh 貼地格線見 `ZONE_TOOL.md`；Worker `zone` 已啟用，保持 `zonesChanged` 增量區塊同步。
 
 M1-09：原子拆除、實付退款、路口／分區清理及失去道路的建築狀態見 `BULLDOZE.md`。Building 與 NetworkSegment 支援可選 `builtDay`／`paidCost`；Building 另以 `roadDisconnectedDay` 與 `problemTimers.noRoad` 記錄斷路，不占用未定義的 flags 位元。
+
+M1-10：`main.ts` 延遲載入城市 `game.ts` 或 `?gallery=1` 工坊 `gallery.ts`。六分區原創幾何、共用 Canvas Atlas、施工視覺介面與單 canvas 多視圖管理見 `BUILDING_GENERATOR.md`；城市建築 InstancedMesh 管理仍屬 M1-11。

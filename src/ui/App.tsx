@@ -44,6 +44,7 @@ export function App({
           <span aria-hidden="true">⌗</span>
           {t('city.overview')}
         </button>
+        <a href="?gallery=1">{t('gallery.title')}</a>
       </nav>
       <aside
         className="input-help"

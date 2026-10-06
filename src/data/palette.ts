@@ -115,3 +115,17 @@ export const LIGHT_PALETTE = {
   sky: '#BBD7F0',
   ground: '#6B7A4F',
 } as const;
+
+// ART §4 / §7 and original neutral gallery presentation colors.
+export const BUILDING_DETAIL_PALETTE = {
+  concrete: '#A9A59C',
+  glass: '#5F7F99',
+  frame: '#E6E8EA',
+  windowLight: '#FFD27A',
+  atlasWhite: '#FFFFFF',
+  atlasBlack: '#000000',
+  night: '#0E1630',
+  galleryDay: '#E9E7E2',
+  scaffold: '#C0C0C0',
+  crane: '#E8B931',
+} as const;

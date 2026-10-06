@@ -212,7 +212,8 @@ h1 {
   background: var(--color-panel);
   backdrop-filter: blur(8px);
 }
-.view-nav button {
+.view-nav button,
+.view-nav a {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -262,7 +263,8 @@ h1 {
     justify-content: space-around;
     bottom: max(12px, env(safe-area-inset-bottom));
   }
-  .view-nav button {
+  .view-nav button,
+  .view-nav a {
     padding: 6px 12px;
   }
   .input-help {
@@ -593,4 +595,23 @@ h1 {
 }
 .bulldoze-status[data-invalid='true'] {
   color: var(--color-negative);
+}
+
+.view-nav a {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 720px) {
+  .view-nav button,
+  .view-nav a {
+    padding: 6px 8px;
+    font-size: 12px;
+    gap: 4px;
+  }
+  .view-nav button span {
+    font-size: 18px;
+  }
 }
