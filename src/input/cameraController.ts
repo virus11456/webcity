@@ -10,6 +10,7 @@ export interface InputTool {
   onPointerMove(p: InputPointer): void;
   onPointerUp(p: InputPointer): void;
   onCancel(): void;
+  onAngleModifier?(disabled: boolean): void;
 }
 export interface InputOptions {
   onTap?: (p: InputPointer) => void;
@@ -82,6 +83,9 @@ export class CameraController {
     });
     canvas.addEventListener('wheel', this.wheel, { passive: false });
     canvas.addEventListener('pointermove', this.edge);
+    canvas.addEventListener('pointermove', this.hover);
+    window.addEventListener('keydown', this.modifier);
+    window.addEventListener('keyup', this.modifier);
     canvas.addEventListener('pointerleave', this.stopEdge);
     canvas.addEventListener('blur', this.stopEdge);
     canvas.addEventListener('webglcontextlost', this.reset);
@@ -141,6 +145,22 @@ export class CameraController {
     this.edgeX = x < INPUT.edgePx ? -1 : x > r.width - INPUT.edgePx ? 1 : 0;
     this.edgeY = y < INPUT.edgePx ? -1 : y > r.height - INPUT.edgePx ? 1 : 0;
   };
+  private readonly hover = (e: PointerEvent): void => {
+    if (e.pointerType === 'mouse' && e.buttons === 0)
+      this.tool?.onPointerMove({
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        kind: e.pointerType,
+        button: 0,
+        ctrl: e.ctrlKey,
+        shift: e.shiftKey,
+      });
+  };
+  private readonly modifier = (e: KeyboardEvent): void => {
+    if (e.key === 'Shift' && document.activeElement === this.canvas)
+      this.tool?.onAngleModifier?.(e.type === 'keydown');
+  };
   private readonly stopEdge = (): void => {
     this.edgeX = this.edgeY = 0;
   };
@@ -148,6 +168,8 @@ export class CameraController {
     this.stopEdge();
     this.keyboard.clear();
     this.pointer.cancel();
+    this.tool?.onCancel();
+    this.tool?.onAngleModifier?.(false);
   };
   /** Opt in to desktop edge scrolling; turning it off stops an active scroll. */
   setEdgeScrolling(enabled: boolean): void {
@@ -186,6 +208,9 @@ export class CameraController {
     this.stopEdge();
     this.canvas.removeEventListener('wheel', this.wheel);
     this.canvas.removeEventListener('pointermove', this.edge);
+    this.canvas.removeEventListener('pointermove', this.hover);
+    window.removeEventListener('keydown', this.modifier);
+    window.removeEventListener('keyup', this.modifier);
     this.canvas.removeEventListener('pointerleave', this.stopEdge);
     this.canvas.removeEventListener('blur', this.stopEdge);
     this.canvas.removeEventListener('webglcontextlost', this.reset);

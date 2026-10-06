@@ -1,3 +1,5 @@
+import { ROADS, type RoadTypeId } from '../data/roads';
+import { isStraightRoadDraft } from '../world/roadConstruction';
 import type { Response, SimEvent } from '../bridge/protocol';
 import type { CitySettings } from '../world/snapshot';
 import { Simulation } from './simulation';
@@ -5,7 +7,6 @@ import { Simulation } from './simulation';
 const futureCommands = new Set([
   'load',
   'save',
-  'buildRoad',
   'upgradeRoad',
   'zone',
   'place',
@@ -74,7 +75,11 @@ export class CommandDispatcher {
       }
       return;
     }
-    if (value.t !== 'setSpeed' && !futureCommands.has(value.t)) {
+    if (
+      value.t !== 'setSpeed' &&
+      value.t !== 'buildRoad' &&
+      !futureCommands.has(value.t)
+    ) {
       fail('err.invalidCommand');
       return;
     }
@@ -82,7 +87,23 @@ export class CommandDispatcher {
       fail('err.notReady');
       return;
     }
-    if (value.t === 'setSpeed') {
+    if (value.t === 'buildRoad') {
+      if (
+        !('type' in value) ||
+        typeof value.type !== 'string' ||
+        !Object.hasOwn(ROADS, value.type) ||
+        !('points' in value) ||
+        !isStraightRoadDraft(value.points)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.buildRoad(value.type as RoadTypeId, value.points),
+      });
+    } else if (value.t === 'setSpeed') {
       if (
         !('speed' in value) ||
         (value.speed !== 0 &&

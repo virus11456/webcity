@@ -189,7 +189,13 @@ function checkJunctions(data: GraphData): void {
   }
 }
 /** Positive collinear overlap at a common height, including opposite road direction. */
-function overlaps(a: RoadNode, b: RoadNode, c: RoadNode, d: RoadNode): boolean {
+function overlaps(
+  a: RoadNode,
+  b: RoadNode,
+  c: RoadNode,
+  d: RoadNode,
+  sameSurface = false,
+): boolean {
   const dx = b.pos.x - a.pos.x,
     dz = b.pos.z - a.pos.z;
   const sx = d.pos.x - c.pos.x,
@@ -213,6 +219,7 @@ function overlaps(a: RoadNode, b: RoadNode, c: RoadNode, d: RoadNode): boolean {
   const lo = Math.max(0, Math.min(tc, td)),
     hi = Math.min(1, Math.max(tc, td));
   if ((hi - lo) * length <= PRECISION.positionM) return false;
+  if (sameSurface) return true;
   const gap = (t: number) =>
     heightAt(a, b, t) - heightAt(c, d, (t - tc) / (td - tc));
   const lowGap = gap(lo),
@@ -227,12 +234,15 @@ function overlaps(a: RoadNode, b: RoadNode, c: RoadNode, d: RoadNode): boolean {
 /** Transactional straight-road topology. Returned values never expose mutable authority. */
 export class RoadGraph {
   private data: GraphData;
+  private groundHeight?: (point: Vec2) => number;
   /** Dry-run a road on a trusted world snapshot without modifying it or consuming IDs. */
   static previewRoad(
     snapshot: RoadGraphSnapshot,
     road: StraightRoad,
+    groundHeight?: (point: Vec2) => number,
   ): RoadGraphChange {
     const graph = new RoadGraph(snapshot.nextId);
+    graph.groundHeight = groundHeight;
     graph.data = structuredClone({
       nodes: new Map(snapshot.nodes.map((node) => [node.id, node])),
       segments: new Map(
@@ -353,7 +363,10 @@ export class RoadGraph {
         const hit = closestPointOnSegment(node.pos, a.pos, b.pos);
         if (
           hit.distance <= PRECISION.positionM &&
-          sameHeight(node.height, heightAt(a, b, hit.t))
+          (sameHeight(node.height, heightAt(a, b, hit.t)) ||
+            (this.groundHeight &&
+              !road.elevated &&
+              node.segments.some((id) => !data.segments.get(id)!.elevated)))
         )
           cuts.add(node.id);
       }
@@ -361,13 +374,16 @@ export class RoadGraph {
       for (const segment of data.segments.values()) {
         const c = data.nodes.get(segment.start)!,
           d = data.nodes.get(segment.end)!;
-        if (overlaps(a, b, c, d)) fail('overlap');
+        const ground = Boolean(
+          this.groundHeight && !road.elevated && !segment.elevated,
+        );
+        if (overlaps(a, b, c, d, ground)) fail('overlap');
         const hit = segmentIntersection(a.pos, b.pos, c.pos, d.pos);
         if (!hit) continue;
         const t = closestPointOnSegment(hit, a.pos, b.pos).t;
         const u = closestPointOnSegment(hit, c.pos, d.pos).t;
-        const height = heightAt(a, b, t);
-        if (!sameHeight(height, heightAt(c, d, u))) continue;
+        const height = ground ? this.groundHeight!(hit) : heightAt(a, b, t);
+        if (!ground && !sameHeight(height, heightAt(c, d, u))) continue;
         const id = ensureNode(data, hit, height);
         cuts.add(id);
         const ids = oldCuts.get(segment.id) ?? new Set<Id>();

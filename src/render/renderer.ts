@@ -144,6 +144,11 @@ export class CityRenderer {
     this.resize();
     this.visibility();
   }
+  /** Separate decorative city assets from the authoritative construction world. */
+  setConstructionMode(enabled: boolean): void {
+    this.town.group.visible = !enabled;
+    this.canvas.dataset.construction = String(enabled);
+  }
   private createLighting(level: QualityLevel): Lighting {
     this.renderer.shadowMap.enabled = level !== 'low';
     this.stats.shadows =

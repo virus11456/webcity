@@ -20,7 +20,7 @@
 
 `bridge/protocol.ts` 定義 TECH §5 全部指令與事件。所有請求由 `SimClient` 配給唯一正整數 `reqId`，包含 init 和 setSpeed；`ready` 也帶 reqId。`send()` 回傳 `Promise<Response>`，Response 是 result / ready / saved / inspectResult 的 discriminated union，保留各種回覆的 payload。
 
-目前只執行 init、setSpeed。未初始化回 `err.notReady`；錯誤參數回 `err.invalidCommand`；未實作的建造、存讀檔等指令回 `err.notImplemented`，不假回成功。無法關聯請求的非法 reqId 回 error。再次 init 原子地替換城市，無效 init 保留原城市。
+目前執行 init、setSpeed 與地面直線 buildRoad。未初始化回 `err.notReady`；錯誤參數回 `err.invalidCommand`；其他尚未實作的建造種類、存讀檔等指令回 `err.notImplemented`，不假回成功。道路驗證、原子扣款與立即 fundsChanged 同步見 `docs/ROAD_TOOL.md`。無法關聯請求的非法 reqId 回 error。再次 init 原子地替換城市，無效 init 保留原城市。
 
 `WorldMirror` 套用完整 snapshot、路網／分區／建築／管線差異、場資料與車流。接收即套用，再發出訂閱通知，不等渲染迴圈；WebGL 中斷不會堵住訊息回覆。公開 snapshot 與 typed arrays 都是副本，clock 是凍結的小物件。傳輸錯誤會停用控制、結束 Worker 並拒絕待處理 Promise；請求逾時為 15 秒。HMR 清理會取消訂閱、關閉 Worker、清除所有待處理計時器。
 

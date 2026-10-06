@@ -1,3 +1,4 @@
+import type { ConstructionReason } from '../world/roadConstruction';
 import type { BuildingDefId } from '../data/buildings';
 import type { SimSpeed } from '../data/config';
 import type { BudgetDepartment } from '../data/economy';
@@ -49,7 +50,7 @@ export type CommandInput =
   | { t: 'inspect'; target: { kind: string; id: Id } };
 export type Command = CommandInput & { reqId: number };
 export type FailureReason =
-  'err.invalidCommand' | 'err.notReady' | 'err.notImplemented';
+  ConstructionReason | 'err.notReady' | 'err.notImplemented';
 export type Result = {
   t: 'result';
   reqId: number;
@@ -65,6 +66,7 @@ export type Response =
 export type SimEvent =
   | Response
   | { t: 'clock'; clock: SimClock }
+  | { t: 'fundsChanged'; money: number }
   | {
       t: 'roadsChanged';
       added: RoadSegment[];

@@ -1,3 +1,9 @@
+import { RoadTool } from './tools/roadTool';
+import { ToolManager } from './tools/toolManager';
+import { RoadPreviewRenderer } from './render/preview';
+import { createRoadControls } from './ui/roadControls';
+import { TerrainPicker } from './input/picking';
+import { ROAD_TOOL_RENDER } from './data/roadTool';
 import { PickingPreview } from './input/pickingPreview';
 import { createPickingDebug } from './ui/pickingDebug';
 import type { TerrainPick } from './world/picking';
@@ -26,6 +32,10 @@ const root = document.querySelector<HTMLDivElement>('#app');
 
 if (!root) throw new Error('Missing #app element');
 
+let roadTool: RoadTool | undefined;
+let roadControls: ReturnType<typeof createRoadControls> | undefined;
+let roadPreview: RoadPreviewRenderer | undefined;
+let tools: ToolManager | undefined;
 let input: CameraController | undefined;
 let city: CityRenderer | undefined;
 let picking: PickingPreview | undefined;
@@ -111,6 +121,60 @@ if (canvas && status) {
         else if (action === 'speed3') void simControls?.setSpeed(4);
       },
     });
+    if (sim) {
+      const picker = new TerrainPicker(city.terrain);
+      roadPreview = new RoadPreviewRenderer(city.scene);
+      roadTool = new RoadTool(
+        {
+          sim,
+          pick(x, y) {
+            const hit = picker.pick(
+              x,
+              y,
+              canvas.getBoundingClientRect(),
+              city!.camera,
+              city!.camera.far,
+            );
+            return hit ? { x: hit.world.x, z: hit.world.z } : null;
+          },
+          preview: (result, anchor) => roadPreview?.show(result, anchor),
+          worldChanged: (world) => roadPreview?.sync(world),
+        },
+        (state) => roadControls?.update(state),
+      );
+      tools = new ToolManager((tool) => input?.setTool(tool));
+      const mode = (construction: boolean) => {
+        const first = construction && root.dataset.construction !== 'true';
+        root.dataset.construction = String(construction);
+        city!.setConstructionMode(construction);
+        roadPreview!.group.visible = construction;
+        if (first)
+          city!.cameraController.flyTo(
+            ROAD_TOOL_RENDER.focus,
+            ROAD_TOOL_RENDER.focus.distance,
+          );
+      };
+      roadControls = createRoadControls(root, {
+        enter() {
+          mode(true);
+          tools!.select(roadTool!);
+          canvas.focus({ preventScroll: true });
+        },
+        explore() {
+          tools!.select(null);
+          canvas.focus({ preventScroll: true });
+        },
+        demo() {
+          tools!.select(null);
+          mode(false);
+        },
+        confirm: () => roadTool!.onConfirm(),
+        cancel: () => roadTool!.onCancel(),
+        type: (type) => roadTool!.setType(type),
+        angle: (enabled) => roadTool!.setAngleSnap(enabled),
+      });
+      roadControls.update(roadTool.readState());
+    }
     if (debug) window.__webcityCamera = city.cameraController;
   } catch {
     status.hidden = false;
@@ -121,6 +185,10 @@ if (import.meta.hot)
   import.meta.hot.dispose(() => {
     delete window.__webcityCamera;
     delete window.__webcityPick;
+    tools?.dispose();
+    roadTool?.dispose();
+    roadControls?.dispose();
+    roadPreview?.dispose();
     picking?.dispose();
     pickingDebug?.dispose();
     input?.dispose();

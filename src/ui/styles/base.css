@@ -382,3 +382,149 @@ h1 {
 .sim-week {
   color: var(--color-secondary);
 }
+
+.road-controls {
+  position: absolute;
+  z-index: 4;
+  left: max(18px, env(safe-area-inset-left));
+  bottom: max(190px, env(safe-area-inset-bottom));
+  font-size: 14px;
+}
+.road-controls button,
+.road-controls select {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-background);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+.road-controls button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.road-controls button[aria-pressed='true'],
+.road-controls button:focus-visible,
+.road-controls select:focus-visible {
+  border-color: var(--color-accent);
+  outline: 1px solid var(--color-accent);
+}
+.road-controls[data-construction='true'] {
+  bottom: max(18px, env(safe-area-inset-bottom));
+  width: min(520px, calc(100% - 36px));
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-panel);
+  backdrop-filter: blur(8px);
+}
+.road-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.road-money {
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+.road-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+.road-options {
+  justify-content: space-between;
+}
+.road-options label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+.road-angle {
+  min-height: 44px;
+}
+.road-angle input {
+  width: 20px;
+  height: 20px;
+}
+.road-metrics {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.road-status {
+  margin: 8px 0;
+  min-height: 18px;
+  font-size: 12px;
+}
+.road-status[data-invalid='true'] {
+  color: var(--color-negative);
+}
+.road-controls small {
+  color: var(--color-secondary);
+  font-size: 12px;
+}
+#app[data-construction='true'] .input-help,
+#app[data-construction='true'] .view-nav,
+#app[data-construction='true'] .preview-badge {
+  display: none;
+}
+@media (max-width: 720px) {
+  .road-controls {
+    left: max(12px, env(safe-area-inset-left));
+    bottom: calc(260px + env(safe-area-inset-bottom));
+  }
+  .road-controls[data-construction='true'] {
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    width: auto;
+    padding: 10px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .road-options {
+    flex-wrap: wrap;
+    gap: 0;
+  }
+  .road-row {
+    gap: 6px;
+  }
+  .road-controls button {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  #app[data-construction='true'] .sim-controls {
+    top: max(86px, calc(74px + env(safe-area-inset-top)));
+    bottom: auto;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .road-controls {
+    bottom: max(90px, env(safe-area-inset-bottom));
+  }
+  .road-controls[data-construction='true'] {
+    width: 330px;
+    left: auto;
+    right: max(12px, env(safe-area-inset-right));
+    padding: 8px;
+  }
+  .road-heading {
+    margin-bottom: 2px;
+  }
+  .road-row {
+    margin: 4px 0;
+  }
+  .road-status {
+    margin: 4px 0;
+  }
+  .road-options label {
+    gap: 4px;
+  }
+}
+[hidden] {
+  display: none !important;
+}

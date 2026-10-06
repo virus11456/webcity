@@ -33,7 +33,7 @@ export interface RoadGeometryWorld extends RoadGraphSnapshot {
 export interface RoadSnapOptions {
   angle?: boolean;
   length?: boolean;
-  connections?: boolean;
+  connections?: boolean | 'exact';
 }
 export interface RoadSnap {
   pos: Vec2;
@@ -73,7 +73,7 @@ const height = (world: RoadGeometryWorld, p: Vec2) =>
 export function snapRoadPoint(
   point: Vec2,
   world: RoadGeometryWorld,
-  enabled = true,
+  enabled: boolean | 'exact' = true,
 ): RoadSnap {
   const free: RoadSnap = {
     pos: { ...point },
@@ -82,7 +82,8 @@ export function snapRoadPoint(
   };
   if (!enabled) return free;
   let best: RoadSnap | undefined;
-  let nearest = ROAD_RULES.nodeSnapDistanceM as number;
+  let nearest: number =
+    enabled === 'exact' ? EPS.positionM : ROAD_RULES.nodeSnapDistanceM;
   for (const node of [...world.nodes].sort((a, b) => a.id - b.id)) {
     const d = distance(point, node.pos);
     // This MVP only connects ground roads; bridge picking belongs to M2-04.
@@ -372,12 +373,12 @@ export function previewStraightRoad(
   const start = snapRoadPoint(
     request.start,
     world,
-    request.snap?.connections !== false,
+    request.snap?.connections ?? true,
   );
   let end = snapRoadPoint(
     request.end,
     world,
-    request.snap?.connections !== false,
+    request.snap?.connections ?? true,
   );
   // An exact connection wins over angle/length rounding; never round a T junction off its road.
   if (end.kind === 'none') {
@@ -387,8 +388,11 @@ export function previewStraightRoad(
       referenceAngle(start, request.end, world),
       request.snap,
     );
-    end = snapRoadPoint(pos, world, request.snap?.connections !== false);
+    end = snapRoadPoint(pos, world, request.snap?.connections ?? true);
   }
+  // Ground roads follow the sampled surface, including the interior of existing roads.
+  if (start.kind === 'segment') start.height = height(world, start.pos);
+  if (end.kind === 'segment') end.height = height(world, end.pos);
   const length = distance(start.pos, end.pos);
   if (![start.height, end.height, length].every(Number.isFinite))
     return reject('err.invalidCommand');
@@ -443,14 +447,18 @@ export function previewStraightRoad(
   )
     return reject('err.buildingConflict', preview);
   try {
-    RoadGraph.previewRoad(world, {
-      start: start.pos,
-      end: end.pos,
-      startHeight: start.height,
-      endHeight: end.height,
-      type: request.type,
-      builtDay: 0,
-    });
+    RoadGraph.previewRoad(
+      world,
+      {
+        start: start.pos,
+        end: end.pos,
+        startHeight: start.height,
+        endHeight: end.height,
+        type: request.type,
+        builtDay: 0,
+      },
+      (point) => height(world, point),
+    );
   } catch (error) {
     if (!(error instanceof RoadGraphError)) throw error;
     const reason =

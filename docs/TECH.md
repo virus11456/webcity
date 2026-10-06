@@ -308,6 +308,7 @@ export type SimEvent =
 - 每個需要回應的指令帶 `reqId`；`SimClient` 提供 `send(cmd): Promise<Result>`。
 - M1-01 實作細節：所有請求（含 init / setSpeed）均自動配置 reqId；ready 回覆也帶 reqId。`send()` 的實際回傳為 `Promise<Response>`（result / ready / saved / inspectResult union），並增加獨立 clock 事件回報速度與固定步數。鏡像於接收訊息時套用，避免依賴 WebGL 是否正常繪製。完整執行、背景節流與未實作型別界線見 `docs/SIMULATION.md`。
 - M1-02：snapshot 增加目前 `stats`，遊戲日完成時依序執行日鉤子、適用的週鉤子、stats snapshot 與事件；day=0 為起始日，第一個週鉤子於完成第 7 天觸發。日期與執行順序詳見 `docs/SIMULATION.md`。
+- M1-05：`buildRoad` 已接入權威驗證、道路圖與扣款；新增 `fundsChanged` 事件立即同步資金而不寫入每日統計歷史。工具鏡像快取、exact 接點與地表路口整合詳見 `docs/ROAD_TOOL.md`。
 - 失敗原因 `reason` 用 i18n key（例：`err.notEnoughMoney`、`err.slopeTooSteep`），由 UI 翻譯顯示。
 
 ---

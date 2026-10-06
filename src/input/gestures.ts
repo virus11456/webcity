@@ -9,6 +9,7 @@ export interface InputPointer extends Point {
   kind: string;
   button: number;
   ctrl: boolean;
+  shift?: boolean;
 }
 export interface GestureSink {
   start(p: InputPointer): void;

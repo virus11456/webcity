@@ -1,3 +1,4 @@
+import type { RoadConstructionWorld } from '../world/roadConstruction';
 import type { SimClock, WorldSnapshot } from '../world/snapshot';
 import type { ServiceType } from '../world/types';
 import type { SimEvent } from './protocol';
@@ -28,6 +29,25 @@ export class WorldMirror {
     return this.state && structuredClone(this.state);
   }
 
+  /** Copy only data needed by construction tools; cache it until a world event changes it. */
+  readRoadWorld(): RoadConstructionWorld | undefined {
+    const s = this.state;
+    return (
+      s &&
+      structuredClone({
+        nodes: s.nodes,
+        segments: s.segments,
+        nextId: s.nextId,
+        heights: s.terrain.heights,
+        buildings: s.buildings,
+        ownedTiles: s.ownedTiles,
+        money: s.money,
+        mode: s.settings.mode,
+        unlocked: s.unlocked,
+      })
+    );
+  }
+
   /** Return the latest copied vehicle stream (M2). */
   readVehicles(): { data: Float32Array; count: number } {
     return structuredClone(this.vehicles);
@@ -46,7 +66,12 @@ export class WorldMirror {
       case 'clock':
         state.clock = { ...event.clock };
         break;
+      case 'fundsChanged':
+        state.money = state.stats.money = event.money;
+        break;
       case 'roadsChanged':
+        for (const item of [...event.added, ...event.nodes])
+          state.nextId = Math.max(state.nextId, item.id + 1);
         state.segments = upsert(
           state.segments,
           structuredClone(event.added),

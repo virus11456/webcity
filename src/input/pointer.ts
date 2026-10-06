@@ -25,6 +25,7 @@ export class PointerInput {
       kind: e.pointerType,
       button: this.active.get(e.pointerId)?.button ?? e.button,
       ctrl: e.ctrlKey,
+      shift: e.shiftKey,
     };
   }
   private readonly prevent = (e: Event): void => e.preventDefault();

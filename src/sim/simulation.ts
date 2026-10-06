@@ -1,3 +1,10 @@
+import { meshHeightAt } from '../world/heightField';
+import { GAME_MODES } from '../data/config';
+import type { RoadTypeId } from '../data/roads';
+import { RoadGraph } from '../world/roadGraph';
+import { validateRoadDraft } from '../world/roadConstruction';
+import type { RoadDraft } from '../world/snapshot';
+import type { Result } from '../bridge/protocol';
 import type { SimEvent } from '../bridge/protocol';
 import type { Unsubscribe } from '../core/events';
 import { TimeSystem, type DayBoundary } from './systems/time';
@@ -41,6 +48,50 @@ export class Simulation {
   /** Copy all arrays; callers cannot mutate the authoritative city. */
   snapshot(): WorldSnapshot {
     return structuredClone(this.state);
+  }
+
+  /** Validate and atomically commit a ground road, also while paused; clients cannot supply prices. */
+  buildRoad(type: RoadTypeId, points: RoadDraft): Omit<Result, 't' | 'reqId'> {
+    const s = this.state;
+    const result = validateRoadDraft(type, points, {
+      ...s,
+      heights: s.terrain.heights,
+      mode: s.settings.mode,
+    });
+    if (!result.canBuild || !result.preview)
+      return { ok: false, reason: result.reason ?? 'err.invalidCommand' };
+    const p = result.preview;
+    const change = RoadGraph.previewRoad(
+      s,
+      {
+        type,
+        start: p.start.pos,
+        end: p.end.pos,
+        startHeight: p.start.height,
+        endHeight: p.end.height,
+        builtDay: s.clock.day,
+      },
+      (point) => meshHeightAt(s.terrain.heights, point.x, point.z),
+    );
+    const removed = new Set(change.removed),
+      removedNodes = new Set(change.removedNodes);
+    const nodes = new Map(
+      s.nodes.filter((n) => !removedNodes.has(n.id)).map((n) => [n.id, n]),
+    );
+    for (const node of change.nodes) nodes.set(node.id, node);
+    s.nodes = [...nodes.values()];
+    s.segments = [
+      ...s.segments.filter((segment) => !removed.has(segment.id)),
+      ...change.added,
+    ];
+    for (const item of [...change.nodes, ...change.added])
+      s.nextId = Math.max(s.nextId, item.id + 1);
+    const cost = GAME_MODES[s.settings.mode].unlimitedMoney ? 0 : p.cost;
+    s.money -= cost;
+    s.stats.money = s.money;
+    this.emit({ t: 'roadsChanged', ...structuredClone(change) });
+    this.emit({ t: 'fundsChanged', money: s.money });
+    return { ok: true, cost };
   }
 
   /** Advance exactly one simulation step, unless paused. */

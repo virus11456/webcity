@@ -1,6 +1,6 @@
 # M1-03：道路圖資料核心
 
-本卡實作 `world/roadGraph.ts`，供後續 Worker 鋪路驗證、吸附及路口 Mesh 使用。尚未把 `buildRoad` 指令接入 Worker，也沒有新增鋪路按鈕；可操作工具屬 M1-05，道路可見 Mesh 屬 M1-06。
+本卡實作 `world/roadGraph.ts`，供後續 Worker 鋪路驗證、吸附及路口 Mesh 使用。M1-05 已將 `buildRoad` 接入 Worker 與可操作工具，並提供暫時的道路色帶；完整道路 Mesh 屬 M1-06。整合見 `docs/ROAD_TOOL.md`。
 
 ## API
 
