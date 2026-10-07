@@ -1,3 +1,10 @@
+import { updateWater } from './systems/water';
+import {
+  previewWaterFacility,
+  previewPipe,
+  previewRoadPipes,
+  waterDefinition,
+} from '../world/waterUtility';
 import { updatePower } from './systems/power';
 import {
   previewPlant,
@@ -55,7 +62,7 @@ export class Simulation {
       const roads = tickRoadAccess(this.state);
       const population = updatePopulation(this.state, true);
       updateDemand(this.state);
-      const power = updatePower(this.state);
+      const power = [...updatePower(this.state), ...updateWater(this.state)];
       const updates = new Map<number, BuildingPatch>(
         roads.map((b) => [b.id, { ...b }]),
       );
@@ -82,7 +89,14 @@ export class Simulation {
     };
   }
   private refreshPower(): void {
-    const updated = updatePower(this.state);
+    const updated = [
+      ...new Map(
+        [...updatePower(this.state), ...updateWater(this.state)].map((p) => [
+          p.id,
+          p,
+        ]),
+      ).values(),
+    ];
     if (updated.length)
       this.emit({
         t: 'buildingsChanged',
@@ -101,8 +115,10 @@ export class Simulation {
     pos: Vec2,
     rotation: number,
   ): Omit<Result, 't' | 'reqId'> {
-    const preview = previewPlant(this.powerWorld(), defId, pos, rotation),
-      d = plantDefinition(defId);
+    const d = waterDefinition(defId) ?? plantDefinition(defId),
+      preview = waterDefinition(defId)
+        ? previewWaterFacility(this.powerWorld(), defId, pos, rotation)
+        : previewPlant(this.powerWorld(), defId, pos, rotation);
     if (!preview.valid || !d || !d.footprintCells)
       return { ok: false, reason: preview.reason ?? 'err.invalidCommand' };
     const s = this.state,
@@ -182,6 +198,33 @@ export class Simulation {
     this.emit({ t: 'fundsChanged', money: s.money });
     this.refreshPower();
     return { ok: true, cost: p.cost };
+  }
+
+  buildWaterPipes(points?: Vec2[]): Omit<Result, 't' | 'reqId'> {
+    const s = this.state,
+      w = { ...this.powerWorld(), networks: s.networks.water };
+    const preview = points ? previewPipe(w, points) : previewRoadPipes(w);
+    if (!preview.valid)
+      return { ok: false, reason: preview.reason ?? 'err.invalidCommand' };
+    const paths = preview.paths ?? [preview.points];
+    const added = paths.map((path) => ({
+      id: s.nextId++,
+      points: structuredClone(path),
+      builtDay: s.clock.day,
+      paidCost: previewPipe({ ...w, money: Infinity }, path, true).cost,
+    }));
+    s.networks.water = [...s.networks.water, ...added];
+    s.money -= preview.cost;
+    s.stats.money = s.money;
+    this.emit({
+      t: 'networksChanged',
+      net: 'water',
+      added: structuredClone(added),
+      removed: [],
+    });
+    this.emit({ t: 'fundsChanged', money: s.money });
+    this.refreshPower();
+    return { ok: true, cost: preview.cost };
   }
 
   /** Register an authoritative worker system to run at each completed day. */
@@ -404,7 +447,7 @@ export class Simulation {
         removed: [],
         updated: structuredClone(updated),
       });
-    const power = updatePower(this.state);
+    const power = [...updatePower(this.state), ...updateWater(this.state)];
     if (power.length)
       this.emit({
         t: 'buildingsChanged',

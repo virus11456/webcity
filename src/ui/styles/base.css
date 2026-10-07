@@ -673,10 +673,12 @@ h1 {
   }
 }
 
-.power-controls .road-row {
+.power-controls .road-row,
+.water-controls .road-row {
   flex-wrap: wrap;
 }
-.power-controls select {
+.power-controls select,
+.water-controls select {
   max-width: 100%;
   font-size: 12px;
 }
@@ -700,5 +702,26 @@ h1 {
   .road-tabs button {
     padding: 8px 4px;
     font-size: 12px;
+  }
+}
+
+@media (max-width: 720px), (max-height: 500px) and (orientation: landscape) {
+  .road-tabs {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .road-tabs button {
+    min-width: 0;
+    padding: 4px 1px;
+    white-space: normal;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .road-controls[data-construction='true'] {
+    width: 370px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
   }
 }

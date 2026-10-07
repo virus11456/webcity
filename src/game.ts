@@ -1,3 +1,6 @@
+import { WaterTool } from './tools/waterTool';
+import { WaterUtilityRenderer } from './render/waterUtilities';
+import { createWaterControls } from './ui/waterControls';
 import { PlaceTool } from './tools/placeTool';
 import { NetworkTool } from './tools/networkTool';
 import { PowerRenderer } from './render/power';
@@ -60,6 +63,10 @@ const root = document.querySelector<HTMLDivElement>('#app');
 
 if (!root) throw new Error('Missing #app element');
 
+let waterTool: WaterTool | undefined;
+let waterUtilities: WaterUtilityRenderer | undefined;
+let waterControls: ReturnType<typeof createWaterControls> | undefined;
+let unsubscribeWater: (() => void) | undefined;
 let placeTool: PlaceTool | undefined;
 let networkTool: NetworkTool | undefined;
 let powerRenderer: PowerRenderer | undefined;
@@ -287,6 +294,29 @@ if (canvas && status) {
       };
       placeTool = new PlaceTool(powerContext, powerChanged);
       networkTool = new NetworkTool(powerContext, powerChanged);
+      waterUtilities = new WaterUtilityRenderer(city.scene, (x, z) =>
+        city!.terrain.heightAt(x, z),
+      );
+      waterUtilities.group.visible = false;
+      if (powerSnapshot)
+        waterUtilities.accept({
+          t: 'ready',
+          reqId: 0,
+          snapshot: powerSnapshot,
+        });
+      unsubscribeWater = sim.onEvent((e) => waterUtilities!.accept(e));
+      waterTool = new WaterTool(
+        { ...powerContext, preview: (p) => waterUtilities?.show(p) },
+        (s) => {
+          roadControls?.updateWater(s.active, s.pending);
+          waterControls?.update(s);
+          const underground =
+            s.active && (s.mode === 'pipe' || s.mode === 'roads');
+          city!.setWaterOverlay(underground);
+          waterUtilities?.setUnderground(underground);
+          root.dataset.underground = String(underground);
+        },
+      );
       tools = new ToolManager((tool) => input?.setTool(tool));
       const mode = (construction: boolean) => {
         const first = construction && root.dataset.construction !== 'true';
@@ -296,6 +326,7 @@ if (canvas && status) {
         zoneRenderer!.group.visible = construction;
         buildings!.group.visible = construction;
         powerRenderer!.group.visible = construction;
+        waterUtilities!.group.visible = construction;
         if (first)
           city!.cameraController.flyTo(
             ROAD_TOOL_RENDER.focus,
@@ -311,6 +342,11 @@ if (canvas && status) {
         zone() {
           mode(true);
           tools!.select(zoneTool!);
+          canvas.focus({ preventScroll: true });
+        },
+        water() {
+          mode(true);
+          tools!.select(waterTool!);
           canvas.focus({ preventScroll: true });
         },
         power() {
@@ -353,6 +389,12 @@ if (canvas && status) {
           networkTool!.readState().active
             ? networkTool!.onCancel()
             : placeTool!.onCancel(),
+      });
+      waterControls = createWaterControls(roadControls.waterHost, {
+        mode: (m) => waterTool!.setMode(m),
+        rotate: () => waterTool!.rotate(),
+        confirm: () => waterTool!.onConfirm(),
+        cancel: () => waterTool!.onCancel(),
       });
       growthControls = createGrowthControls(
         roadControls.growthHost,
@@ -424,6 +466,10 @@ if (import.meta.hot)
     delete window.__webcityZoneStats;
     delete window.__webcityPick;
     tools?.dispose();
+    unsubscribeWater?.();
+    waterTool?.dispose();
+    waterControls?.dispose();
+    waterUtilities?.dispose();
     unsubscribePower?.();
     placeTool?.dispose();
     networkTool?.dispose();

@@ -23,13 +23,16 @@ export function createGrowthControls(
   const homes = document.createElement('span'),
     jobs = document.createElement('span'),
     flow = document.createElement('span'),
-    power = document.createElement('span');
-  people.append(homes, jobs, flow, power);
+    power = document.createElement('span'),
+    water = document.createElement('span');
+  people.append(homes, jobs, flow, power, water);
   const population = (stats: CityStats | undefined) => {
     const p = stats?.populationDetails;
     const e = stats?.power;
     power.textContent = `${t('power.summary')} ${(e?.produced ?? 0).toFixed(2)} / ${(e?.consumed ?? 0).toFixed(2)} / ${(e?.served ?? 0).toFixed(2)} · ${t('power.unpowered')} ${e?.unpowered ?? 0}`;
     power.className = 'power-summary';
+    water.className = 'power-summary';
+    water.textContent = `${t('water.summary')} ${stats?.water.produced ?? 0}/${stats?.water.consumed ?? 0}/${stats?.water.served ?? 0} · ${t('water.sewage')} ${stats?.sewage.capacity ?? 0}/${stats?.sewage.produced ?? 0}/${stats?.sewage.treated ?? 0} · ${t('water.unserved')} ${stats?.water.unserved ?? 0} · ${t('water.uncollected')} ${stats?.sewage.uncollected ?? 0}`;
     people.dataset.population = String(stats?.population ?? 0);
     people.dataset.occupied = String(p?.occupiedHouseholds ?? 0);
     people.dataset.jobs = String(p?.jobs ?? 0);

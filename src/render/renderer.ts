@@ -1,3 +1,4 @@
+import { WATER_UTILITY } from '../data/waterUtility';
 import {
   ACESFilmicToneMapping,
   FogExp2,
@@ -283,6 +284,16 @@ export class CityRenderer {
     if (this.canvas.dataset.ready !== 'true')
       this.canvas.dataset.ready = 'true';
   };
+  /** Underground utility view leaves the terrain pick surface intact. */
+  setWaterOverlay(enabled: boolean): void {
+    const material = this.land.material;
+    if (material.transparent !== enabled) {
+      material.transparent = enabled;
+      material.needsUpdate = true;
+    }
+    material.opacity = enabled ? WATER_UTILITY.terrainOpacity : 1;
+    material.depthWrite = !enabled;
+  }
   /** Stop animation and release event subscriptions, GPU resources and scene nodes. */
   dispose(): void {
     if (this.disposed) return;

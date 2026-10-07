@@ -55,13 +55,13 @@ export class WorldMirror {
     );
   }
 
-  readPowerWorld(): PowerWorld | undefined {
+  readPowerWorld(net: 'power' | 'water' = 'power'): PowerWorld | undefined {
     const road = this.readRoadWorld();
     return road && this.state
       ? {
           ...road,
           seed: this.state.seed,
-          networks: structuredClone(this.state.networks.power),
+          networks: structuredClone(this.state.networks[net]),
         }
       : undefined;
   }

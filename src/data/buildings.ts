@@ -131,7 +131,7 @@ export const BUILDINGS = [
     cost: 2500,
     upkeepPerWeek: 120,
     unlock: 0,
-    footprintCells: null,
+    footprintCells: [2, 2],
     water: {
       capacityM3PerWeek: 12000,
       output: 'water',
@@ -145,7 +145,7 @@ export const BUILDINGS = [
     cost: 3000,
     upkeepPerWeek: 160,
     unlock: 0,
-    footprintCells: null,
+    footprintCells: [2, 2],
     water: {
       capacityM3PerWeek: 6000,
       output: 'water',
@@ -159,7 +159,7 @@ export const BUILDINGS = [
     cost: 2500,
     upkeepPerWeek: 120,
     unlock: 0,
-    footprintCells: null,
+    footprintCells: [2, 2],
     water: {
       capacityM3PerWeek: 30000,
       output: 'sewage',
@@ -173,7 +173,7 @@ export const BUILDINGS = [
     cost: 25000,
     upkeepPerWeek: 800,
     unlock: 4,
-    footprintCells: null,
+    footprintCells: [4, 4],
     water: {
       capacityM3PerWeek: 30000,
       output: 'sewage',
@@ -463,7 +463,7 @@ export const NETWORKS = [
     costPer8M: 10,
     upkeepPer8MWeek: 0.08,
     unlock: 0,
-    canCrossWater: null,
+    canCrossWater: true,
     underground: true,
   },
   {

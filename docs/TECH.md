@@ -487,3 +487,6 @@ M1-14：`sim/systems/demand.ts` 在 `createState` 初始化及每日人口結算
 
 
 M1-15：`place` 支援兩種開局電力設施，`buildNetwork` 支援 power；共用 `world/power.ts` 驗證。`stats.power` 增加 optional served／unpowered／groups，flags bit 1 為 HAS_POWER。供電 BFS 與空間索引在 Worker，建造及人口變化觸發更新；鏡像新增 `readPowerWorld`，電線事件推進 nextId。獨立 PowerRenderer 接收已確認事件，PlaceTool／NetworkTool 使用既有工具管理器、雙指取消與明確確認；不跨模組直接改世界。詳見 `POWER.md`。
+
+
+M1-16：`place` 開放水務設施、`buildNetwork` 支援 water，新增 `buildRoadPipes` 原子批次請求。Worker 先更新電力再更新水務；flags bit 2／4 表示 HAS_WATER／HAS_SEWAGE，既有位元保留。water stats 增加 optional served／unserved／groups，sewage 增加 treated／uncollected。工具沿用共享場址／土地驗證並由 Worker 重算；鏡像 `readPowerWorld('water')`、獨立 WaterTool／WaterUtilityRenderer 及地形透明模式接入。詳見 `WATER_UTILITIES.md`。

@@ -410,7 +410,7 @@ describe('worker transactions and mirror', () => {
     ).toBe(false);
     expect(snapshot()).toBe(before);
   });
-  it('validates untrusted place/network payloads and supports power only', () => {
+  it('validates untrusted place/network payloads', () => {
     const events: SimEvent[] = [],
       d = new CommandDispatcher((e) => events.push(e));
     d.handle({ t: 'init', reqId: 1, ...settings });
@@ -436,8 +436,8 @@ describe('worker transactions and mirror', () => {
       ],
     });
     expect(events.at(-1)).toMatchObject({
-      ok: false,
-      reason: 'err.notImplemented',
+      ok: true,
+      cost: 100,
     });
   });
 });

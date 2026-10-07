@@ -133,8 +133,19 @@ export interface CityStats {
     unpowered?: number;
     groups?: number;
   };
-  water: { produced: number; consumed: number };
-  sewage: { capacity: number; produced: number };
+  water: {
+    produced: number;
+    consumed: number;
+    served?: number;
+    unserved?: number;
+    groups?: number;
+  };
+  sewage: {
+    capacity: number;
+    produced: number;
+    treated?: number;
+    uncollected?: number;
+  };
   happiness: number;
   milestone: number;
 }

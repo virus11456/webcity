@@ -14,6 +14,7 @@ const futureCommands = new Set([
   'upgradeRoad',
   'place',
   'buildNetwork',
+  'buildRoadPipes',
   'undo',
   'setTax',
   'setBudget',
@@ -109,8 +110,13 @@ export class CommandDispatcher {
         reqId,
         ...this.simulation.place(value.defId, value.pos, value.rotation),
       });
+    } else if (value.t === 'buildRoadPipes') {
+      this.emit({ t: 'result', reqId, ...this.simulation.buildWaterPipes() });
     } else if (value.t === 'buildNetwork') {
-      if (!('net' in value) || value.net !== 'power') {
+      if (
+        !('net' in value) ||
+        (value.net !== 'power' && value.net !== 'water')
+      ) {
         fail('err.notImplemented');
         return;
       }
@@ -125,7 +131,9 @@ export class CommandDispatcher {
       this.emit({
         t: 'result',
         reqId,
-        ...this.simulation.buildPowerLine(value.points),
+        ...(value.net === 'water'
+          ? this.simulation.buildWaterPipes(value.points)
+          : this.simulation.buildPowerLine(value.points)),
       });
     } else if (value.t === 'bulldoze') {
       const targets =

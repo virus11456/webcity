@@ -1,3 +1,5 @@
+import { WATER_UTILITY } from '../data/waterUtility';
+import type { BuildingDefinition } from '../data/buildings';
 import { POWER } from '../data/power';
 import { BUILDINGS, NETWORKS } from '../data/buildings';
 import {
@@ -38,7 +40,12 @@ export type PowerReason =
   | 'err.roadOverlap'
   | 'err.powerTerrain'
   | 'err.powerLength'
-  | 'err.powerLocked';
+  | 'err.powerLocked'
+  | 'err.waterShore'
+  | 'err.waterTerrain'
+  | 'err.waterLength'
+  | 'err.waterNothing'
+  | 'err.waterLocked';
 export interface PowerPreview {
   points: Vec2[];
   closed: boolean;
@@ -140,13 +147,19 @@ export function shapeDistance(
     }
   return best;
 }
-export function previewPlant(
+export function previewFacility(
   w: PowerWorld,
   id: string,
   pos: Vec2,
   rotation: number,
+  options: {
+    definition?: BuildingDefinition;
+    maxSlope?: number;
+    maxHeightDifferenceM?: number;
+    output?: number;
+  } = {},
 ): PowerPreview {
-  const d = plantDefinition(id);
+  const d = options.definition ?? plantDefinition(id);
   const r: PowerPreview = {
     points: [],
     closed: true,
@@ -166,16 +179,20 @@ export function previewPlant(
   const [lotW, lotD] = d.footprintCells;
   r.points = zoneBuildingFootprint({ pos, rotation, lotW, lotD });
   r.cost = GAME_MODES[w.mode].unlimitedMoney ? 0 : d.cost;
-  r.output = plantOutput(w.seed, id, pos);
+  r.output = options.output ?? plantOutput(w.seed, id, pos);
   if (!GAME_MODES[w.mode].allUnlocked && !w.unlocked.includes(d.unlock))
     r.reason = 'err.powerLocked';
   else if (r.points.some((p) => !ownedPoint(p, w.ownedTiles)))
     r.reason = 'err.landNotOwned';
   else if (
-    !zoneTerrainValid(r.points, w.heights, POWER.maxSlope) ||
+    !zoneTerrainValid(
+      r.points,
+      w.heights,
+      options.maxSlope ?? POWER.maxSlope,
+    ) ||
     Math.max(...r.points.map((p) => meshHeightAt(w.heights, p.x, p.z))) -
       Math.min(...r.points.map((p) => meshHeightAt(w.heights, p.x, p.z))) >
-      POWER.maxHeightDifferenceM
+      (options.maxHeightDifferenceM ?? POWER.maxHeightDifferenceM)
   )
     r.reason = 'err.powerTerrain';
   else if (
@@ -203,7 +220,20 @@ export function previewPlant(
   }
   return r;
 }
-export function previewLine(w: PowerWorld, points: Vec2[]): PowerPreview {
+export function previewPlant(
+  w: PowerWorld,
+  id: string,
+  pos: Vec2,
+  rotation: number,
+): PowerPreview {
+  return previewFacility(w, id, pos, rotation);
+}
+export function previewLine(
+  w: PowerWorld,
+  points: Vec2[],
+  net: 'power' | 'water' = 'power',
+  allowShort = false,
+): PowerPreview {
   const r: PowerPreview = {
     points: [],
     closed: false,
@@ -215,7 +245,8 @@ export function previewLine(w: PowerWorld, points: Vec2[]): PowerPreview {
   if (
     !Array.isArray(points) ||
     points.length < 2 ||
-    points.length > POWER.maxPoints ||
+    points.length >
+      (net === 'water' ? WATER_UTILITY.maxPoints : POWER.maxPoints) ||
     !points.every(finitePoint)
   )
     return r;
@@ -223,15 +254,21 @@ export function previewLine(w: PowerWorld, points: Vec2[]): PowerPreview {
   const edges = pathEdges(points, false),
     length = edges.reduce((n, [a, b]) => n + distance(a, b), 0);
   if (
-    length > POWER.maxLineM ||
-    edges.some(([a, b]) => distance(a, b) < POWER.minLineM)
+    length > (net === 'water' ? WATER_UTILITY.maxPipeM : POWER.maxLineM) ||
+    (net === 'water' && !allowShort && length < WATER_UTILITY.minPipeM) ||
+    edges.some(
+      ([a, b]) =>
+        distance(a, b) <
+        (net === 'water' ? WATER_UTILITY.minSegmentM : POWER.minLineM),
+    )
   ) {
     r.reason = 'err.powerLength';
     return r;
   }
   r.cost = GAME_MODES[w.mode].unlimitedMoney
     ? 0
-    : Math.ceil(length / CELL_SIZE) * NETWORKS[0].costPer8M;
+    : Math.ceil(length / CELL_SIZE) *
+      NETWORKS[net === 'water' ? 1 : 0].costPer8M;
   // Split at every tile boundary; point sampling alone can miss a narrow unowned corner.
   for (const [a, b] of edges) {
     const cuts = [0, 1];

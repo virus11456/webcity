@@ -39,6 +39,7 @@ export type CommandInput =
   | { t: 'upgradeRoad'; segment: Id; type: RoadTypeId }
   | { t: 'zone'; cells: [Id, number][]; zone: ZoneType | null }
   | { t: 'place'; defId: BuildingDefId; pos: Vec2; rotation: number }
+  | { t: 'buildRoadPipes' }
   | { t: 'buildNetwork'; net: NetworkKind; points: Vec2[] }
   | {
       t: 'bulldoze';
