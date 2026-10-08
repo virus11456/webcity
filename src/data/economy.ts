@@ -37,6 +37,10 @@ export const ECONOMY = {
     easy: 200000,
   },
   maxLoans: 3,
+  weeksPerYear: 52,
+  currencyScale: 100,
+  separateTaxUnlock: 3,
+  budgetUnlock: 1,
   incomePerWeek: {
     household: 16,
     commercialJob: 20,

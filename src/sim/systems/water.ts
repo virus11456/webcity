@@ -98,7 +98,10 @@ export function updateWater(s: SimState): BuildingPatch[] {
   const capacities = (b: Building) => {
     const def = waterDefinition(b.defId);
     return def && 'water' in def && (b.flags & POWER.flag) !== 0
-      ? def.water
+      ? {
+          ...def.water,
+          capacityM3PerWeek: def.water.capacityM3PerWeek * s.budgets.water,
+        }
       : undefined;
   };
   const supplied = new Set<number>(),

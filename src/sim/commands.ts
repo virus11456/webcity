@@ -1,3 +1,4 @@
+import type { BudgetDepartment } from '../data/economy';
 import { finitePoint } from '../world/power';
 import { isBulldozeTargets } from '../world/bulldoze';
 import { isZonePayload } from '../world/zoning';
@@ -92,7 +93,59 @@ export class CommandDispatcher {
       fail('err.notReady');
       return;
     }
-    if (value.t === 'place') {
+    if (this.simulation.gameOver) {
+      fail('err.gameOver');
+      return;
+    }
+    if (
+      value.t === 'setTax' ||
+      value.t === 'setBudget' ||
+      value.t === 'takeLoan' ||
+      value.t === 'repayLoan'
+    ) {
+      let command;
+      if (
+        value.t === 'setTax' &&
+        'zone' in value &&
+        typeof value.zone === 'string' &&
+        'rate' in value &&
+        typeof value.rate === 'number'
+      )
+        command = {
+          t: value.t,
+          zone: value.zone as ZoneType,
+          rate: value.rate,
+        } as const;
+      else if (
+        value.t === 'setBudget' &&
+        'dept' in value &&
+        typeof value.dept === 'string' &&
+        'value' in value &&
+        typeof value.value === 'number'
+      )
+        command = {
+          t: value.t,
+          dept: value.dept as BudgetDepartment,
+          value: value.value,
+        } as const;
+      else if (
+        value.t === 'takeLoan' &&
+        'bank' in value &&
+        typeof value.bank === 'number'
+      )
+        command = { t: value.t, bank: value.bank } as const;
+      else if (
+        value.t === 'repayLoan' &&
+        'index' in value &&
+        typeof value.index === 'number'
+      )
+        command = { t: value.t, index: value.index } as const;
+      if (!command) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({ t: 'result', reqId, ...this.simulation.finance(command) });
+    } else if (value.t === 'place') {
       if (
         !('defId' in value) ||
         typeof value.defId !== 'string' ||

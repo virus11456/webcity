@@ -36,6 +36,18 @@ export function createState(settings: CitySettings): SimState {
     clock: { day: 0, tickInDay: 0, ticks: 0, speed: SIM_RUNTIME.initialSpeed },
     money,
     loans: [],
+    economy: {
+      distressWeeks: 0,
+      status: 'normal',
+      settledWeek: 0,
+      taxIncome: Object.fromEntries(
+        Object.keys(ZONES).map((z) => [z, 0]),
+      ) as SimState['taxRates'],
+      upkeep: Object.fromEntries(
+        BUDGET_DEPARTMENTS.map((d) => [d, 0]),
+      ) as SimState['budgets'],
+      debtPayment: 0,
+    },
     taxRates: Object.fromEntries(
       Object.keys(ZONES).map((key) => [key, ECONOMY.taxRate.default]),
     ) as WorldSnapshot['taxRates'],

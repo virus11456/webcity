@@ -1,3 +1,13 @@
+import {
+  chargeConstruction,
+  financeView,
+  settleEconomy,
+  setTax,
+  setBudget,
+  takeLoan,
+  repayLoan,
+} from './systems/economy';
+import type { BudgetDepartment } from '../data/economy';
 import { updateProblems } from './systems/problems';
 import { updateWater } from './systems/water';
 import {
@@ -86,6 +96,39 @@ export class Simulation {
           updated: structuredClone(updated),
         });
     });
+    this.time.onWeek(() => {
+      settleEconomy(this.state);
+      this.emit({ t: 'fundsChanged', money: this.state.money });
+      this.emit({ t: 'economy', finance: financeView(this.state) });
+    });
+  }
+
+  get gameOver(): boolean {
+    return this.state.economy.status === 'gameOver';
+  }
+  finance(
+    command:
+      | { t: 'setTax'; zone: ZoneType; rate: number }
+      | { t: 'setBudget'; dept: BudgetDepartment; value: number }
+      | { t: 'takeLoan'; bank: number }
+      | { t: 'repayLoan'; index: number },
+  ): Omit<Result, 't' | 'reqId'> {
+    if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
+    const s = this.state;
+    const result =
+      command.t === 'setTax'
+        ? setTax(s, command.zone, command.rate)
+        : command.t === 'setBudget'
+          ? setBudget(s, command.dept, command.value)
+          : command.t === 'takeLoan'
+            ? takeLoan(s, command.bank)
+            : repayLoan(s, command.index);
+    if (result.ok) {
+      if (command.t === 'setBudget') this.refreshPower();
+      this.emit({ t: 'fundsChanged', money: s.money });
+      this.emit({ t: 'economy', finance: financeView(s) });
+    }
+    return result;
   }
 
   private powerWorld(): PowerWorld {
@@ -137,6 +180,8 @@ export class Simulation {
         : previewPlant(this.powerWorld(), defId, pos, rotation);
     if (!preview.valid || !d || !d.footprintCells)
       return { ok: false, reason: preview.reason ?? 'err.invalidCommand' };
+    const charge = chargeConstruction(this.state, preview.cost);
+    if (!charge.ok) return charge;
     const s = this.state,
       id = s.nextId++;
     const b: Building = {
@@ -163,8 +208,7 @@ export class Simulation {
       ) as Building['problemTimers'],
     };
     s.buildings = [...s.buildings, b];
-    s.money -= preview.cost;
-    s.stats.money = s.money;
+
     const zones = rebuildZoneGrid({ ...s, heights: s.terrain.heights });
     s.zoneBlocks = zones.blocks;
     s.segments = zones.segments;
@@ -195,6 +239,8 @@ export class Simulation {
     const p = previewLine(this.powerWorld(), points);
     if (!p.valid)
       return { ok: false, reason: p.reason ?? 'err.invalidCommand' };
+    const charge = chargeConstruction(this.state, p.cost);
+    if (!charge.ok) return charge;
     const s = this.state,
       n = {
         id: s.nextId++,
@@ -203,8 +249,7 @@ export class Simulation {
         paidCost: p.cost,
       };
     s.networks.power = [...s.networks.power, n];
-    s.money -= p.cost;
-    s.stats.money = s.money;
+
     this.emit({
       t: 'networksChanged',
       net: 'power',
@@ -222,6 +267,8 @@ export class Simulation {
     const preview = points ? previewPipe(w, points) : previewRoadPipes(w);
     if (!preview.valid)
       return { ok: false, reason: preview.reason ?? 'err.invalidCommand' };
+    const charge = chargeConstruction(s, preview.cost);
+    if (!charge.ok) return charge;
     const paths = preview.paths ?? [preview.points];
     const added = paths.map((path) => ({
       id: s.nextId++,
@@ -230,8 +277,7 @@ export class Simulation {
       paidCost: previewPipe({ ...w, money: Infinity }, path, true).cost,
     }));
     s.networks.water = [...s.networks.water, ...added];
-    s.money -= preview.cost;
-    s.stats.money = s.money;
+
     this.emit({
       t: 'networksChanged',
       net: 'water',
@@ -290,6 +336,8 @@ export class Simulation {
       },
       (point) => roadHeightAt(s.nodes, s.segments, s.terrain.heights, point),
     );
+    const charge = chargeConstruction(s, cost);
+    if (!charge.ok) return charge;
     const removed = new Set(change.removed),
       removedNodes = new Set(change.removedNodes);
     const nodes = new Map(
@@ -303,8 +351,7 @@ export class Simulation {
     ];
     for (const item of [...change.nodes, ...change.added])
       s.nextId = Math.max(s.nextId, item.id + 1);
-    s.money -= cost;
-    s.stats.money = s.money;
+
     const terrain = roadBedPatch(s.terrain.heights, s.nodes, s.segments);
     terrain.indices.forEach((index, i) => {
       s.terrain.heights[index] = terrain.heights[i]!;
@@ -364,6 +411,7 @@ export class Simulation {
 
   /** Delete an entire acknowledged stroke and settle the authoritative quote exactly once. */
   bulldoze(targets: BulldozeTarget[]): Omit<Result, 't' | 'reqId'> {
+    if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
     const s = this.state;
     const result = planBulldoze(
       {
@@ -427,6 +475,7 @@ export class Simulation {
 
   /** Apply free zoning atomically; the renderer receives only acknowledged block copies. */
   zone(cells: ZoneCell[], zone: ZoneType | null): Omit<Result, 't' | 'reqId'> {
+    if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
     const result = paintZones(
       { ...this.state, mode: this.state.settings.mode },
       cells,
@@ -468,7 +517,7 @@ export class Simulation {
 
   /** Advance exactly one simulation step, unless paused. */
   tick(): void {
-    if (this.state.clock.speed === 0) return;
+    if (this.state.clock.speed === 0 || this.gameOver) return;
     const dayCompleted = this.time.tick(this.state.clock);
     const growth = this.growth.tick(this.state);
     if (growth.blocks.length)
@@ -501,7 +550,7 @@ export class Simulation {
   /** Preserve fractional progress when pausing / changing speed. */
   setSpeed(speed: SimSpeed): void {
     if (![0, 1, 2, 4].includes(speed)) throw new RangeError('Invalid speed');
-    this.state.clock.speed = speed;
+    this.state.clock.speed = this.gameOver ? 0 : speed;
   }
 
   /** Consume elapsed milliseconds with a bounded catch-up window; return executed steps. */

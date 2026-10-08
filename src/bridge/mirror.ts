@@ -2,7 +2,7 @@ import type { PowerWorld } from '../world/power';
 import type { CityStats } from '../world/types';
 import type { BulldozeWorld } from '../world/bulldoze';
 import type { RoadConstructionWorld } from '../world/roadConstruction';
-import type { SimClock, WorldSnapshot } from '../world/snapshot';
+import type { SimClock, WorldSnapshot, FinanceView } from '../world/snapshot';
 import type { Building, ServiceType, ZoneBlock } from '../world/types';
 import type { SimEvent } from './protocol';
 
@@ -27,8 +27,28 @@ export class WorldMirror {
     return this.state && Object.freeze({ ...this.state.clock });
   }
 
+  get gameOver(): boolean {
+    return this.state?.economy.status === 'gameOver';
+  }
+
   readStats(): CityStats | undefined {
     return this.state && structuredClone(this.state.stats);
+  }
+
+  readFinance(): FinanceView | undefined {
+    const s = this.state;
+    return (
+      s &&
+      structuredClone({
+        money: s.money,
+        loans: s.loans,
+        taxRates: s.taxRates,
+        budgets: s.budgets,
+        economy: s.economy,
+        unlocked: s.unlocked,
+        sandbox: s.settings.mode === 'sandbox',
+      })
+    );
   }
 
   /** Request a defensive full snapshot, outside the render loop. */
@@ -110,6 +130,17 @@ export class WorldMirror {
     const state = this.state;
     if (!state) return;
     switch (event.t) {
+      case 'economy': {
+        const finance = structuredClone(event.finance);
+        state.money = finance.money;
+        state.loans = finance.loans;
+        state.taxRates = finance.taxRates;
+        state.budgets = finance.budgets;
+        state.economy = finance.economy;
+        state.unlocked = finance.unlocked;
+        state.stats.money = finance.money;
+        break;
+      }
       case 'clock':
         state.clock = { ...event.clock };
         break;

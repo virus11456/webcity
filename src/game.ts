@@ -1,6 +1,7 @@
 import { ProblemIcons } from './render/icons';
 import { WaterTool } from './tools/waterTool';
 import { WaterUtilityRenderer } from './render/waterUtilities';
+import { createFinanceControls } from './ui/financeControls';
 import { createWaterControls } from './ui/waterControls';
 import { PlaceTool } from './tools/placeTool';
 import { NetworkTool } from './tools/networkTool';
@@ -111,6 +112,7 @@ const debug =
     ? createDebugPanel(root)
     : undefined;
 let sim: SimClient | undefined;
+let financeControls: ReturnType<typeof createFinanceControls> | undefined;
 let simControls: ReturnType<typeof createSimControls> | undefined;
 try {
   sim = new SimClient(
@@ -426,6 +428,7 @@ if (canvas && status) {
         },
         root,
       );
+      financeControls = createFinanceControls(root, sim!);
       roadControls.update(roadTool.readState());
       zoneControls = createZoneControls(roadControls.zoneHost, {
         zone: (zone) => zoneTool!.setZone(zone),
@@ -514,6 +517,7 @@ if (import.meta.hot)
     buildings?.dispose();
     city?.dispose();
     debug?.dispose();
+    financeControls?.dispose();
     simControls?.dispose();
     sim?.dispose();
   });

@@ -213,6 +213,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       panel.dataset.phase = state.phase;
       panel.dataset.pending = String(state.pending);
       panel.dataset.money = String(state.money);
+      money.dataset.negative = String(state.money < 0);
       panel.dataset.segments = String(state.segments);
       panel.dataset.valid = String(Boolean(state.preview?.canBuild));
       panel.dataset.active = String(state.active);

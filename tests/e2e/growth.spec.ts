@@ -180,6 +180,7 @@ test('roadside zones grow, pause, finish construction and rezone through native 
   expect(errors).toEqual([]);
   if (info.project.name === 'iPhone 15') {
     await page.setViewportSize({ width: 852, height: 393 });
+    await page.locator('.problem-summary').click(); // Measure the revealed controls, too.
     const sizes = await page
       .locator('.growth-controls button')
       .evaluateAll((es) =>

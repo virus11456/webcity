@@ -28,6 +28,7 @@ import type {
   RoadDraft,
   SimClock,
   WorldSnapshot,
+  FinanceView,
 } from '../world/snapshot';
 
 export type CommandInput =
@@ -60,6 +61,9 @@ export type FailureReason =
   | ConstructionReason
   | ZoningReason
   | BulldozeReason
+  | 'err.gameOver'
+  | 'err.loanLimit'
+  | 'err.locked'
   | 'err.notReady'
   | 'err.notImplemented';
 export type Result = {
@@ -79,6 +83,7 @@ export type SimEvent =
   | Response
   | { t: 'clock'; clock: SimClock }
   | { t: 'fundsChanged'; money: number }
+  | { t: 'economy'; finance: FinanceView }
   | {
       t: 'roadsChanged';
       terrain?: TerrainPatch & { revision: number };

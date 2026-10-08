@@ -251,7 +251,7 @@ test('an old road can be removed while paused without a refund', async ({
   );
   await expect(page.locator('.road-controls')).toHaveAttribute(
     'data-money',
-    '69600',
+    String(69600 - (160 / 8) * 0.16), // One week of upkeep, no demolition refund.
   );
   await expect(page.locator('.bulldoze-controls')).toHaveAttribute(
     'data-last-refund',

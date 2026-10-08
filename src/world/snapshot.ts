@@ -50,12 +50,26 @@ export type InspectInfo =
   | { kind: 'segment'; value: RoadSegment }
   | { kind: 'network'; net: NetworkKind; value: NetworkSegment };
 
+export interface EconomyState {
+  distressWeeks: number;
+  status: 'normal' | 'warning' | 'gameOver';
+  settledWeek: number;
+  taxIncome: Record<ZoneType, number>;
+  upkeep: Record<BudgetDepartment, number>;
+  debtPayment: number;
+}
+export type FinanceView = Pick<
+  WorldSnapshot,
+  'money' | 'loans' | 'taxRates' | 'budgets' | 'economy' | 'unlocked'
+> & { sandbox: boolean };
+
 /** Structured-clone wire format, never a reference to the authoritative state. */
 export interface WorldSnapshot {
   seed: number;
   settings: CitySettings;
   clock: SimClock;
   money: number;
+  economy: EconomyState;
   loans: { bank: number; remaining: number; weeksLeft: number }[];
   taxRates: Record<ZoneType, number>;
   budgets: Record<BudgetDepartment, number>;

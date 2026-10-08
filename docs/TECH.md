@@ -493,3 +493,6 @@ M1-16：`place` 開放水務設施、`buildNetwork` 支援 water，新增 `build
 
 
 M1-17：`problemSinceTick`／`abandonedAtTick` 是 Building 的 optional 絕對時間欄位，Worker 在日結及結構變更刷新問題。日結合併同建築的狀態、人口與旗標 patch，主執行緒保持唯讀；廢棄 60 天占用釋放由 GrowthSystem 處理。`ProblemIcons` 共用事件、屋頂位置及單批次圖集渲染，詳見 `BUILDING_PROBLEMS.md`。
+
+
+M1-18：`WorldSnapshot.economy` 保存已結算週與破產連續週狀態，`economy` 事件／`readFinance()` 同步小型財政資料。Worker 於 onWeek 結算，所有既有付費建造統一 `chargeConstruction`，四種財政命令完成驗證與回覆；稅率／預算不由 UI 直接寫入。原型操作使用現有 DOM 控制模式，共用 UI 仍待 M1-19／M1-23。詳見 `ECONOMY.md`。

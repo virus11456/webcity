@@ -55,13 +55,14 @@ export function createSimControls(parent: HTMLElement, client: SimClient) {
       panel.dataset.day = String(clock.day);
       week.textContent = `${t('sim.weekPrefix')}${Math.floor(clock.day / TIME.fiscalPeriodDays) + 1}${t('sim.weekSuffix')} · ${(clock.day % TIME.fiscalPeriodDays) + 1}/${TIME.fiscalPeriodDays}`;
     }
-    if (displayedSpeed === clock.speed) return;
+    const ended = client.mirror.gameOver;
+    if (displayedSpeed === clock.speed && !ended) return;
     displayedSpeed = clock.speed;
     panel.dataset.ready = 'true';
     panel.dataset.speed = String(clock.speed);
     status.textContent = t(clock.speed === 0 ? 'sim.paused' : 'sim.running');
     buttons.forEach((button, i) => {
-      button.disabled = false;
+      button.disabled = Boolean(ended);
       button.setAttribute('aria-pressed', String(clock.speed === speeds[i]));
     });
   }
@@ -76,7 +77,12 @@ export function createSimControls(parent: HTMLElement, client: SimClient) {
   }
   const unsubscribe = client.onEvent((event) => {
     if (event.t === 'error') showError();
-    else if (event.t === 'clock' || event.t === 'ready') update();
+    else if (
+      event.t === 'clock' ||
+      event.t === 'ready' ||
+      event.t === 'economy'
+    )
+      update();
   });
   update();
   return {

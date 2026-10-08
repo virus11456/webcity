@@ -35,7 +35,7 @@ export function updatePower(s: SimState): BuildingPatch[] {
       b,
       points: zoneBuildingFootprint(b),
       closed: true,
-      output: plantOutput(s.seed, b.defId, b.pos),
+      output: plantOutput(s.seed, b.defId, b.pos) * s.budgets.power,
       load: consumption(b),
     }));
   for (const n of s.networks.power)

@@ -205,6 +205,7 @@ test('keeps zoning controls usable on phone landscape', async ({
     .locator('.road-controls')
     .locator('button:visible, select:visible')
     .all()) {
+    await control.scrollIntoViewIfNeeded(); // The compact toolbar scrolls horizontally.
     const b = (await control.boundingBox())!;
     expect(b.x).toBeGreaterThanOrEqual(0);
     expect(b.y).toBeGreaterThanOrEqual(0);

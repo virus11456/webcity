@@ -106,16 +106,22 @@ describe('daily and weekly boundaries', () => {
       state.stats.income = 123;
     });
     for (let i = 0; i < 70; i++) sim.tick();
-    expect(events).toHaveLength(7);
+    const dailyStats = events.filter((e) => e.t === 'stats');
+    expect(dailyStats).toHaveLength(7);
+    expect(events.slice(-3).map((e) => e.t)).toEqual([
+      'fundsChanged',
+      'economy',
+      'stats',
+    ]);
     expect(events.at(-1)).toMatchObject({
       t: 'stats',
-      stats: { day: 7, population: 0, expenses: 7, money: 70123, income: 123 },
+      stats: { day: 7, population: 0, expenses: 0, money: 70123, income: 123 },
     });
     const snapshot = sim.snapshot();
     expect(snapshot.statsHistory.map((s) => s.expenses)).toEqual([
-      1, 2, 3, 4, 5, 6, 7,
+      1, 2, 3, 4, 5, 6, 0,
     ]);
-    if (events[6]!.t === 'stats') events[6]!.stats.demand.R = 100;
+    dailyStats[6]!.stats.demand.R = 100;
     snapshot.statsHistory[0]!.power.produced = 500;
     sim.tick();
     expect(sim.snapshot().stats.demand.R).toBe(INITIAL_DEMAND.R);
