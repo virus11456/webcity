@@ -553,6 +553,19 @@ export class BuildingRenderer {
       maxWorkMs: this.maxWorkMs,
     };
   }
+  /** Roof anchor shares the actual generated massing, without per-frame geometry allocation. */
+  roof(id: number, out: Vector3): boolean {
+    const e = this.entries.get(id);
+    if (!e || e.removed) return false;
+    const b = e.data,
+      depth = (b.lotD * CELL_SIZE) / 2;
+    out.set(
+      b.pos.x + Math.sin(b.rotation) * depth,
+      e.base + e.shape.height,
+      b.pos.z + Math.cos(b.rotation) * depth,
+    );
+    return true;
+  }
   inspect(id: number) {
     const e = this.entries.get(id);
     return e

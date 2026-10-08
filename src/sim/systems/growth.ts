@@ -1,3 +1,4 @@
+import { ABANDONMENT } from '../../data/simulation';
 import { Rng } from '../../core/rng';
 import { TIME } from '../../data/config';
 import { GROWTH, ZONES, ZONE_CODES, type ZoneType } from '../../data/zones';
@@ -48,7 +49,13 @@ export class GrowthSystem {
       removed: number[] = [],
       changedBlocks = new Set<ZoneBlock>();
     for (const b of s.buildings) {
-      if (b.rezoneAtTick !== undefined && s.clock.ticks >= b.rezoneAtTick) {
+      if (
+        (b.rezoneAtTick !== undefined && s.clock.ticks >= b.rezoneAtTick) ||
+        ((b.state === 'abandoned' || b.state === 'burned') &&
+          b.abandonedAtTick !== undefined &&
+          s.clock.ticks - b.abandonedAtTick >=
+            ABANDONMENT.collapseDays * TIME.ticksPerDay)
+      ) {
         removed.push(b.id);
         continue;
       }

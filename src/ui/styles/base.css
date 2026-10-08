@@ -725,3 +725,28 @@ h1 {
     overflow-y: auto;
   }
 }
+
+.building-problems {
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+.building-problems[open] {
+  flex-basis: 100%;
+}
+.problem-summary {
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+  color: var(--color-negative);
+}
+.problem-detail {
+  display: block;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+@media (max-width: 720px) and (orientation: portrait) {
+  .road-controls[data-construction='true'] {
+    max-height: calc(100dvh - 190px);
+    overflow-y: auto;
+  }
+}

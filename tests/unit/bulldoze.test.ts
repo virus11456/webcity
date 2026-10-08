@@ -405,11 +405,43 @@ describe('atomic demolition and topology', () => {
     });
   });
 });
+// Isolate road failure from the now-enabled 20-day utility abandonment deadlines.
+function supplyUtilities(state: SimState) {
+  for (const [index, defId] of [
+    'power_wind',
+    'water_tower',
+    'water_drain',
+  ].entries())
+    state.buildings.push({
+      ...building(),
+      id: 1000 + index,
+      kind: 'utility',
+      defId,
+      pos: { x: 40, z: 24 + index * 24 },
+      households: 0,
+      residents: 0,
+      jobs: 0,
+      workers: 0,
+      lotW: 2,
+      lotD: 2,
+    });
+  state.networks.water = [
+    {
+      id: 1010,
+      points: [
+        { x: 40, z: 0 },
+        { x: 40, z: 100 },
+      ],
+    },
+  ];
+  state.nextId = 1020;
+}
 describe('frontage and abandonment', () => {
   it('marks access loss immediately, retains the building, and abandons after thirty full days', () => {
     const { sim, state } = setup();
     sim.buildRoad('road_small', draft(0, 0, 160, 0));
     state.buildings = [building()];
+    supplyUtilities(state);
     expect(roadAccess(state.nodes, state.segments)(state.buildings[0]!)).toBe(
       true,
     );
@@ -456,6 +488,7 @@ describe('frontage and abandonment', () => {
     const { sim, state } = setup();
     sim.buildRoad('road_small', draft(0, 0, 160, 0));
     state.buildings = [building()];
+    supplyUtilities(state);
     sim.bulldoze([{ kind: 'segment', id: state.segments[0]!.id }]);
     expect(sim.buildRoad('road_small', draft(0, 0, 160, 0)).ok).toBe(true);
     expect(state.buildings[0]!.roadDisconnectedDay).toBeUndefined();

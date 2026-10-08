@@ -490,3 +490,6 @@ M1-15：`place` 支援兩種開局電力設施，`buildNetwork` 支援 power；�
 
 
 M1-16：`place` 開放水務設施、`buildNetwork` 支援 water，新增 `buildRoadPipes` 原子批次請求。Worker 先更新電力再更新水務；flags bit 2／4 表示 HAS_WATER／HAS_SEWAGE，既有位元保留。water stats 增加 optional served／unserved／groups，sewage 增加 treated／uncollected。工具沿用共享場址／土地驗證並由 Worker 重算；鏡像 `readPowerWorld('water')`、獨立 WaterTool／WaterUtilityRenderer 及地形透明模式接入。詳見 `WATER_UTILITIES.md`。
+
+
+M1-17：`problemSinceTick`／`abandonedAtTick` 是 Building 的 optional 絕對時間欄位，Worker 在日結及結構變更刷新問題。日結合併同建築的狀態、人口與旗標 patch，主執行緒保持唯讀；廢棄 60 天占用釋放由 GrowthSystem 處理。`ProblemIcons` 共用事件、屋頂位置及單批次圖集渲染，詳見 `BUILDING_PROBLEMS.md`。

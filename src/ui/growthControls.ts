@@ -1,3 +1,5 @@
+import { buildingProblemIcons } from '../world/buildingProblems';
+import { PROBLEMS } from '../data/simulation';
 import type { SimClient } from '../bridge/simClient';
 import type { Building, CityStats } from '../world/types';
 import { t } from './i18n/t';
@@ -44,7 +46,27 @@ export function createGrowthControls(
     flow.textContent = `${t('population.in')} +${p?.movedIn ?? 0} · ${t('population.out')} −${p?.movedOut ?? 0}`;
   };
   population(sim.mirror.readStats());
-  host.append(summary, button, hint);
+  const problemPanel = document.createElement('details');
+  problemPanel.className = 'building-problems';
+  const problems = document.createElement('summary');
+  problems.className = 'problem-summary';
+  const problemButton = document.createElement('button');
+  problemButton.type = 'button';
+  problemButton.textContent = t('problem.view');
+  const problemDetail = document.createElement('output');
+  problemDetail.className = 'problem-detail';
+  problemDetail.setAttribute('aria-live', 'polite');
+  let selectedProblem: number | undefined;
+  const describe = (b: Building) =>
+    buildingProblemIcons(b)
+      .map((p) =>
+        p === 'abandoned'
+          ? t('problem.abandoned')
+          : `${t(`problem.${p}`)} ${Math.floor(b.problemTimers[p])}/${PROBLEMS[p].days} ${t('problem.days')}`,
+      )
+      .join(' · ');
+  problemPanel.append(problems, problemButton, problemDetail);
+  host.append(summary, button, problemPanel, hint);
   statsParent.append(people);
   parent.append(host);
   const buildings = new Map(sim.mirror.readBuildings().map((b) => [b.id, b]));
@@ -58,7 +80,35 @@ export function createGrowthControls(
     host.dataset.rezone = String(rezone);
     summary.textContent = `${t('growth.construction')} ${construction} · ${t('growth.active')} ${active} · ${t('growth.rezone')} ${rezone}`;
     button.disabled = !all.length;
+    const affected = all.filter((b) => buildingProblemIcons(b).length);
+    const abandoned = all.filter(
+      (b) => b.state === 'abandoned' || b.state === 'burned',
+    ).length;
+    host.dataset.abandoned = String(abandoned);
+    host.dataset.problems = String(affected.length);
+    problems.textContent = `${t('problem.summary')} ${affected.length}`;
+    problems.title = `${t('problem.abandoned')} ${abandoned}`;
+    problemButton.disabled = !affected.length;
+    const selected = affected.find((b) => b.id === selectedProblem);
+    problemDetail.textContent = selected
+      ? `#${selected.id} · ${describe(selected)}`
+      : t('problem.hint');
   };
+  problemButton.addEventListener('click', () => {
+    const affected = [...buildings.values()]
+      .filter((b) => buildingProblemIcons(b).length)
+      .sort((a, b) => a.id - b.id);
+    const next =
+      affected[
+        (affected.findIndex((b) => b.id === selectedProblem) + 1) %
+          affected.length
+      ];
+    if (next) {
+      selectedProblem = next.id;
+      update();
+      view(next);
+    }
+  });
   button.addEventListener('click', () => {
     const all = [...buildings.values()],
       b = all.find((b) => b.state === 'construction') ?? all[0];
@@ -79,6 +129,11 @@ export function createGrowthControls(
       const b = buildings.get(p.id);
       if (!b) continue;
       if (
+        p.flags !== undefined ||
+        p.problemTimers !== undefined ||
+        Object.hasOwn(p, 'roadDisconnectedDay') ||
+        p.jobs !== undefined ||
+        p.workers !== undefined ||
         (p.state !== undefined && p.state !== b.state) ||
         (Object.hasOwn(p, 'rezoneAtTick') && p.rezoneAtTick !== b.rezoneAtTick)
       )

@@ -1,3 +1,4 @@
+import { ProblemIcons } from './render/icons';
 import { WaterTool } from './tools/waterTool';
 import { WaterUtilityRenderer } from './render/waterUtilities';
 import { createWaterControls } from './ui/waterControls';
@@ -39,6 +40,7 @@ declare global {
   interface Window {
     __webcityStats?: () => ReturnType<SimClient['mirror']['readStats']>;
     __webcityBuildings?: () => ReturnType<SimClient['mirror']['readBuildings']>;
+    __webcityProblemIcons?: () => ReturnType<ProblemIcons['readStats']>;
     __webcityBuildingStats?: () => ReturnType<BuildingRenderer['readStats']>;
     __webcityCamera?: RtsCamera;
     __webcityZoneStats?: () => {
@@ -86,6 +88,7 @@ let tools: ToolManager | undefined;
 let input: CameraController | undefined;
 let city: CityRenderer | undefined;
 let buildings: BuildingRenderer | undefined;
+let problemIcons: ProblemIcons | undefined;
 let frameSeconds = 0;
 let unsubscribeBuildings: (() => void) | undefined;
 let picking: PickingPreview | undefined;
@@ -145,6 +148,13 @@ if (canvas && status) {
       onAfterCamera: () => {
         picking?.update();
         buildings?.update(frameSeconds, city?.camera);
+        if (city)
+          problemIcons?.update(
+            frameSeconds,
+            city.camera,
+            window.innerWidth,
+            window.innerHeight,
+          );
         powerRenderer?.update(frameSeconds);
       },
       onContextState(lost) {
@@ -189,7 +199,15 @@ if (canvas && status) {
       });
       buildings.group.visible = false;
       buildings.reset(sim.mirror.readBuildings());
-      unsubscribeBuildings = sim.onEvent((event) => buildings!.accept(event));
+      problemIcons = new ProblemIcons(city.scene, (id, out) =>
+        buildings!.roof(id, out),
+      );
+      problemIcons.reset(sim.mirror.readBuildings());
+      problemIcons.group.visible = false;
+      unsubscribeBuildings = sim.onEvent((event) => {
+        buildings!.accept(event);
+        problemIcons!.accept(event);
+      });
       const picker = new TerrainPicker(city.terrain);
       roadPreview = new RoadPreviewRenderer(city.scene);
       city.registerMaterial(roadPreview.roads.material);
@@ -325,6 +343,7 @@ if (canvas && status) {
         roadPreview!.group.visible = construction;
         zoneRenderer!.group.visible = construction;
         buildings!.group.visible = construction;
+        problemIcons!.group.visible = construction;
         powerRenderer!.group.visible = construction;
         waterUtilities!.group.visible = construction;
         if (first)
@@ -448,6 +467,7 @@ if (canvas && status) {
       };
       window.__webcityStats = () => sim!.mirror.readStats();
       window.__webcityBuildings = () => sim!.mirror.readBuildings();
+      window.__webcityProblemIcons = () => problemIcons!.readStats();
       window.__webcityBuildingStats = () => buildings!.readStats();
       window.__webcityRoadStats = () => roadPreview!.roads.readStats();
     }
@@ -458,6 +478,7 @@ if (canvas && status) {
 }
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
+    delete window.__webcityProblemIcons;
     delete window.__webcityBuildingStats;
     delete window.__webcityBuildings;
     delete window.__webcityStats;
@@ -489,6 +510,7 @@ if (import.meta.hot)
     pickingDebug?.dispose();
     input?.dispose();
     unsubscribeBuildings?.();
+    problemIcons?.dispose();
     buildings?.dispose();
     city?.dispose();
     debug?.dispose();

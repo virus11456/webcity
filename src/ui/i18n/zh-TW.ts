@@ -1,4 +1,15 @@
 export const ZH_TW = {
+  'problem.noPower': '缺電',
+  'problem.noWater': '缺水',
+  'problem.noSewage': '污水無法排放',
+  'problem.noRoad': '沒有道路',
+  'problem.noWorkers': '缺工人',
+  'problem.abandoned': '廢棄',
+  'problem.days': '天',
+  'problem.summary': '問題建築',
+  'problem.view': '查看問題建築',
+  'problem.hint':
+    '缺電／缺水 20 天，污水／斷路／缺工 30 天會廢棄；修復會重設計時。',
   'power.title': '電力建設',
   'water.tab': '水務',
   'water.title': '水與污水',

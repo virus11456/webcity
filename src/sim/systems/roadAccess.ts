@@ -1,4 +1,3 @@
-import { PROBLEMS } from '../../data/simulation';
 import { roadAccess } from '../../world/roadAccess';
 import type { Building } from '../../world/types';
 import type { SimState } from '../state';
@@ -26,26 +25,6 @@ export function refreshRoadAccess(
       b.problemTimers.noRoad = 0;
       changed.push(b);
     }
-  }
-  return changed;
-}
-/** Thirty complete disconnected days cause abandonment; repairing the road stops the timer. */
-export function tickRoadAccess(s: SimState): Building[] {
-  const changed: Building[] = [];
-  for (const b of s.buildings) {
-    if (
-      b.roadDisconnectedDay === undefined ||
-      b.state === 'abandoned' ||
-      b.state === 'burned'
-    )
-      continue;
-    b.problemTimers.noRoad = s.clock.day - b.roadDisconnectedDay;
-    if (b.problemTimers.noRoad >= PROBLEMS.noRoad.days) {
-      b.state = 'abandoned';
-      b.stateTimer = 0;
-      b.residents = b.workers = b.jobs = b.households = 0;
-    }
-    changed.push(b);
   }
   return changed;
 }

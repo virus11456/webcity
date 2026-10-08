@@ -1,3 +1,4 @@
+import { updateProblems } from './systems/problems';
 import { updateWater } from './systems/water';
 import {
   previewWaterFacility,
@@ -19,7 +20,7 @@ import { updatePopulation } from './systems/population';
 import { GrowthSystem } from './systems/growth';
 import { planBulldoze, type BulldozeTarget } from '../world/bulldoze';
 import { roadAccess } from '../world/roadAccess';
-import { refreshRoadAccess, tickRoadAccess } from './systems/roadAccess';
+import { refreshRoadAccess } from './systems/roadAccess';
 import { paintZones, type ZoneCell } from '../world/zoning';
 import type { ZoneType } from '../world/types';
 import { rebuildZoneGrid } from '../world/zoneGrid';
@@ -59,14 +60,22 @@ export class Simulation {
   ) {
     this.state = createState(settings);
     this.time.onDay(() => {
-      const roads = tickRoadAccess(this.state);
       const population = updatePopulation(this.state, true);
-      updateDemand(this.state);
       const power = [...updatePower(this.state), ...updateWater(this.state)];
-      const updates = new Map<number, BuildingPatch>(
-        roads.map((b) => [b.id, { ...b }]),
-      );
-      for (const p of [...population, ...power])
+      const problems = updateProblems(this.state);
+      const reconciliation = problems.some(
+        (p) => p.state === 'abandoned' && p.stateTimer === 0,
+      )
+        ? [
+            ...updatePopulation(this.state),
+            ...updatePower(this.state),
+            ...updateWater(this.state),
+            ...updateProblems(this.state),
+          ]
+        : [];
+      updateDemand(this.state);
+      const updates = new Map<number, BuildingPatch>();
+      for (const p of [...population, ...power, ...problems, ...reconciliation])
         updates.set(p.id, { ...updates.get(p.id), ...p });
       const updated = [...updates.values()];
       if (updated.length)
@@ -89,14 +98,21 @@ export class Simulation {
     };
   }
   private refreshPower(): void {
-    const updated = [
-      ...new Map(
-        [...updatePower(this.state), ...updateWater(this.state)].map((p) => [
-          p.id,
-          p,
-        ]),
-      ).values(),
+    const patches = [
+      ...updatePower(this.state),
+      ...updateWater(this.state),
+      ...updateProblems(this.state),
     ];
+    if (patches.some((p) => p.state === 'abandoned' && p.stateTimer === 0))
+      patches.push(
+        ...updatePopulation(this.state),
+        ...updatePower(this.state),
+        ...updateWater(this.state),
+        ...updateProblems(this.state),
+      );
+    const merged = new Map<number, BuildingPatch>();
+    for (const p of patches) merged.set(p.id, { ...merged.get(p.id), ...p });
+    const updated = [...merged.values()];
     if (updated.length)
       this.emit({
         t: 'buildingsChanged',
@@ -447,19 +463,7 @@ export class Simulation {
         removed: [],
         updated: structuredClone(updated),
       });
-    const power = [...updatePower(this.state), ...updateWater(this.state)];
-    if (power.length)
-      this.emit({
-        t: 'buildingsChanged',
-        added: [],
-        removed: [],
-        updated: power,
-      });
-    this.emit({
-      t: 'stats',
-      stats: structuredClone(this.state.stats),
-      transient: true,
-    });
+    this.refreshPower();
   }
 
   /** Advance exactly one simulation step, unless paused. */

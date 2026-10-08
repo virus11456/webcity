@@ -92,6 +92,8 @@ export interface Building {
   seed: number; // 外觀用
   state: 'construction' | 'active' | 'abandoned' | 'burned';
   stateTimer: number;
+  problemSinceTick?: Partial<Record<ProblemType, number>>;
+  abandonedAtTick?: number;
   constructionStartedTick?: number;
   rezoneAtTick?: number; // Complete deadline, removed without a refund after changed zoning.
   flags: number; // 位元旗標：HAS_POWER | HAS_WATER | HAS_SEWAGE | HAS_GARBAGE_SERVICE | ON_FIRE …
