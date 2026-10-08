@@ -826,3 +826,12 @@ h1 {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+/* Shared typography for the reusable UI kit; game canvas gestures remain scoped. */
+.ui-panel,
+.ui-sheet,
+.ui-toast {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  font-variant-numeric: tabular-nums;
+}

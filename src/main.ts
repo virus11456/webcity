@@ -4,7 +4,11 @@ import './ui/styles/base.css';
 
 const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('Missing #app element');
-if (new URLSearchParams(location.search).get('gallery') === '1')
+if (new URLSearchParams(location.search).get('ui-gallery') === '1')
+  void import('./ui/uiGallery').then(({ startUiGallery }) =>
+    startUiGallery(root),
+  );
+else if (new URLSearchParams(location.search).get('gallery') === '1')
   void import('./gallery').then(({ startGallery }) => startGallery(root));
 else if (new URLSearchParams(location.search).get('district') === '1')
   void import('./buildingDistrict').then(({ startDistrict }) =>

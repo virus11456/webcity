@@ -385,8 +385,10 @@
 - **參考**：ART §2.5；TECH §8
 - **內容**：`ui/styles/tokens.css`、`base.css`；元件：Button、IconButton、Panel、BottomSheet、Slider、Tabs、Tooltip、Toast、Icon（SVG sprite）；`ui/i18n`（`t()` + zh-TW）；`layout` signal（4 種版面判斷）。`?ui-gallery=1` 展示所有元件。
 - **驗收標準**：
-  - [ ] 所有可點元件 ≥ 44×44 px
-  - [ ] gallery 在 3 種 viewport 截圖無破版
+  - [x] 所有可點元件 ≥ 44×44 px
+  - [x] gallery 在 3 種 viewport 截圖無破版
+
+驗證紀錄（2026-10-09）：完成九種可重用元件、原創 SVG sprite、繁中文案與四版面 signal；獨立互動工坊 `?ui-gallery=1`，44px 觸控目標與平板 48px。682 項單元測試、lint、typecheck、build 通過；完整三裝置 E2E 85 通過、11 個裝置不適用略過（11.1 分鐘），最後樣式／焦點調整另補驗工坊。涵蓋鍵盤分頁、焦點循環與返回、通知、實際觸控捲動與手機橫式。觸控為 Chromium 模擬；使用約定見 `UI_KIT.md`，截圖見 `docs/screenshots/m1-19/`。頂部列與工具列整合留待 M1-20／M1-21。
 
 ### M1-20　頂部資訊列與速度控制
 - **分支**：`feature/m1-20-topbar`｜**相依**：M1-19、M1-14｜**估時**：1.5
