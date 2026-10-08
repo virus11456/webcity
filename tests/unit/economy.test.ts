@@ -379,7 +379,8 @@ it('tutorial golden: real construction, migration and employment turn profitable
   expect(
     s.buildings.filter((b) => b.kind === 'zoned' && b.state === 'abandoned'),
   ).toHaveLength(0);
-});
+}, 15_000); // Coverage on the CI runner simulates 28 full game days.
+
 it('all construction commands reject debt atomically while demolition and free zoning remain available', () => {
   const sim = new Simulation(settings);
   let authority: ReturnType<typeof state> | undefined;
