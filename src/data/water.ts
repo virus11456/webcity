@@ -13,3 +13,15 @@ export const WATER = {
   roughness: 0.32,
   metalness: 0.12,
 } as const;
+
+/** ART §5.2, display-only water material settings. */
+export const WATER_DETAIL = {
+  normalSize: 128,
+  normalStrength: 0.22,
+  flowMps: 0.7,
+  phasePeriodSeconds: 400,
+  foamDepthM: 0.8,
+  foamOpacity: 0.65,
+  fresnelBase: 0.04,
+  pollutionMax: 100,
+} as const;

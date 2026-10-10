@@ -605,3 +605,7 @@ render/FollowCamera 只讀 VehicleRenderer 的重用座標輸出；RtsCamera 追
 
 ### M3-02 地形細節
 `world/terrainDetail.ts` 產生確定性週期 RGBA 灰階細節，render 封裝 mipmapped DataTexture。TerrainRenderer 以 world-space 三平面投影組合既有 lighting hook／資訊圖層，所有 Chunk 共用一張貼圖與中央差分法線。詳見 `TERRAIN_DETAIL.md`。
+
+
+### M3-03 水面細節
+WaterRenderer 共用一個 MeshStandardMaterial，兩層沿河道流向的週期法線、菲涅耳天空色反射與淺岸泡沫。ready／fields 只讀權威水污染場並更新單通道貼圖；逐幀只改相位，GPU 資源集中釋放。見 WATER_SHADER.md。

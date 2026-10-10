@@ -600,9 +600,14 @@ if (canvas && status) {
         [powerRenderer!.group, waterUtilities!.group, serviceRenderer!.group],
       );
       const infoSnapshot = sim.mirror.readSnapshot();
-      if (infoSnapshot)
+      if (infoSnapshot) {
+        city.acceptWater({ t: 'ready', reqId: 0, snapshot: infoSnapshot });
         infoOverlays.accept({ t: 'ready', reqId: 0, snapshot: infoSnapshot });
-      unsubscribeInfo = sim.onEvent((e) => infoOverlays!.accept(e));
+      }
+      unsubscribeInfo = sim.onEvent((e) => {
+        infoOverlays!.accept(e);
+        city!.acceptWater(e);
+      });
       infoControls = createInfoControls(root, (view) => {
         if (view) {
           mode(true);
