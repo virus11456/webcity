@@ -93,6 +93,27 @@ export class CommandDispatcher {
       fail('err.notReady');
       return;
     }
+    if (value.t === 'inspect') {
+      if (
+        !('target' in value) ||
+        !value.target ||
+        typeof value.target !== 'object' ||
+        !('kind' in value.target) ||
+        typeof value.target.kind !== 'string' ||
+        !('id' in value.target) ||
+        !Number.isSafeInteger(value.target.id)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      const info = this.simulation.inspect(
+        value.target.kind,
+        value.target.id as number,
+      );
+      if (info) this.emit({ t: 'inspectResult', reqId, info });
+      else fail('err.bulldozeMissing');
+      return;
+    }
     if (this.simulation.gameOver) {
       fail('err.gameOver');
       return;

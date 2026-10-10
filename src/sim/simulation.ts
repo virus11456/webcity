@@ -103,6 +103,23 @@ export class Simulation {
     });
   }
 
+  /** Return one copied asset without exposing mutable simulation state. */
+  inspect(
+    kind: string,
+    id: number,
+  ): import('../world/snapshot').InspectInfo | null {
+    const s = this.state;
+    if (kind === 'building') {
+      const value = s.buildings.find((b) => b.id === id);
+      return value ? { kind, value: structuredClone(value) } : null;
+    }
+    if (kind === 'segment') {
+      const value = s.segments.find((b) => b.id === id);
+      return value ? { kind, value: structuredClone(value) } : null;
+    }
+    return null;
+  }
+
   get gameOver(): boolean {
     return this.state.economy.status === 'gameOver';
   }

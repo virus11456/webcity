@@ -1,3 +1,6 @@
+import { InspectTool } from './tools/inspectTool';
+import { createInspectPanel } from './ui/panels/InspectPanel';
+import { UI_PALETTE } from './data/palette';
 import { ProblemIcons } from './render/icons';
 import { WaterTool } from './tools/waterTool';
 import { WaterUtilityRenderer } from './render/waterUtilities';
@@ -66,6 +69,9 @@ const root = document.querySelector<HTMLDivElement>('#app');
 
 if (!root) throw new Error('Missing #app element');
 
+let inspectTool: InspectTool | undefined;
+let inspectPanel: ReturnType<typeof createInspectPanel> | undefined;
+let inspectPreview: BulldozePreview | undefined;
 let waterTool: WaterTool | undefined;
 let waterUtilities: WaterUtilityRenderer | undefined;
 let waterControls: ReturnType<typeof createWaterControls> | undefined;
@@ -183,8 +189,12 @@ if (canvas && status) {
         );
     }
     input = new CameraController(canvas, city.cameraController, {
-      onTap: (p) => picking?.tap(p.x, p.y),
+      onTap: (p) => {
+        picking?.tap(p.x, p.y);
+        if (root.dataset.construction === 'true') inspectTool?.tap(p.x, p.y);
+      },
       onShortcut: (action) => {
+        if (action === 'cancel') inspectTool?.clear();
         const speed = sim?.mirror.clock?.speed;
         if (action === 'pause') void simControls?.setSpeed(speed === 0 ? 1 : 0);
         else if (action === 'speed1') void simControls?.setSpeed(1);
@@ -337,7 +347,18 @@ if (canvas && status) {
           root.dataset.underground = String(underground);
         },
       );
-      tools = new ToolManager((tool) => input?.setTool(tool));
+      inspectPreview = new BulldozePreview(city.scene, UI_PALETTE.accent);
+      inspectPanel = createInspectPanel(root, () => inspectTool?.clear());
+      inspectTool = new InspectTool(
+        sim,
+        powerContext.pick,
+        (info) => inspectPanel?.update(info),
+        (shapes, heights) => inspectPreview?.show(shapes, heights),
+      );
+      tools = new ToolManager((tool) => {
+        inspectTool?.clear();
+        input?.setTool(tool);
+      });
       const mode = (construction: boolean) => {
         const first = construction && root.dataset.construction !== 'true';
         root.dataset.construction = String(construction);
@@ -490,6 +511,9 @@ if (import.meta.hot)
     delete window.__webcityZoneStats;
     delete window.__webcityPick;
     tools?.dispose();
+    inspectTool?.dispose();
+    inspectPanel?.dispose();
+    inspectPreview?.dispose();
     unsubscribeWater?.();
     waterTool?.dispose();
     waterControls?.dispose();

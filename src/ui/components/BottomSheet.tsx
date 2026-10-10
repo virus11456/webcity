@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact';
-import { useId, useLayoutEffect, useRef } from 'preact/hooks';
+import { useLayoutEffect, useRef } from 'preact/hooks';
 import { IconButton } from './IconButton';
 import { t } from '../i18n/t';
 
@@ -16,7 +16,6 @@ export function BottomSheet({
   onDismiss: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  const id = useId();
   useLayoutEffect(() => {
     const dialog = ref.current;
     if (!dialog || !open) return;
@@ -29,7 +28,7 @@ export function BottomSheet({
     <dialog
       ref={ref}
       class="ui-sheet"
-      aria-labelledby={id}
+      aria-label={title}
       onKeyDown={(event) => {
         if (event.key !== 'Tab') return;
         const controls = Array.from(
@@ -58,7 +57,7 @@ export function BottomSheet({
       }}
     >
       <header class="ui-panel-header">
-        <h2 id={id}>{title}</h2>
+        <h2>{title}</h2>
         <IconButton icon="close" label={t('ui.close')} onClick={onDismiss} />
       </header>
       <div class="ui-panel-body">{children}</div>
