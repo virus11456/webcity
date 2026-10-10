@@ -507,3 +507,7 @@ M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/st
 ### M1-25／M1-26 啟動與整合
 
 預設主選單以動態 import 載入，不配置 Worker／WebGL；一次性新遊戲或讀檔請求經 sessionStorage 交給 bootstrap，再建立 Game。新遊戲 `CitySettings.starterRoads?` 為 Worker 初始化選項，缺省保留既有空白測試世界；存檔保留實際路網。`RoadSegment.regional?` 僅標記起始地塊外的預鋪高速公路維護歸屬，並排除自動水管。這兩個可選欄位與 version 1 存檔向後相容。
+
+### M2-01 曲線道路
+
+道路與控制點沿用現有 RoadDraft／RoadSegment。`world/roadCurves.ts` 負責形狀、投影、交叉與精確分段，RoadGraph 與工具共用；Worker 改為接受有限地面三次貝茲載荷，並以同一份幾何驗證重新計價。無新增 runtime 依賴或存檔版本。操作及容差見 `CURVED_ROADS.md`。

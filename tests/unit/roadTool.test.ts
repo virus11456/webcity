@@ -210,3 +210,44 @@ describe('road tool interaction state', () => {
     manager.dispose();
   });
 });
+
+describe('curved and free tool input', () => {
+  it('uses three points, confirms touch and keeps a continuous curve chain', async () => {
+    const { tool, tap, transport, respond } = setup();
+    tool.setMode('curve');
+    tool.setAngleSnap(false);
+    tap(-160, -80);
+    expect(tool.readState().phase).toBe('control');
+    tap(-160, 80);
+    expect(tool.readState().phase).toBe('end');
+    tap(80, 80);
+    expect(tool.readState().preview?.canBuild).toBe(true);
+    expect(transport.sent).toHaveLength(0);
+    tool.onConfirm();
+    expect(transport.sent[0]).toMatchObject({
+      t: 'buildRoad',
+      points: { start: { x: -160, z: -80 }, end: { x: 80, z: 80 } },
+    });
+    await respond();
+    expect(tool.readState().phase).toBe('control');
+  });
+  it('draws a smooth free stroke, with touch confirmation and cancellation', () => {
+    const { tool, transport } = setup();
+    tool.setMode('free');
+    const e = (x: number, y: number) => ({ x, y, button: 0, kind: 'touch' });
+    tool.onPointerDown(e(-160, -80));
+    tool.onPointerMove(e(-160, -40));
+    tool.onPointerMove(e(-120, 0));
+    tool.onPointerMove(e(-80, 0));
+    tool.onPointerUp(e(-80, 0));
+    const d = tool.readState().preview?.preview?.draft;
+    expect(d?.c1.x).toBe(-160);
+    expect(d?.c2.z).toBe(0);
+    expect(tool.readState().preview?.canBuild).toBe(true);
+    expect(transport.sent).toHaveLength(0);
+    tool.onCancel();
+    tool.onConfirm();
+    expect(transport.sent).toHaveLength(0);
+    expect(tool.readState().phase).toBe('start');
+  });
+});

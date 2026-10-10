@@ -4,7 +4,7 @@ import { isBulldozeTargets } from '../world/bulldoze';
 import { isZonePayload } from '../world/zoning';
 import type { ZoneType } from '../world/types';
 import { ROADS, type RoadTypeId } from '../data/roads';
-import { isStraightRoadDraft } from '../world/roadConstruction';
+import { isRoadDraft } from '../world/roadConstruction';
 import type { Response, SimEvent } from '../bridge/protocol';
 import type { CitySettings } from '../world/snapshot';
 import { Simulation } from './simulation';
@@ -305,7 +305,7 @@ export class CommandDispatcher {
         typeof value.type !== 'string' ||
         !Object.hasOwn(ROADS, value.type) ||
         !('points' in value) ||
-        !isStraightRoadDraft(value.points)
+        !isRoadDraft(value.points)
       ) {
         fail('err.invalidCommand');
         return;

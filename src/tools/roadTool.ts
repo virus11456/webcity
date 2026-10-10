@@ -1,7 +1,14 @@
+import { distance, lerp, normalize } from '../core/math';
+import { ROAD_CURVES } from '../data/roadCurves';
 import { buildingsChangeFootprints } from '../bridge/buildingChanges';
 import type { FailureReason } from '../bridge/protocol';
 import { ROADS, type RoadTypeId } from '../data/roads';
-import { previewStraightRoad, snapRoadPoint } from '../world/roadGeometry';
+import {
+  previewStraightRoad,
+  snapRoadPoint,
+  snapRoadVector,
+  roadReferenceAngle,
+} from '../world/roadGeometry';
 import {
   checkRoadBudget,
   type ConstructionPreview,
@@ -10,11 +17,13 @@ import {
 import type { Vec2 } from '../world/types';
 import type { Tool, ToolContext, ToolPointer } from './tool';
 
+export type RoadMode = 'straight' | 'curve' | 'free';
 export interface RoadToolState {
   active: boolean;
   ready: boolean;
   pending: boolean;
-  phase: 'start' | 'end' | 'confirm';
+  phase: 'start' | 'control' | 'end' | 'confirm';
+  mode: RoadMode;
   type: RoadTypeId;
   angleSnap: boolean;
   preview: ConstructionPreview | null;
@@ -23,12 +32,14 @@ export interface RoadToolState {
   segments: number;
   unlocked: readonly number[];
 }
-/** Two-point straight-road tool; only worker acknowledgement advances a continuous chain. */
+/** Straight, three-point curve and free-drag tool; only worker acknowledgement advances a continuous chain. */
 export class RoadTool implements Tool {
   readonly id = 'road';
   private world: RoadConstructionWorld | undefined;
   private anchor: Vec2 | null = null;
   private end: Vec2 | null = null;
+  private control: Vec2 | null = null;
+  private stroke: Vec2[] = [];
   private down: ToolPointer | null = null;
   private epoch = 0;
   private shift = false;
@@ -39,6 +50,7 @@ export class RoadTool implements Tool {
     ready: false,
     pending: false,
     phase: 'start',
+    mode: 'straight',
     type: 'road_small',
     angleSnap: true,
     preview: null,
@@ -105,13 +117,17 @@ export class RoadTool implements Tool {
   }
   private recalculate(): void {
     this.state.preview =
-      this.anchor && this.end && this.world
+      this.anchor &&
+      this.end &&
+      this.world &&
+      (this.state.mode !== 'curve' || this.control)
         ? checkRoadBudget(
             previewStraightRoad(
               {
                 type: this.state.type,
                 start: this.anchor,
                 end: this.end,
+                ...this.handles(),
                 snap: { angle: this.state.angleSnap && !this.shift },
               },
               this.world,
@@ -120,6 +136,38 @@ export class RoadTool implements Tool {
             this.world,
           )
         : null;
+    this.publish();
+  }
+  private handles(): { c1?: Vec2; c2?: Vec2 } {
+    if (!this.anchor || !this.end) return {};
+    if (this.state.mode === 'curve' && this.control)
+      return {
+        c1: lerp(this.anchor, this.control, 2 / 3),
+        c2: lerp(this.end, this.control, 2 / 3),
+      };
+    if (this.state.mode === 'free' && this.stroke.length > 1) {
+      const n = this.stroke.length,
+        a = normalize({
+          x: this.stroke[1]!.x - this.anchor.x,
+          z: this.stroke[1]!.z - this.anchor.z,
+        }),
+        b = normalize({
+          x: this.end.x - this.stroke[n - 2]!.x,
+          z: this.end.z - this.stroke[n - 2]!.z,
+        }),
+        h = distance(this.anchor, this.end) * ROAD_CURVES.freeHandleRatio;
+      return {
+        c1: { x: this.anchor.x + a.x * h, z: this.anchor.z + a.z * h },
+        c2: { x: this.end.x - b.x * h, z: this.end.z - b.z * h },
+      };
+    }
+    return {};
+  }
+  setMode(mode: RoadMode): void {
+    if (this.state.pending || !['straight', 'curve', 'free'].includes(mode))
+      return;
+    this.onCancel();
+    this.state.mode = mode;
     this.publish();
   }
   /** Start accepting road points without changing camera controls for multi-touch. */
@@ -159,11 +207,39 @@ export class RoadTool implements Tool {
       !this.state.pending &&
       this.state.ready &&
       event.button === 0
-    )
+    ) {
       this.down = { ...event };
+      if (this.state.mode === 'free' && this.world) {
+        const p = this.ctx.pick(event.x, event.y);
+        if (p) {
+          this.anchor = snapRoadPoint(p, this.world).pos;
+          this.stroke = [this.anchor];
+          this.end = null;
+          this.state.phase = 'end';
+          this.recalculate();
+        }
+      }
+    }
   }
   /** Mouse hover previews the endpoint; touch placement waits for a tap. */
   onPointerMove(event: ToolPointer): void {
+    if (
+      this.state.mode === 'free' &&
+      this.down &&
+      this.anchor &&
+      !this.state.pending
+    ) {
+      const p = this.ctx.pick(event.x, event.y);
+      if (
+        p &&
+        distance(p, this.stroke[this.stroke.length - 1]!) >= ROAD_CURVES.sampleM
+      ) {
+        this.stroke.push(p);
+        this.end = p;
+        this.recalculate();
+      }
+      return;
+    }
     // Drag callbacks arrive only after the shared gesture recognizer crosses its slop.
     this.down = null;
     if (
@@ -190,6 +266,20 @@ export class RoadTool implements Tool {
     if (!this.anchor) {
       this.anchor = snapRoadPoint(point, this.world).pos;
       this.end = null;
+      this.state.phase = this.state.mode === 'curve' ? 'control' : 'end';
+      this.recalculate();
+    } else if (this.state.mode === 'curve' && !this.control) {
+      this.control = snapRoadVector(
+        this.anchor,
+        point,
+        roadReferenceAngle(
+          snapRoadPoint(this.anchor, this.world),
+          point,
+          this.world,
+        ),
+        { angle: this.state.angleSnap && !event.shift },
+      );
+      this.end = null;
       this.state.phase = 'end';
       this.recalculate();
     } else {
@@ -204,7 +294,8 @@ export class RoadTool implements Tool {
   onCancel(): void {
     this.epoch++;
     this.down = null;
-    this.anchor = this.end = null;
+    this.anchor = this.end = this.control = null;
+    this.stroke = [];
     this.state.phase = 'start';
     this.state.preview = null;
     this.state.reason = null;
@@ -238,8 +329,9 @@ export class RoadTool implements Tool {
       if (epoch !== this.epoch || !this.state.active) return;
       if (response.t === 'result' && response.ok) {
         this.anchor = { ...points.end };
-        this.end = null;
-        this.state.phase = 'end';
+        this.end = this.control = null;
+        this.stroke = [];
+        this.state.phase = this.state.mode === 'curve' ? 'control' : 'end';
         this.state.reason = null;
       } else {
         this.state.reason =

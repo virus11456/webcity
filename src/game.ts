@@ -433,6 +433,7 @@ if (canvas && status) {
         confirm: () => roadTool!.onConfirm(),
         cancel: () => roadTool!.onCancel(),
         type: (type) => roadTool!.setType(type),
+        mode: (mode) => roadTool!.setMode(mode),
         angle: (enabled) => roadTool!.setAngleSnap(enabled),
       });
       powerControls = createPowerControls(roadControls.powerHost, {

@@ -270,23 +270,40 @@ export function rebuildZoneGrid(w: ZoneGridWorld): ZoneGridChange {
         for (
           let d = 0;
           d + CELL_SIZE <= length + C.positionEpsilonM;
-          d += CELL_SIZE
+          d += CELL_SIZE * C.curveBlockWidth
         ) {
+          const width = Math.min(
+            C.curveBlockWidth,
+            Math.floor((length - d + C.positionEpsilonM) / CELL_SIZE),
+          );
+          const span = width * CELL_SIZE;
           const a = at(points, d),
-            b = at(points, d + CELL_SIZE),
+            b = at(points, d + span),
             l = distance(a, b);
           if (l < C.positionEpsilonM) continue;
           const dir = { x: (b.x - a.x) / l, z: (b.z - a.z) / l },
-            middle = at(points, d + CELL_SIZE / 2);
+            middle = at(points, d + span / 2);
+          const normal = { x: -dir.z * side, z: dir.x * side };
+          // Place the straight front outside the full curved pavement over this block.
+          let offset = half;
+          for (let k = 0; k <= width; k++) {
+            const p = at(points, d + k * CELL_SIZE);
+            offset = Math.max(
+              offset,
+              half + (p.x - middle.x) * normal.x + (p.z - middle.z) * normal.z,
+            );
+          }
           create(
             s,
             side,
             {
-              x: middle.x - dir.z * side * half,
-              z: middle.z + dir.x * side * half,
+              x:
+                middle.x + normal.x * offset - (dir.x * (span - CELL_SIZE)) / 2,
+              z:
+                middle.z + normal.z * offset - (dir.z * (span - CELL_SIZE)) / 2,
             },
             dir,
-            1,
+            width,
           );
         }
     }
