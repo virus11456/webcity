@@ -3,6 +3,7 @@ import { ZONES, type ZoneType } from '../data/zones';
 import type { ZoneSelectionMode } from '../data/zoneTool';
 import type { ZoneToolState } from '../tools/zoneTool';
 import { t } from './i18n/t';
+import { createBuildCatalog } from './buildCatalog';
 
 interface ZoneActions {
   zone(value: ZoneType | null): void;
@@ -59,7 +60,8 @@ export function createZoneControls(parent: HTMLElement, actions: ZoneActions) {
   cancel.textContent = t('zone.cancel');
   cancel.addEventListener('click', actions.cancel);
   footer.append(swatch, metrics, cancel);
-  panel.append(row, status, footer);
+  const catalog = createBuildCatalog(zone, 'zone');
+  panel.append(catalog.host, row, status, footer);
   parent.append(panel);
   return {
     update(state: Readonly<ZoneToolState>) {
@@ -79,6 +81,7 @@ export function createZoneControls(parent: HTMLElement, actions: ZoneActions) {
             ? ` · MS${ZONES[type].unlock} ${t('zone.locked')}`
             : '');
       }
+      catalog.update();
       swatch.style.background = state.zone
         ? ZONE_PALETTE[state.zone].normal
         : 'transparent';

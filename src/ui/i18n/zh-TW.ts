@@ -1,4 +1,16 @@
 export const ZH_TW = {
+  'toolbar.catalog': '建造項目',
+  'toolbar.categories': '建造分類',
+  'toolbar.upkeep': '維護',
+  'toolbar.per8m': ' / 8m',
+  'toolbar.perWeek': ' / 週',
+  'toolbar.straight': '道路模式：直線',
+  'toolbar.future': '後續開放的分類',
+  'toolbar.futureItems':
+    '行政區、垃圾、醫療、消防、警察、教育、大眾運輸、公園美化、獨特建築與政策尚未開放。',
+  'toolbar.shortcuts':
+    '1–3 速度 · 4 道路 · 5 分區 · 6 電力 · 7 水務 · 8 拆除 · Esc 取消',
+
   'hud.population': '人口',
   'hud.money': '資金',
   'hud.weekly': '上週收支',

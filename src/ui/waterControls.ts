@@ -1,6 +1,7 @@
 import { WATER_UTILITY } from '../data/waterUtility';
 import type { WaterMode, WaterToolState } from '../tools/waterTool';
 import { t } from './i18n/t';
+import { createBuildCatalog } from './buildCatalog';
 export function createWaterControls(
   parent: HTMLElement,
   actions: {
@@ -40,7 +41,11 @@ export function createWaterControls(
   hint.className = 'power-hint';
   hint.setAttribute('role', 'status');
   row.append(select, rotate, confirm, cancel, roads);
-  host.append(row, output, hint);
+  const catalog = createBuildCatalog(select, 'water');
+  const actionRow = document.createElement('div');
+  actionRow.className = 'road-row tool-actions';
+  actionRow.append(rotate, confirm, cancel);
+  host.append(catalog.host, row, output, hint, actionRow);
   parent.append(host);
   return {
     update(s: WaterToolState) {
@@ -51,7 +56,8 @@ export function createWaterControls(
       host.dataset.cost = String(s.preview?.cost ?? 0);
       host.dataset.rotation = String(s.rotation);
       select.value = s.mode === 'roads' ? 'pipe' : s.mode;
-      select.disabled = s.pending;
+      select.disabled = !s.ready || s.pending;
+      catalog.update(s.unlocked);
       rotate.hidden = s.mode === 'pipe' || s.mode === 'roads';
       rotate.disabled = cancel.disabled = roads.disabled = s.pending;
       confirm.disabled = !s.ready || s.pending || !s.preview?.valid;

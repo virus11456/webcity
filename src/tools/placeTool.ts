@@ -14,6 +14,7 @@ export interface PowerToolState {
   active: boolean;
   pending: boolean;
   ready: boolean;
+  unlocked: readonly number[];
   preview: PowerPreview | null;
   reason: FailureReason | 'sim.failed' | null;
   rotation: number;
@@ -45,6 +46,7 @@ export class PlaceTool implements Tool {
       active: false,
       pending: false,
       ready: false,
+      unlocked: [],
       preview: null,
       reason: null,
       rotation: 0,
@@ -54,6 +56,7 @@ export class PlaceTool implements Tool {
     const refresh = () => {
       this.world = ctx.sim.mirror.readPowerWorld();
       this.state.ready = !!this.world;
+      this.state.unlocked = this.world?.unlocked ?? [];
       this.publish();
     };
     this.unsubscribe = ctx.sim.onEvent((e) => {

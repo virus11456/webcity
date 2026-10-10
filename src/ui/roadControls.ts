@@ -1,6 +1,8 @@
 import { ROADS, type RoadTypeId } from '../data/roads';
 import type { RoadToolState } from '../tools/roadTool';
 import { t } from './i18n/t';
+import { catalogIcon, createBuildCatalog } from './buildCatalog';
+import { layout, observeLayout } from './store';
 
 interface RoadActions {
   enter(): void;
@@ -69,7 +71,22 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       enter.hidden = false;
       actions.demo();
     });
-  tabs.append(draw, zones, bulldoze, power, water, explore, demo);
+  tabs.setAttribute('aria-label', t('toolbar.categories'));
+  for (const [button, category] of [
+    [draw, 'road'],
+    [zones, 'zone'],
+    [power, 'power'],
+    [water, 'water'],
+  ] as const)
+    button.prepend(catalogIcon(category));
+  tabs.append(draw, zones, power, water, bulldoze, explore, demo);
+  const future = document.createElement('details');
+  future.className = 'toolbar-future';
+  const futureLabel = document.createElement('summary');
+  futureLabel.textContent = t('toolbar.future');
+  const futureItems = document.createElement('p');
+  futureItems.textContent = t('toolbar.futureItems');
+  future.append(futureLabel, futureItems);
   const options = document.createElement('div');
   options.className = 'road-row road-options';
   const typeLabel = document.createElement('label');
@@ -94,20 +111,25 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   angle.addEventListener('change', () => actions.angle(angle.checked));
   angleLabel.append(angle, t('road.angle'));
   options.append(typeLabel, angleLabel);
+  const catalog = createBuildCatalog(select, 'road');
+  const roadMode = document.createElement('span');
+  roadMode.className = 'tool-mode';
+  roadMode.textContent = t('toolbar.straight');
+  options.append(roadMode);
   const metrics = document.createElement('output');
   metrics.className = 'road-metrics';
   const status = document.createElement('p');
   status.className = 'road-status';
   status.setAttribute('role', 'status');
   const confirmRow = document.createElement('div');
-  confirmRow.className = 'road-row';
+  confirmRow.className = 'road-row tool-actions';
   const confirm = button('road.confirm', actions.confirm),
     cancel = button('road.cancel', actions.cancel);
   confirmRow.append(confirm, cancel);
   const note = document.createElement('small');
   note.textContent = t('road.temporary');
   const details = document.createElement('div');
-  details.append(options, metrics, status, confirmRow);
+  details.append(catalog.host, options, metrics, status, confirmRow);
   const zoneHost = document.createElement('div');
   zoneHost.hidden = true;
   const bulldozeHost = document.createElement('div');
@@ -119,7 +141,6 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   const growthHost = document.createElement('div');
   body.append(
     heading,
-    tabs,
     details,
     zoneHost,
     bulldozeHost,
@@ -127,9 +148,61 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     waterHost,
     growthHost,
     note,
+    future,
   );
+  const content = document.createElement('div');
+  content.className = 'toolbar-content';
+  content.append(...Array.from(body.childNodes));
+  body.append(content, tabs);
   panel.append(enter, body);
   parent.append(panel);
+  const stopLayout = observeLayout();
+  const stopSignal = layout.subscribe((value) => {
+    panel.dataset.layout = value;
+  });
+  const shortcut = (event: KeyboardEvent) => {
+    const target = event.target;
+    if (
+      !construction ||
+      event.repeat ||
+      event.isComposing ||
+      event.ctrlKey ||
+      event.altKey ||
+      event.metaKey ||
+      !(target instanceof HTMLElement) ||
+      (!panel.contains(target) && target.tagName !== 'CANVAS') ||
+      target.closest(
+        'input, select, textarea, [contenteditable="true"], dialog',
+      )
+    )
+      return;
+    const choice = (
+      {
+        Digit4: draw,
+        Digit5: zones,
+        Digit6: power,
+        Digit7: water,
+        Digit8: bulldoze,
+      } as Record<string, HTMLButtonElement>
+    )[event.code];
+    if (choice && !choice.disabled) {
+      event.preventDefault();
+      choice.click();
+    }
+    if (
+      event.code === 'Escape' &&
+      panel.contains(target) &&
+      !explore.disabled
+    ) {
+      event.preventDefault();
+      actions.explore();
+    }
+  };
+  window.addEventListener('keydown', shortcut);
+  const hint = document.createElement('small');
+  hint.className = 'toolbar-shortcuts';
+  hint.textContent = t('toolbar.shortcuts');
+  content.append(hint);
   const format = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 });
   return {
     waterHost,
@@ -243,7 +316,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         bulldozePending ||
         powerPending ||
         waterPending;
-      options.hidden = !state.active;
+      options.hidden = catalog.host.hidden = !state.active;
       select.disabled = state.pending;
       angle.disabled = state.pending;
       select.value = state.type;
@@ -254,6 +327,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         option.textContent =
           t(`road.${type}`) + (option.disabled ? ` · ${t('road.locked')}` : '');
       }
+      catalog.update();
       confirm.disabled =
         !state.ready || state.pending || !state.preview?.canBuild;
       confirm.hidden = !state.active || !state.preview;
@@ -282,6 +356,9 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       if (!construction) body.hidden = true;
     },
     dispose() {
+      window.removeEventListener('keydown', shortcut);
+      stopSignal();
+      stopLayout();
       panel.remove();
     },
   };

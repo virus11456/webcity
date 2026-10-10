@@ -1,6 +1,7 @@
 import { POWER, type PowerPlantId } from '../data/power';
 import type { PowerToolState } from '../tools/placeTool';
 import { t } from './i18n/t';
+import { createBuildCatalog } from './buildCatalog';
 export function createPowerControls(
   parent: HTMLElement,
   actions: {
@@ -47,7 +48,11 @@ export function createPowerControls(
   hint.className = 'power-hint';
   hint.setAttribute('role', 'status');
   row.append(select, rotate, confirm, cancel);
-  host.append(row, output, hint);
+  const catalog = createBuildCatalog(select, 'power');
+  const actionRow = document.createElement('div');
+  actionRow.className = 'road-row tool-actions';
+  actionRow.append(rotate, confirm, cancel);
+  host.append(catalog.host, row, output, hint, actionRow);
   parent.append(host);
   return {
     update(s: PowerToolState) {
@@ -58,7 +63,8 @@ export function createPowerControls(
       host.dataset.output = String(s.preview?.output ?? 0);
       host.dataset.cost = String(s.preview?.cost ?? 0);
       select.value = s.line ? 'line' : s.defId;
-      select.disabled = s.pending;
+      select.disabled = !s.ready || s.pending;
+      catalog.update(s.unlocked);
       rotate.disabled = s.pending;
       rotate.hidden = s.line;
       confirm.disabled = !s.ready || s.pending || !s.preview?.valid;

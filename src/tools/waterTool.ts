@@ -17,6 +17,7 @@ export interface WaterToolState {
   active: boolean;
   pending: boolean;
   ready: boolean;
+  unlocked: readonly number[];
   mode: WaterMode;
   rotation: number;
   preview: WaterPreview | null;
@@ -34,6 +35,7 @@ export class WaterTool implements Tool {
     active: false,
     pending: false,
     ready: false,
+    unlocked: [],
     mode: 'water_tower',
     rotation: 0,
     preview: null,
@@ -52,6 +54,7 @@ export class WaterTool implements Tool {
     const refresh = () => {
       this.world = ctx.sim.mirror.readPowerWorld('water');
       this.state.ready = !!this.world;
+      this.state.unlocked = this.world?.unlocked ?? [];
       this.publish();
     };
     this.unsubscribe = ctx.sim.onEvent((e) => {
