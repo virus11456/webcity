@@ -22,3 +22,7 @@ Original six tree and two shrub geometries, plus a procedurally authored silhoue
 ## M3-11 商業、工業與辦公
 
 99 款 CL／CH／I／O 模型及四組 atlas 為 WebCity 原創參數化離線素材，沿用專案授權，無外部遊戲素材。來源與重建方式：`assets-source/catalog/cio-recipes.json`、`scripts/generateModels.ts`、`scripts/modelAtlas.ts`、`src/render/buildings/catalogGeometry.ts`；輸出為 `public/assets/models/bld_{cl,ch,i,o}_*.glb`，授權 metadata 見 manifest。
+
+## M3-12 公共設施與地標
+
+30 種設施及 12 種地標 GLB／civic atlas 為 WebCity 原創離線參數化素材，沿用專案授權，未採用外部商業遊戲素材。來源：`src/render/facilities/geometry.ts`、`scripts/generateFacilities.ts`、`scripts/modelAtlas.ts`；原始檔與重建紀錄位於 `assets-source/catalog/`。地標為一般建築形式的原創組合，非特定商業遊戲資產或現存地標之重製。

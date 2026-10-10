@@ -641,3 +641,7 @@ world/modelCatalog 為穩定 recipe／資產選擇；scripts 離線輸出三段 
 ### M3-11 商業、工業與辦公素材
 
 MODEL_CATALOG 擴充 CL／CH／I／O，沿用 world mapping 與 CatalogAssets 無需改變 Worker、存檔或模擬。離線 catalogGeometry 提供各分區細節與完整高度的三段 LOD；共用 atlas 仍按分區去重。見 COMMERCIAL_MODELS.md。
+
+### M3-12 公共設施與地標素材
+
+world/facilityModels 對照 BUILDINGS 與純美術地標清單；FacilityAssets 提供原始 GLTF 變換、獨立幾何副本與共用狀態材質，接入既有 power／water／services 渲染器，保留權威事件、風力動畫與水管高度。樹維持 instancing，量化 buffer 先還原 float 才烘焙矩陣。見 FACILITY_MODELS.md。

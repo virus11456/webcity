@@ -1,3 +1,4 @@
+import type { FacilityAssets } from './facilities/assets';
 import { SEA_LEVEL } from '../data/config';
 import {
   BoxGeometry,
@@ -10,6 +11,7 @@ import {
   Mesh,
   MeshStandardMaterial,
   type Scene,
+  type Object3D,
 } from 'three';
 import type { SimEvent } from '../bridge/protocol';
 import { POWER } from '../data/power';
@@ -29,7 +31,10 @@ export class PowerRenderer {
   readonly group = new Group();
   private readonly preview = new Group();
   private readonly assets = new Map<string, Group>();
-  private readonly rotors = new Map<number, { group: Group; speed: number }>();
+  private readonly rotors = new Map<
+    number,
+    { group: Object3D; speed: number }
+  >();
   private seed = 0;
   private readonly concrete = new MeshStandardMaterial({
     color: SERVICE_PALETTE.power,
@@ -61,6 +66,7 @@ export class PowerRenderer {
   constructor(
     scene: Scene,
     private readonly height: (x: number, z: number) => number,
+    private catalog?: FacilityAssets,
   ) {
     this.group.add(this.preview);
     scene.add(this.group);
@@ -117,6 +123,21 @@ export class PowerRenderer {
     g.rotation.y = b.rotation;
     const w = b.lotW * 8,
       d = b.lotD * 8;
+    const formal = this.catalog?.request(b, () => {
+      if (this.assets.has(key)) this.plant(b);
+    });
+    if (formal) {
+      g.add(formal);
+      const rotor = formal.getObjectByName('Rotor0');
+      if (rotor)
+        this.rotors.set(b.id, {
+          group: rotor,
+          speed: windAt(this.seed, b.pos) * POWER.rotorSpeed,
+        });
+      this.assets.set(key, g);
+      this.group.add(g);
+      return;
+    }
     this.box(g, w, 1, d, 0, 0.5, d / 2);
     if (b.defId === 'power_wind') {
       this.pole(
@@ -214,6 +235,12 @@ export class PowerRenderer {
       for (const id of e.removed) this.remove(`n${id}`);
       for (const n of e.added) this.line(n);
     }
+  }
+  readStats() {
+    return {
+      rotors: this.rotors.size,
+      rotorAngle: this.rotors.values().next().value?.group.rotation.z ?? 0,
+    };
   }
   show(p: PowerPreview | null) {
     for (const c of [...this.preview.children]) {
