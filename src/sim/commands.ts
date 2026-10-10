@@ -1,3 +1,4 @@
+import { PARKS } from '../data/parks';
 import { TRAFFIC_RUNTIME } from '../data/traffic';
 import { SIM_RUNTIME } from '../data/simRuntime';
 import type { BudgetDepartment } from '../data/economy';
@@ -16,6 +17,7 @@ const futureCommands = new Set([
   'save',
   'upgradeRoad',
   'place',
+  'plantTrees',
   'setBuildingEnabled',
   'buildNetwork',
   'buildRoadPipes',
@@ -252,6 +254,22 @@ export class CommandDispatcher {
         t: 'result',
         reqId,
         ...this.simulation.setBuildingEnabled(value.id, value.enabled),
+      });
+    } else if (value.t === 'plantTrees') {
+      if (
+        !('points' in value) ||
+        !Array.isArray(value.points) ||
+        !value.points.length ||
+        value.points.length > PARKS.maxBrushTrees ||
+        !value.points.every(finitePoint)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.plantTrees(value.points),
       });
     } else if (value.t === 'place') {
       if (

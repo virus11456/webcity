@@ -87,6 +87,8 @@ export interface HealthSummary {
   residents: number;
 }
 export interface Building {
+  landValue?: number;
+  parkBonus?: number;
   education?: { enrolled: number; eligible: number; capacity?: number };
   health?: HealthSummary;
   drinkingWaterPollution?: number;

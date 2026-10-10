@@ -35,6 +35,7 @@ export interface ServiceReach {
   radius: number;
 }
 export interface ServicePreview extends PowerPreview {
+  trees?: Vec2[];
   roads: Vec2[][];
   radius: number;
 }
@@ -258,16 +259,35 @@ export function previewService(
       maxSlope: SERVICES.maxSlope,
       maxHeightDifferenceM: SERVICES.maxHeightDifferenceM,
     });
+  const center = p.points.length
+    ? p.points.reduce(
+        (a, b) => ({
+          x: a.x + b.x / p.points.length,
+          z: a.z + b.z / p.points.length,
+        }),
+        { x: 0, z: 0 },
+      )
+    : pos;
   const radius = (definition?.radiusM ?? 0) * budget,
     access = network.access(pos);
-  if (p.valid && !access) {
+  if (p.valid && !access && id !== 'tree') {
     p.valid = false;
     p.reason = 'err.serviceRoad';
   }
   return {
     ...p,
     radius,
-    roads: access ? network.pieces(network.reach(access, radius)) : [],
+    roads:
+      definition?.kind === 'park'
+        ? [
+            Array.from({ length: 33 }, (_, i) => ({
+              x: center.x + Math.cos((i * Math.PI) / 16) * radius,
+              z: center.z + Math.sin((i * Math.PI) / 16) * radius,
+            })),
+          ]
+        : access
+          ? network.pieces(network.reach(access, radius))
+          : [],
   };
 }
 export function serviceDemand(

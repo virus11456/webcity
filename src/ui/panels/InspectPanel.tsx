@@ -144,15 +144,21 @@ function Content({
           `${b.housing?.occupied ?? 0} / ${b.households}`,
         ],
       );
-    rows.push(
-      [t('inspect.jobs'), `${b.workers} / ${b.jobs}`],
-      [
-        t('inspect.utilities'),
-        [1, 2, 4]
-          .map((flag) => t(b.flags & flag ? 'inspect.yes' : 'inspect.no'))
-          .join(' / '),
-      ],
-    );
+    if (b.kind !== 'park')
+      rows.push(
+        [t('inspect.jobs'), `${b.workers} / ${b.jobs}`],
+        [
+          t('inspect.utilities'),
+          [1, 2, 4]
+            .map((flag) => t(b.flags & flag ? 'inspect.yes' : 'inspect.no'))
+            .join(' / '),
+        ],
+      );
+    if (b.kind === 'park' && b.defId !== 'tree')
+      rows.push([
+        t('service.status'),
+        t(b.enabled === false ? 'service.off' : 'service.on'),
+      ]);
     if (b.serviceStatus) {
       const q = b.serviceStatus;
       rows.push(
@@ -175,6 +181,10 @@ function Content({
           `${t(`finance.${service as keyof NonNullable<typeof b.coverage>}`)} ${t('service.coverage')}`,
           `${Math.round(value * 100)}%`,
         ]);
+    if (b.landValue !== undefined)
+      rows.push([t('park.landValue'), b.landValue.toFixed(1)]);
+    if (b.parkBonus !== undefined)
+      rows.push([t('park.bonus'), `+${b.parkBonus.toFixed(1)}`]);
     if (b.education) {
       rows.push([
         t(
@@ -254,16 +264,22 @@ function Content({
         ))}
       </dl>
       {failure && <p role="alert">{failure}</p>}
-      {info.kind === 'building' && serviceDefinition(info.value.defId) && (
-        <Button
-          disabled={pending}
-          onClick={() => toggle?.(info.value.id, info.value.enabled === false)}
-        >
-          {t(
-            info.value.enabled === false ? 'service.enable' : 'service.disable',
-          )}
-        </Button>
-      )}
+      {info.kind === 'building' &&
+        info.value.defId !== 'tree' &&
+        serviceDefinition(info.value.defId) && (
+          <Button
+            disabled={pending}
+            onClick={() =>
+              toggle?.(info.value.id, info.value.enabled === false)
+            }
+          >
+            {t(
+              info.value.enabled === false
+                ? 'service.enable'
+                : 'service.disable',
+            )}
+          </Button>
+        )}
     </div>
   );
 }

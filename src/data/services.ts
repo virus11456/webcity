@@ -1,3 +1,4 @@
+import { PARKS } from './parks';
 /** GDD §10; capacity conversions fill the unspecified service-demand units. */
 export const SERVICES = {
   ids: [
@@ -10,6 +11,7 @@ export const SERVICES = {
     'school_elementary',
     'school_high',
     'university',
+    ...PARKS.ids,
   ],
   peoplePerPoliceCar: 200,
   buildingsPerFireTruck: 40,

@@ -575,3 +575,7 @@ FireSystem 保存 WorldSnapshot.fire／Building.fire，日結依確定性 RNG �
 ### M2-18 教育配置
 
 `CitizenSystem` 追蹤教育預算、設施啟停／火災與道路版本，在計算就學日前檢查學位。沿用 `ServiceNetwork` 道路距離，配置由居民穩定 ID 決定；`education.ts` 只由個人權威資料產生住宅／學校摘要，透過 BuildingPatch 更新檢視。存檔驗證新增可選摘要且向下相容。詳見 `EDUCATION.md`。
+
+### M2-19 公園及樹木
+
+`plantTrees` 是有上限的 Worker 原子指令，`world/parks.ts` 共用筆畫與地形／占用預覽，`sim/systems/parks.ts` 產生徑向休憩場。樹木採 park 建築記錄、保留 ID／費用／種植日，沿用分區阻擋、拆除與存檔，不參與電網或職缺。渲染以兩組共享幾何 InstancedMesh 承載最多 4,000 棵，公園原創模型按材質合併。詳見 `PARKS.md`。

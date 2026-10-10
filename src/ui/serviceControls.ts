@@ -20,7 +20,7 @@ export function createServiceControls(
   for (const id of SERVICES.ids) {
     const o = document.createElement('option');
     o.value = id;
-    o.textContent = t(`service.${id}`);
+    o.textContent = id === 'tree' ? t('park.brushName') : t(`service.${id}`);
     select.append(o);
   }
   select.onchange = () => actions.mode(select.value as ServiceId);
@@ -57,12 +57,13 @@ export function createServiceControls(
       select.value = s.defId;
       select.disabled = !s.ready || s.pending;
       catalog.update(s.unlocked);
-      rotate.disabled = cancel.disabled = s.pending;
+      rotate.disabled = s.pending || s.defId === 'tree';
+      cancel.disabled = s.pending;
       confirm.disabled = !s.ready || s.pending || !s.preview?.valid;
       const p = s.preview;
       host.dataset.reach = String(p?.roads.length ?? 0);
       output.textContent = p
-        ? `${t('road.cost')} $${p.cost} · ${t('service.radius')} ${p.radius.toFixed(0)} m`
+        ? `${t('road.cost')} $${p.cost} · ${t(s.defId.startsWith('park_') || s.defId === 'tree' ? 'park.radius' : 'service.radius')} ${p.radius.toFixed(0)} m${p.trees ? ` · ${p.trees.length} ${t('park.trees')}` : ''}`
         : t('service.hint');
       const reason = s.reason ?? p?.reason;
       hint.dataset.invalid = String(!!reason);
@@ -70,7 +71,7 @@ export function createServiceControls(
         ? t('road.pending')
         : reason
           ? t(reason)
-          : t('service.hint');
+          : t(s.defId === 'tree' ? 'park.brushHint' : 'service.hint');
     },
     dispose() {
       host.remove();

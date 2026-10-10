@@ -1,3 +1,5 @@
+import { previewTrees, treeBrush } from '../world/parks';
+import { PARKS } from '../data/parks';
 import type { SimClient } from '../bridge/simClient';
 import type { FailureReason } from '../bridge/protocol';
 import type { ServiceId } from '../data/services';
@@ -31,6 +33,8 @@ export class ServiceTool implements Tool {
   readonly id: string;
   private world: PowerWorld | undefined;
   private point: Vec2 | null = null;
+  private treePoints = new Map<string, Vec2>();
+  private treeLast: Vec2 | null = null;
   private network?: ServiceNetwork;
   private armed = false;
   private disposed = false;
@@ -85,16 +89,18 @@ export class ServiceTool implements Tool {
     if (this.disposed) return;
     this.state.preview =
       this.state.active && this.world && this.point
-        ? previewService(
-            this.world,
-            this.state.defId,
-            this.point,
-            this.state.rotation,
-            this.ctx.sim.mirror.readFinance()?.budgets[
-              serviceDefinition(this.state.defId)!.service!
-            ] ?? 1,
-            this.network,
-          )
+        ? this.state.defId === 'tree'
+          ? previewTrees(this.world, [...this.treePoints.values()])
+          : previewService(
+              this.world,
+              this.state.defId,
+              this.point,
+              this.state.rotation,
+              this.ctx.sim.mirror.readFinance()?.budgets[
+                serviceDefinition(this.state.defId)!.service ?? 'parks'
+              ] ?? 1,
+              this.network,
+            )
         : null;
     if (this.state.active) this.ctx.preview(this.state.preview);
     this.changed({ ...this.state });
@@ -110,6 +116,7 @@ export class ServiceTool implements Tool {
   }
   setDefinition(id: ServiceId) {
     if (this.state.pending) return;
+    this.onCancel();
     this.state.defId = id;
     this.state.reason = null;
     this.publish();
@@ -123,6 +130,8 @@ export class ServiceTool implements Tool {
     if (this.state.ready) this.state.reason = null;
     this.armed = false;
     this.point = null;
+    this.treePoints.clear();
+    this.treeLast = null;
     this.state.preview = null;
     this.publish();
   }
@@ -132,10 +141,32 @@ export class ServiceTool implements Tool {
       this.state.ready &&
       !this.state.pending &&
       e.button === 0
-    )
+    ) {
       this.armed = true;
+      if (this.state.defId === 'tree') {
+        this.treeLast = null;
+        const p = this.ctx.pick(e.x, e.y);
+        if (p) this.paintTrees(p);
+      }
+    }
+  }
+  private paintTrees(p: Vec2) {
+    for (const point of treeBrush(this.treeLast ?? p, p)) {
+      if (this.treePoints.size >= PARKS.maxBrushTrees) break;
+      this.treePoints.set(`${point.x}:${point.z}`, point);
+    }
+    this.treeLast = this.point = p;
+    this.state.reason = null;
+    this.publish();
   }
   onPointerMove(e: ToolPointer) {
+    if (this.state.defId === 'tree') {
+      if (this.state.active && this.armed && !this.state.pending) {
+        const p = this.ctx.pick(e.x, e.y);
+        if (p) this.paintTrees(p);
+      }
+      return;
+    }
     if (!this.state.active || this.state.pending || e.kind !== 'mouse') return;
     this.point = this.ctx.pick(e.x, e.y);
     this.state.reason = null;
@@ -146,7 +177,8 @@ export class ServiceTool implements Tool {
     this.armed = false;
     const p = this.ctx.pick(e.x, e.y);
     if (!p) return;
-    this.point = p;
+    if (this.state.defId === 'tree') this.paintTrees(p);
+    else this.point = p;
     this.state.reason = null;
     this.publish();
   }
@@ -161,12 +193,15 @@ export class ServiceTool implements Tool {
       return;
     this.state.pending = true;
     this.publish();
-    const command = {
-      t: 'place' as const,
-      defId: this.state.defId,
-      pos: this.point,
-      rotation: this.state.rotation,
-    };
+    const command =
+      this.state.defId === 'tree'
+        ? { t: 'plantTrees' as const, points: [...this.treePoints.values()] }
+        : {
+            t: 'place' as const,
+            defId: this.state.defId,
+            pos: this.point,
+            rotation: this.state.rotation,
+          };
     void this.ctx.sim
       .send(command)
       .then((r) => {

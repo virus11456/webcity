@@ -30,7 +30,7 @@ interface Node {
 /** Spatial broad phase, exact footprint gaps, then BFS islands and deterministic near-first supply. */
 export function updatePower(s: SimState): BuildingPatch[] {
   const nodes: Node[] = s.buildings
-    .filter((b) => b.state === 'active')
+    .filter((b) => b.state === 'active' && b.kind !== 'park')
     .map((b) => ({
       b,
       points: zoneBuildingFootprint(b),

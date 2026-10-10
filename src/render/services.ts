@@ -1,5 +1,10 @@
+import { PARKS } from '../data/parks';
 import {
   BoxGeometry,
+  ConeGeometry,
+  InstancedMesh,
+  Color,
+  CylinderGeometry,
   DoubleSide,
   BufferGeometry,
   Float32BufferAttribute,
@@ -16,16 +21,20 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import type { SimEvent } from '../bridge/protocol';
 import {
   BUILDING_PALETTE,
+  ROAD_PALETTE,
+  ENVIRONMENT_PALETTE,
   SERVICE_PALETTE,
   UI_PALETTE,
   FIRE_PALETTE,
 } from '../data/palette';
 import { serviceDefinition, type ServicePreview } from '../world/services';
+import { zoneBuildingFootprint } from '../world/zoneGeometry';
 import type { Building, Vec2 } from '../world/types';
 /** Original civic buildings, merged by material; rebuilt on structural changes only. */
 export class ServiceRenderer {
   readonly group = new Group();
   private assets = new Group();
+  private plantedTrees: InstancedMesh[] = [];
   private buildings = new Map<number, Building>();
   private preview = new Mesh(
     new BufferGeometry(),
@@ -46,6 +55,26 @@ export class ServiceRenderer {
     scene.add(this.group);
     this.group.add(this.assets, this.preview);
     this.preview.renderOrder = 4;
+    const trunk = new CylinderGeometry(0.35, 0.55, 3, 6);
+    trunk.translate(0, 1.5, 0);
+    const lower = new ConeGeometry(2.8, 6, 7);
+    lower.translate(0, 5, 0);
+    const upper = new ConeGeometry(2, 4, 7);
+    upper.translate(0, 7, 0);
+    const leaves = mergeGeometries([lower, upper])!;
+    lower.dispose();
+    upper.dispose();
+    for (const geometry of [trunk, leaves]) {
+      const mesh = new InstancedMesh(
+        geometry,
+        new MeshStandardMaterial({ roughness: 0.85 }),
+        PARKS.maxTrees,
+      );
+      mesh.count = 0;
+      mesh.castShadow = mesh.receiveShadow = true;
+      this.plantedTrees.push(mesh);
+      this.group.add(mesh);
+    }
   }
   private clear() {
     this.assets.traverse((o) => {
@@ -56,9 +85,39 @@ export class ServiceRenderer {
   private rebuild() {
     this.clear();
     const batches = new Map<string, BufferGeometry[]>();
+    const treeMatrix = new Matrix4(),
+      treeColor = new Color();
+    let treeCount = 0;
+    for (const b of this.buildings.values())
+      if (b.defId === 'tree' && treeCount < PARKS.maxTrees) {
+        const x = b.pos.x + Math.sin(b.rotation) * 4,
+          z = b.pos.z + Math.cos(b.rotation) * 4;
+        treeMatrix.makeTranslation(x, this.height(x, z), z);
+        for (let i = 0; i < this.plantedTrees.length; i++) {
+          const mesh = this.plantedTrees[i]!;
+          mesh.setMatrixAt(treeCount, treeMatrix);
+          mesh.setColorAt(
+            treeCount,
+            treeColor.set(
+              b.fire?.burning || b.state === 'burned'
+                ? FIRE_PALETTE.char
+                : i
+                  ? ROAD_PALETTE.tree_leaf
+                  : ROAD_PALETTE.tree_trunk,
+            ),
+          );
+        }
+        treeCount++;
+      }
+    for (const mesh of this.plantedTrees) {
+      mesh.count = treeCount;
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      mesh.computeBoundingSphere();
+    }
     for (const b of this.buildings.values()) {
       const def = serviceDefinition(b.defId);
-      if (!def) continue;
+      if (!def || b.defId === 'tree') continue;
       const color =
         b.enabled === false
           ? SERVICE_PALETTE.power
@@ -92,6 +151,81 @@ export class ServiceRenderer {
         list.push(g);
         batches.set(paint, list);
       };
+      if (def.kind === 'park') {
+        const add = (
+          g: BufferGeometry,
+          paint: string,
+          x: number,
+          y: number,
+          z: number,
+        ) => {
+          g.translate(x, y, z);
+          g.applyMatrix4(base);
+          if (b.fire?.burning || b.state === 'burned')
+            paint = FIRE_PALETTE.char;
+          const list = batches.get(paint) ?? [];
+          list.push(g);
+          batches.set(paint, list);
+        };
+        const tree = (x: number, z: number) => {
+          add(
+            new CylinderGeometry(0.35, 0.55, 3, 6),
+            ROAD_PALETTE.tree_trunk,
+            x,
+            1.5,
+            z,
+          );
+          add(new ConeGeometry(2.8, 6, 7), ROAD_PALETTE.tree_leaf, x, 5, z);
+          add(new ConeGeometry(2, 4, 7), ROAD_PALETTE.tree_leaf, x, 7, z);
+        };
+        if (b.defId === 'tree') tree(0, d / 2);
+        else {
+          box(w, 0.2, d, 0, 0.1, d / 2, ROAD_PALETTE.median_grass);
+          box(2, 0.24, d, 0, 0.12, d / 2, ROAD_PALETTE.sidewalk);
+          box(w, 0.24, 2, 0, 0.12, d / 2, ROAD_PALETTE.sidewalk);
+          for (const x of [-w * 0.3, w * 0.3])
+            for (const z of [d * 0.2, d * 0.8]) tree(x, z);
+          for (const x of [-w * 0.2, w * 0.2]) {
+            box(3, 0.4, 1, x, 0.9, d * 0.4, ROAD_PALETTE.tree_trunk);
+            box(0.4, 0.9, 0.6, x - 1, 0.45, d * 0.4, ROAD_PALETTE.concrete);
+            box(0.4, 0.9, 0.6, x + 1, 0.45, d * 0.4, ROAD_PALETTE.concrete);
+          }
+          if (b.defId === 'park_playground') {
+            box(3, 2, 3, w * 0.23, 1, d * 0.65, UI_PALETTE.positive);
+            box(1, 1, 5, w * 0.23, 0.5, d * 0.47, ROAD_PALETTE.lane_yellow);
+          } else if (b.defId === 'park_plaza') {
+            box(
+              w * 0.35,
+              0.5,
+              d * 0.35,
+              0,
+              0.25,
+              d * 0.5,
+              ROAD_PALETTE.concrete,
+            );
+            box(
+              w * 0.28,
+              0.52,
+              d * 0.28,
+              0,
+              0.26,
+              d * 0.5,
+              ENVIRONMENT_PALETTE.water_shallow,
+            );
+          } else if (b.defId === 'park_large') {
+            box(
+              w * 0.3,
+              0.3,
+              d * 0.23,
+              w * 0.2,
+              0.15,
+              d * 0.72,
+              ENVIRONMENT_PALETTE.water_shallow,
+            );
+          }
+        }
+        continue;
+      }
       const dark = BUILDING_PALETTE.industrial.roofs[0],
         pale = BUILDING_PALETTE.RL.accents[0];
       box(w, 0.5, d, 0, 0.25, d / 2, SERVICE_PALETTE.power);
@@ -192,7 +326,14 @@ export class ServiceRenderer {
       }
     };
     for (const road of p.roads) ribbon(road, false, 3);
-    ribbon(p.points, true, 1);
+    if (p.trees)
+      for (const pos of p.trees)
+        ribbon(
+          zoneBuildingFootprint({ pos, rotation: 0, lotW: 1, lotD: 1 }),
+          true,
+          1,
+        );
+    else ribbon(p.points, true, 1);
     this.preview.geometry.setAttribute(
       'position',
       new Float32BufferAttribute(v, 3),
@@ -201,6 +342,11 @@ export class ServiceRenderer {
   }
   dispose() {
     this.clear();
+    for (const mesh of this.plantedTrees) {
+      mesh.geometry.dispose();
+      (mesh.material as MeshStandardMaterial).dispose();
+      mesh.dispose();
+    }
     this.preview.geometry.dispose();
     this.preview.material.dispose();
     for (const m of this.materials.values()) m.dispose();
