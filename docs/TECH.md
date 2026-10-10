@@ -625,3 +625,7 @@ DayNight 只投影 Worker SimClock 至 ART 關鍵影格，最多一 tick 插值�
 ### M3-07 後製
 
 PostProcessing 管理 HDR targets 與所有 pass，真實深度重建 AO、夜間光暈、相對鏡頭高度移軸、輸出轉色與 DPR 條件 FXAA。Renderer 統一處理 resize／quality／dispose；debug 提供啟用 flags，無逐幀配置。詳見 POSTFX.md。
+
+### M3-08 道路表面
+
+world/roadDetail 生成確定性表面像素；render/roads/detail 使用同一批次材質的 world-space 紋理，與 CSM hook 組合。道路 draw call 不變，dispose 釋放 GPU 貼圖；遠距淡出＋mipmap 保持穩定。見 ROAD_DETAIL.md。
