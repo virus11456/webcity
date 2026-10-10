@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "id": "bld_rl_l2_2x2_sample",
+      "url": "models/bld_rl_l2_2x2_sample.6ef635c9640c.glb",
+      "author": "WebCity",
+      "license": "Original project asset"
+    }
+  ]
+}

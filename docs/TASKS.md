@@ -678,7 +678,9 @@
 - **參考**：ART §7.2
 - **內容**：`scripts/` 中加入 glTF 壓縮（gltf-transform：Meshopt + KTX2）腳本；`render/assets.ts` 載入器（GLTFLoader + MeshoptDecoder + KTX2Loader）；素材清單 `public/assets/manifest.json`。
 - **驗收標準**：
-  - [ ] 放一個測試 .glb 可被壓縮並在遊戲中顯示
+  - [x] 放一個測試 .glb 可被壓縮並在遊戲中顯示
+
+驗證紀錄（2026-10-10）：原創住宅 GLB 通過 Meshopt + KTX2 壓縮並可在素材工坊顯示。872 項全套單元測試及另 2 項素材實體／釋放測試、lint、typecheck、build、三裝置 E2E（含斷線重新載入）通過，手機含橫式；細節見 `docs/ASSET_PIPELINE.md`，截圖見 `docs/screenshots/m3-01/`。
 
 ### M3-02　地形貼圖混合 Shader
 - **分支**：`feature/m3-02-terrain-shader`｜**相依**：M0-10｜**估時**：3

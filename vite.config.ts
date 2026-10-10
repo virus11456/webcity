@@ -44,7 +44,10 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{html,js,css,png,woff,woff2}'],
+        globPatterns: [
+          '**/*.{html,js,css,png,woff,woff2,wasm}',
+          'assets/manifest.json',
+        ],
         cleanupOutdatedCaches: true,
         skipWaiting: false,
         clientsClaim: true,

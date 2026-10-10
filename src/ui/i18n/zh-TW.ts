@@ -1,4 +1,12 @@
 export const ZH_TW = {
+  'asset.title': '模型素材工坊',
+  'asset.help': '拖曳旋轉、雙指縮放，檢視原創住宅樣品。',
+  'asset.canvas': '原創住宅模型',
+  'asset.reload': '重新載入',
+  'asset.reset': '重設視角',
+  'asset.loading': '正在載入模型…',
+  'asset.ready': '原創住宅樣品已載入',
+  'asset.failed': '模型載入失敗，請重新載入。',
   'err.serviceRoad': '需要緊鄰可進出的地面道路',
   'education.homeStudents': '在學 / 適齡居民',
   'education.schoolStudents': '在校生 / 可用學位',
