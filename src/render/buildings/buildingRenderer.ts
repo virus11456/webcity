@@ -1,3 +1,5 @@
+import { visualSeed } from '../../world/modelCatalog';
+import type { CatalogAssets } from './catalogAssets';
 import {
   BoxGeometry,
   Color,
@@ -54,6 +56,7 @@ interface Entry {
   removed: boolean;
   removal: number;
   detail: boolean;
+  asset?: boolean;
   pool?: InstancePool;
   construction?: ConstructionBuilding;
   materials?: Material[];
@@ -69,6 +72,7 @@ interface Dust {
 export interface BuildingRendererOptions {
   heightAt(x: number, z: number): number;
   atlas?: WindowAtlas;
+  assets?: CatalogAssets;
   registerMaterial?(
     material: Material,
     install?: (previous?: ShaderHook) => void,
@@ -79,6 +83,7 @@ export interface BuildingRendererOptions {
 export class BuildingRenderer {
   readonly group = new Group();
   private readonly atlas: WindowAtlas;
+  private readonly catalogMaterials = new Set<Material>();
   private readonly fullMaterial;
   private readonly farMaterial = buildingMaterial();
   private readonly scaffoldMaterial = new MeshBasicMaterial({
@@ -220,7 +225,7 @@ export class BuildingRenderer {
       b.level,
       b.lotW,
       b.lotD,
-      b.seed,
+      this.options.assets ? visualSeed(b) : b.seed,
       false,
     );
     const massing = geometry.userData.massing as BuildingVolume[];
@@ -342,13 +347,34 @@ export class BuildingRenderer {
   private addDetail(e: Entry): void {
     this.removeFar(e);
     const b = e.data;
-    const geometry = generateBuilding(
-      b.defId as ZoneType,
-      b.level,
-      b.lotW,
-      b.lotD,
-      b.seed,
-    );
+    const asset = this.options.assets?.request(b, () => {
+      if (this.disposed || this.entries.get(b.id) !== e) return;
+      this.dropDetail(e);
+      this.draw(e);
+      this.lodAge = R.lodInterval;
+    });
+    const geometry =
+      asset?.geometry ??
+      generateBuilding(
+        b.defId as ZoneType,
+        b.level,
+        b.lotW,
+        b.lotD,
+        this.options.assets ? visualSeed(b) : b.seed,
+      );
+    e.asset = Boolean(asset);
+    if (asset && !this.catalogMaterials.has(asset.material)) {
+      const material = asset.material;
+      material.userData.infoRole = 'instance';
+      material.emissiveIntensity = DAY_NIGHT.windowIntensity;
+      const install = (previous?: ShaderHook) => {
+        installBuildingShader(material, previous);
+        installNightWindows(material, this.hour, material.onBeforeCompile);
+      };
+      install();
+      this.options.registerMaterial?.(material, install);
+      this.catalogMaterials.add(material);
+    }
     e.detail = true;
     if (b.state === 'construction') {
       e.construction = new ConstructionBuilding(geometry, this.atlas);
@@ -377,7 +403,7 @@ export class BuildingRenderer {
         installNightWindows(e.construction.completed.material, this.hour);
       return;
     }
-    let hash = geometryHash(geometry);
+    let hash = `${asset ? geometry.userData.assetId : 'procedural'}:${geometryHash(geometry)}`;
     // Exact comparison prevents even a hash collision from sharing the wrong facade.
     while (
       this.pools.has(hash) &&
@@ -386,7 +412,11 @@ export class BuildingRenderer {
       hash += ':';
     let pool = this.pools.get(hash);
     if (!pool) {
-      pool = new InstancePool(this.group, geometry, this.fullMaterial);
+      pool = new InstancePool(
+        this.group,
+        geometry,
+        asset?.material ?? this.fullMaterial,
+      );
       this.pools.set(hash, pool);
     }
     geometry.dispose();
@@ -560,9 +590,11 @@ export class BuildingRenderer {
     let detail = 0,
       construction = 0,
       abandoned = 0,
-      removing = 0;
+      removing = 0,
+      assets = 0;
     for (const e of this.entries.values()) {
       if (e.detail) detail++;
+      if (e.detail && e.asset) assets++;
       if (e.data.state === 'construction') construction++;
       if (e.data.state === 'abandoned') abandoned++;
       if (e.removed) removing++;
@@ -571,6 +603,7 @@ export class BuildingRenderer {
       buildings: this.entries.size,
       pending: this.pending.size,
       detail,
+      assets,
       construction,
       abandoned,
       removing,
@@ -623,6 +656,9 @@ export class BuildingRenderer {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    for (const material of this.catalogMaterials)
+      this.options.unregisterMaterial?.(material);
+    this.catalogMaterials.clear();
     this.clear();
     for (const p of [this.far, this.scaffold, this.foundation, this.dustPool])
       p.dispose();

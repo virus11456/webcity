@@ -1,3 +1,4 @@
+import { CatalogAssets } from './render/buildings/catalogAssets';
 import { FollowCamera } from './render/followCamera';
 import { createFollowControls } from './ui/followControls';
 import { createNotifications } from './ui/notifications';
@@ -137,6 +138,7 @@ let tools: ToolManager | undefined;
 let input: CameraController | undefined;
 let city: CityRenderer | undefined;
 let buildings: BuildingRenderer | undefined;
+let catalogAssets: CatalogAssets | undefined;
 let fireRenderer: FireRenderer | undefined;
 let problemIcons: ProblemIcons | undefined;
 let vehicles: VehicleRenderer | undefined;
@@ -271,7 +273,9 @@ if (canvas && status) {
     if (sim) {
       const vegetationWorld = sim.mirror.readVegetationWorld();
       if (vegetationWorld) city.vegetation.sync(vegetationWorld);
+      catalogAssets = new CatalogAssets(city.renderer);
       buildings = new BuildingRenderer(city.scene, {
+        assets: catalogAssets,
         heightAt: (x, z) => city!.terrain.heightAt(x, z),
         registerMaterial: (material, install) =>
           city!.registerMaterial(material, install),
@@ -785,6 +789,8 @@ if (import.meta.hot)
     problemIcons?.dispose();
     fireRenderer?.dispose();
     buildings?.dispose();
+    catalogAssets?.dispose();
+    catalogAssets = undefined;
     city?.dispose();
     debug?.dispose();
     financeControls?.dispose();

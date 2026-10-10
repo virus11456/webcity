@@ -633,3 +633,7 @@ world/roadDetail 生成確定性表面像素；render/roads/detail 使用同一�
 ### M3-09 森林植被
 
 world/vegetation 從既有森林場與 seed 分批衍生植被與權威地物占用。Mirror 僅複製道路與建築足跡，不帶整張地形／模擬場；render/vegetation 以雙緩衝 instancing、分幀生成、三段 LOD 與程序 billboard atlas 顯示，逐幀不配置矩陣。見 VEGETATION.md。
+
+### M3-10 正式住宅素材
+
+world/modelCatalog 為穩定 recipe／資產選擇；scripts 離線輸出三段 LOD 與共用分區 atlas。CatalogAssets 將 GLTF 節點量化變換還原為 float geometry，資產完成後排入既有細節預算；分區材質保留 CSM、狀態與窗燈 hooks。未下載／不支援規格維持程序替代，無主執行緒世界寫入。詳見 RESIDENTIAL_MODELS.md。

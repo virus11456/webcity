@@ -1,6 +1,7 @@
 export const ZH_TW = {
+  'asset.model': '模型',
   'asset.title': '模型素材工坊',
-  'asset.help': '拖曳旋轉、雙指縮放，檢視原創住宅樣品。',
+  'asset.help': '拖曳旋轉、雙指縮放，檢視原創模型。',
   'asset.canvas': '原創住宅模型',
   'asset.reload': '重新載入',
   'asset.reset': '重設視角',
