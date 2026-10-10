@@ -163,3 +163,5 @@ export const FIRE_PALETTE = {
   smoke: '#35322F',
   char: '#292623',
 } as const;
+
+export const WATER_PALETTE = { polluted: '#6B5A3A' } as const;

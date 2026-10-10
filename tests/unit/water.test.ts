@@ -3,7 +3,7 @@ import { FloatType, RedFormat, type WebGLRenderer } from 'three';
 import { WaterRenderer } from '../../src/render/water/waterRenderer';
 import { Terrain } from '../../src/world/terrain';
 import { SEA_LEVEL, WORLD } from '../../src/data/config';
-import { WATER } from '../../src/data/water';
+import { WATER, WATER_DETAIL as D } from '../../src/data/water';
 
 const terrain = new Terrain(20261006);
 const compile = (water: WaterRenderer) => {
@@ -40,16 +40,16 @@ describe('water surface', () => {
     expect(shader.uniforms.waterHeights!.value).toBe(water.heightTexture);
     const phase = shader.uniforms.waterPhase!;
     water.update(1000);
-    expect(phase.value).toBeCloseTo(WATER.maxFrameSeconds * WATER.angularSpeed);
+    expect(phase.value).toBeCloseTo(WATER.maxFrameSeconds);
     water.update(NaN);
     water.update(-1);
-    expect(phase.value).toBeCloseTo(WATER.maxFrameSeconds * WATER.angularSpeed);
+    expect(phase.value).toBeCloseTo(WATER.maxFrameSeconds);
     expect(water.heightTexture.version).toBe(textureVersion);
     water.installShader();
     expect(compile(water).uniforms.waterPhase).toBe(phase);
     for (let i = 0; i < 10000; i++) water.update(0.05);
     expect(phase.value).toBeGreaterThanOrEqual(0);
-    expect(phase.value).toBeLessThan(2 * Math.PI);
+    expect(phase.value).toBeLessThan(D.phasePeriodSeconds);
     water.dispose();
   });
   it('uploads edited heights once and releases owned GPU resources', () => {

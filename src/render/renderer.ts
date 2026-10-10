@@ -1,3 +1,4 @@
+import type { SimEvent } from '../bridge/protocol';
 import { WATER_UTILITY } from '../data/waterUtility';
 import {
   ACESFilmicToneMapping,
@@ -315,6 +316,10 @@ export class CityRenderer {
     if (this.canvas.dataset.ready !== 'true')
       this.canvas.dataset.ready = 'true';
   };
+  /** Forward water-only authoritative data to the visual surface. */
+  acceptWater(event: SimEvent): void {
+    this.water.accept(event);
+  }
   /** Underground utility view leaves the terrain pick surface intact. */
   setWaterOverlay(enabled: boolean): void {
     const material = this.land.material;
