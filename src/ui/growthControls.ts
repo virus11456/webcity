@@ -133,6 +133,7 @@ export function createGrowthControls(
         p.crime !== undefined ||
         p.fire !== undefined ||
         p.health !== undefined ||
+        p.education !== undefined ||
         p.problemTimers !== undefined ||
         Object.hasOwn(p, 'roadDisconnectedDay') ||
         p.jobs !== undefined ||

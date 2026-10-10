@@ -87,6 +87,7 @@ export interface HealthSummary {
   residents: number;
 }
 export interface Building {
+  education?: { enrolled: number; eligible: number; capacity?: number };
   health?: HealthSummary;
   drinkingWaterPollution?: number;
   fire?: import('./fire').BuildingFire;

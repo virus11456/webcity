@@ -175,6 +175,21 @@ function Content({
           `${t(`finance.${service as keyof NonNullable<typeof b.coverage>}`)} ${t('service.coverage')}`,
           `${Math.round(value * 100)}%`,
         ]);
+    if (b.education) {
+      rows.push([
+        t(
+          b.education.capacity === undefined
+            ? 'education.homeStudents'
+            : 'education.schoolStudents',
+        ),
+        `${b.education.enrolled} / ${b.education.capacity ?? b.education.eligible}`,
+      ]);
+      if (b.housing)
+        rows.push([
+          t('education.average'),
+          b.housing.averageEducation.toFixed(2),
+        ]);
+    }
     if (b.health?.residents)
       rows.push(
         [t('health.average'), `${b.health.average.toFixed(1)}%`],

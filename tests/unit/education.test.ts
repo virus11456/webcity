@@ -1,0 +1,190 @@
+import { describe, expect, it } from 'vitest';
+import { createState } from '../../src/sim/state';
+import { CitizenSystem } from '../../src/sim/systems/citizens';
+import { updateEducationSummary } from '../../src/sim/systems/education';
+import { updatePopulation } from '../../src/sim/systems/population';
+import { initialHousing } from '../../src/world/population';
+import { RoadGraph } from '../../src/world/roadGraph';
+import { districtFixture } from '../../src/render/buildings/districtFixture';
+import { serialize, deserialize } from '../../src/save/serializer';
+import { educationCity } from '../fixtures/educationCity';
+import { migrateSave } from '../../src/save/migrations';
+import { Simulation } from '../../src/sim/simulation';
+function fixture(people = 400, level = 0) {
+  const s = createState({
+    seed: 72,
+    mapId: 'valley',
+    mode: 'sandbox',
+    cityName: 'Education',
+  });
+  const home = {
+    ...structuredClone(districtFixture(1)[0]!),
+    id: 1,
+    defId: 'RH',
+    level: 5,
+    state: 'active' as const,
+    pos: { x: 0, z: 9 },
+    lotW: 4,
+    lotD: 4,
+    residents: people,
+    households: people / 5,
+  };
+  home.housing = initialHousing(home, 90);
+  const school = {
+    ...structuredClone(home),
+    id: 2,
+    defId: ['school_elementary', 'school_high', 'university'][level]!,
+    kind: 'service' as const,
+    pos: { x: 60, z: 9 },
+    residents: 0,
+    households: 0,
+    housing: undefined,
+    enabled: true,
+  };
+  s.buildings = [home, school];
+  const roads = new RoadGraph(100);
+  roads.addRoad({
+    start: { x: -100, z: 0 },
+    end: { x: 200, z: 0 },
+    type: 'road_small',
+    startHeight: 60,
+    endHeight: 60,
+    builtDay: 0,
+  });
+  Object.assign(s, roads.snapshot());
+  updatePopulation(s);
+  s.citizens.age.fill([6, 13, 19][level]!);
+  s.citizens.education.fill(level);
+  s.citizens.schoolId.fill(0);
+  s.citizens.bornDay.fill(0);
+  s.citizens.schoolDays.fill(29);
+  const system = new CitizenSystem(s);
+  system.reconcile();
+  return { s, home, school, system, c: s.citizens };
+}
+describe('road-based education and effective school places', () => {
+  it('browser save fixture passes production validation', async () => {
+    const f = await educationCity();
+    expect(
+      (await deserialize(new Uint8Array(f.data).buffer)).citizens.count,
+    ).toBe(20);
+  });
+  it('graduates only admitted students; overflow retains its progress and education', () => {
+    const { s, system, c, home, school } = fixture();
+    updateEducationSummary(s);
+    expect(home.education).toEqual({ enrolled: 300, eligible: 400 });
+    expect(school.education).toEqual({
+      enrolled: 300,
+      eligible: 300,
+      capacity: 300,
+    });
+    s.clock.day = 1;
+    system.daily();
+    system.reconcile();
+    expect(
+      [...c.education.slice(0, c.count)].filter((e) => e === 1),
+    ).toHaveLength(300);
+    expect(
+      [...c.schoolDays.slice(0, c.count)].filter((d) => d === 29),
+    ).toHaveLength(100);
+    expect(
+      [...c.schoolId.slice(0, c.count)].filter((id) => id === 2),
+    ).toHaveLength(100);
+  });
+  it('budget reductions deterministically preserve the oldest IDs and suspend excluded pupils', () => {
+    const { s, system, c } = fixture();
+    s.budgets.education = 0.5;
+    s.clock.day = 1;
+    system.daily();
+    expect([...c.education.slice(0, 150)]).toEqual(Array(150).fill(1));
+    expect([...c.education.slice(150, 400)]).toEqual(Array(250).fill(0));
+    expect(c.schoolDays[399]).toBe(29);
+  });
+  it('disabled or disconnected schools cannot advance a day; reopening resumes preserved progress', () => {
+    const { s, system, c, school } = fixture(10);
+    school.enabled = false;
+    s.clock.day = 1;
+    system.daily();
+    system.reconcile();
+    expect(c.schoolDays[0]).toBe(29);
+    expect(school.jobs).toBe(0);
+    school.enabled = true;
+    const segments = s.segments;
+    s.segments = [];
+    s.clock.day = 2;
+    system.daily();
+    expect(c.education[0]).toBe(0);
+    s.segments = segments;
+    s.clock.day = 3;
+    system.daily();
+    expect(c.education[0]).toBe(1);
+  });
+  it('nearby homes across an unconnected road cannot enroll', () => {
+    const { s, system, c, school } = fixture(10);
+    school.pos.z = 109;
+    const roads = new RoadGraph(200);
+    for (const z of [0, 100])
+      roads.addRoad({
+        start: { x: -100, z },
+        end: { x: 200, z },
+        type: 'road_small',
+        startHeight: 60,
+        endHeight: 60,
+        builtDay: 0,
+      });
+    Object.assign(s, roads.snapshot());
+    system.reconcile();
+    expect([...c.schoolId.slice(0, 10)]).toEqual(Array(10).fill(0));
+  });
+  it('all three levels require completed schooling and university graduates can fill qualified jobs', () => {
+    for (const level of [0, 1, 2]) {
+      const { s, system, c } = fixture(10, level);
+      s.clock.day = 1;
+      system.daily();
+      system.reconcile();
+      expect([...c.education.slice(0, 10)]).toEqual(Array(10).fill(level + 1));
+      if (level === 2) {
+        expect([...c.workId.slice(0, 10)].every((id) => id === 2)).toBe(true);
+        expect([...c.requiredEducation.slice(0, 10)].every((e) => e <= 3)).toBe(
+          true,
+        );
+        expect([...c.requiredEducation.slice(0, 10)].some((e) => e === 3)).toBe(
+          true,
+        );
+      }
+    }
+  });
+  it('rejects impossible attendance summaries while accepting old saves without them', () => {
+    const { s } = fixture(10);
+    const snapshot = new Simulation(s.settings, undefined, s).snapshot();
+    for (const summary of [
+      { enrolled: -1, eligible: 10 },
+      { enrolled: 11, eligible: 10 },
+      { enrolled: 10, eligible: 10, capacity: 9 },
+      { enrolled: 1.5, eligible: 10 },
+    ]) {
+      const bad = structuredClone(snapshot);
+      bad.buildings[0]!.education = summary;
+      expect(() => migrateSave(bad, 1)).toThrow('Invalid save');
+    }
+    for (const b of snapshot.buildings) delete b.education;
+    expect(migrateSave(snapshot, 1).citizens.count).toBe(10);
+  });
+  it('save reload preserves wait-list progress and reconstructs attendance without granting a diploma', async () => {
+    const { s, school } = fixture(10);
+    school.enabled = false;
+    const snapshot = new Simulation(s.settings, undefined, s).snapshot();
+    const loaded = new Simulation(
+      s.settings,
+      undefined,
+      await deserialize(await serialize(snapshot)),
+    ).snapshot();
+    expect(loaded.citizens.schoolDays[0]).toBe(29);
+    expect(loaded.citizens.education[0]).toBe(0);
+    expect(loaded.buildings[1]!.education).toEqual({
+      enrolled: 0,
+      eligible: 0,
+      capacity: 0,
+    });
+  });
+});

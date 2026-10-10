@@ -1,5 +1,8 @@
 export const ZH_TW = {
   'err.serviceRoad': '需要緊鄰可進出的地面道路',
+  'education.homeStudents': '在學 / 適齡居民',
+  'education.schoolStudents': '在校生 / 可用學位',
+  'education.average': '居民平均教育（0–3）',
   'health.average': '居民平均健康',
   'health.sick': '生病居民 / 居民數',
   'fire.station': '派遣消防局',

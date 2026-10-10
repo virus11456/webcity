@@ -1,3 +1,4 @@
+import { RoadGraph } from '../../src/world/roadGraph';
 import { describe, expect, it } from 'vitest';
 import { createState } from '../../src/sim/state';
 import { updatePopulation } from '../../src/sim/systems/population';
@@ -54,7 +55,16 @@ function fixture(people = 100) {
       households: 0,
     },
   ];
-  s.nextId = 10;
+  const roads = new RoadGraph(100);
+  roads.addRoad({
+    start: { x: -100, z: -9 },
+    end: { x: 200, z: -9 },
+    type: 'road_small',
+    startHeight: 60,
+    endHeight: 60,
+    builtDay: 0,
+  });
+  Object.assign(s, roads.snapshot());
   updatePopulation(s);
   return s;
 }
@@ -282,6 +292,7 @@ it('100k citizen memory and daily lifetime budget', () => {
     citizenBytes(c),
     samples[Math.floor(samples.length * 0.95)],
   );
+  expect(c.count).toBe(100000);
   expect(citizenBytes(c)).toBeLessThan(20 * 1024 * 1024);
   expect(samples[Math.floor(samples.length * 0.95)]).toBeLessThan(10);
 });

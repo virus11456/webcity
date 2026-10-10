@@ -1,3 +1,4 @@
+import { ServiceNetwork } from '../../world/services';
 import { SpatialHash } from '../../core/spatial';
 import { BUILDINGS, type BuildingDefinition } from '../../data/buildings';
 import { CITIZEN_RULES } from '../../data/citizens';
@@ -54,6 +55,8 @@ export function citizenJobPlaces(b: Building): EducationCounts {
   if (b.state !== 'active') return emptyEducation();
   if (b.kind === 'zoned') return jobPlaces(b);
   const def = definitions.get(b.defId);
+  if (def?.service === 'education' && (b.enabled === false || b.fire?.burning))
+    return emptyEducation();
   return def
     ? [...CITIZEN_RULES.publicJobs[def.service ?? 'utility']]
     : emptyEducation();
@@ -67,6 +70,8 @@ interface Family {
 }
 /** Derived indexes are rebuilt on load, while every personal decision stays in the save. */
 export class CitizenSystem {
+  private educationNodes?: SimState['nodes'];
+  private educationSegments?: SimState['segments'];
   private readonly structure: (number | string | undefined)[] = [];
   private readonly byId = new Map<number, Building>();
   private dirty = true;
@@ -139,14 +144,23 @@ export class CitizenSystem {
   }
   private structureChanged(remember = false): boolean {
     let cursor = 0,
-      changed = false;
+      changed =
+        this.educationNodes !== this.s.nodes ||
+        this.educationSegments !== this.s.segments;
+    if (remember) {
+      this.educationNodes = this.s.nodes;
+      this.educationSegments = this.s.segments;
+    }
     const compare = (value: number | string | undefined) => {
       if (this.structure[cursor] !== value) changed = true;
       if (remember) this.structure[cursor] = value;
       cursor++;
     };
+    compare(this.s.budgets.education);
     for (const b of this.s.buildings) {
       compare(b.id);
+      compare(b.enabled === false ? 0 : 1);
+      compare(b.fire?.burning ? 1 : 0);
       compare(b.state);
       compare(b.defId);
       compare(b.level);
@@ -221,11 +235,14 @@ export class CitizenSystem {
     c.births = c.deaths = 0;
     const byId = this.buildings();
     const structuralChange = this.structureChanged();
+    if (this.dirty || structuralChange) this.schools(byId);
     for (let i = c.count - 1; i >= 0; i--) {
       const school = byId.get(c.schoolId[i]!),
         def = school && definitions.get(school.defId);
       if (
         school?.state === 'active' &&
+        school.enabled !== false &&
+        !school.fire?.burning &&
         school.roadDisconnectedDay === undefined &&
         def?.capacity?.educationLevel === c.education[i]! + 1
       ) {
@@ -250,7 +267,12 @@ export class CitizenSystem {
       const groupChanges = [12, 18, 64].includes(c.age[i]!);
       if (groupChanges) this.adjustSummary(i, -1, byId);
       c.age[i] = Math.min(CITIZENS.ageRange[1], c.age[i]! + 1);
-      if (c.age[i] === CITIZEN_RULES.workingAge[0]) this.dirty = true;
+      if (
+        c.age[i] === CITIZEN_RULES.workingAge[0] ||
+        CITIZEN_RULES.schoolMinAge.some((a) => a === c.age[i]) ||
+        CITIZEN_RULES.schoolMaxAge.some((a) => a + 1 === c.age[i])
+      )
+        this.dirty = true;
       if (c.age[i]! > CITIZEN_RULES.workingAge[1]) {
         if (c.workId[i]) this.dirty = true;
         c.workId[i] = 0;
@@ -435,57 +457,98 @@ export class CitizenSystem {
   }
   private schools(byId: Map<number, Building>): void {
     const c = this.s.citizens,
-      slots = new Map<number, number>();
+      budget = this.s.budgets.education;
     const schools = [...byId.values()]
       .filter(
         (b) =>
           b.state === 'active' &&
+          b.enabled !== false &&
+          !b.fire?.burning &&
           b.roadDisconnectedDay === undefined &&
           definitions.get(b.defId)?.capacity?.students,
       )
       .sort((a, b) => a.id - b.id);
-    for (const b of schools)
-      slots.set(b.id, definitions.get(b.defId)!.capacity!.students!);
-    for (let i = 0; i < c.count; i++) {
-      const e = c.education[i]!,
-        age = c.age[i]!,
-        old = c.schoolId[i]!;
-      const eligible =
-        e < 3 &&
-        age >= CITIZEN_RULES.schoolMinAge[e]! &&
-        age <= CITIZEN_RULES.schoolMaxAge[e]! &&
-        byId.get(c.homeId[i]!)?.roadDisconnectedDay === undefined;
+    if (!schools.length) {
+      c.schoolId.fill(0, 0, c.count);
+      return;
+    }
+    const network = new ServiceNetwork(this.s.nodes, this.s.segments);
+    const slots = new Map(
+      schools.map((b) => [
+        b.id,
+        Math.floor(definitions.get(b.defId)!.capacity!.students! * budget),
+      ]),
+    );
+    const reaches = new Map(
+      schools.map((b) => {
+        const access = network.access(b.pos, b.frontageSetbackM);
+        return [
+          b.id,
+          access
+            ? network.reach(
+                access,
+                (definitions.get(b.defId)!.radiusM ?? 0) * budget,
+              )
+            : undefined,
+        ] as const;
+      }),
+    );
+    const accesses = new Map(
+      [...byId.values()]
+        .filter(residential)
+        .map((b) => [b.id, network.access(b.pos, b.frontageSetbackM)]),
+    );
+    const distance = (i: number, school: number): number => {
+      const reach = reaches.get(school),
+        a = accesses.get(c.homeId[i]!);
       if (
-        eligible &&
-        (slots.get(old) ?? 0) > 0 &&
-        definitions.get(byId.get(old)!.defId)?.capacity?.educationLevel ===
-          e + 1
-      ) {
+        !reach ||
+        !a ||
+        definitions.get(byId.get(school)!.defId)?.capacity?.educationLevel !==
+          c.education[i]! + 1
+      )
+        return Infinity;
+      const d = network.distance(reach, a);
+      return d <= reach.radius ? d : Infinity;
+    };
+    const eligible: number[] = [];
+    for (let i = 0; i < c.count; i++) {
+      const level = c.education[i]!,
+        age = c.age[i]!,
+        home = byId.get(c.homeId[i]!);
+      if (
+        level < 3 &&
+        age >= CITIZEN_RULES.schoolMinAge[level]! &&
+        age <= CITIZEN_RULES.schoolMaxAge[level]! &&
+        home?.state === 'active' &&
+        home.roadDisconnectedDay === undefined
+      )
+        eligible.push(i);
+      else c.schoolId[i] = 0;
+    }
+    eligible.sort((a, b) => c.id[a]! - c.id[b]!);
+    // Reserve eligible existing pupils before admitting newcomers; capacity cuts use stable IDs.
+    for (const i of eligible) {
+      const old = c.schoolId[i]!;
+      if ((slots.get(old) ?? 0) > 0 && Number.isFinite(distance(i, old)))
         slots.set(old, slots.get(old)! - 1);
-        continue;
-      }
-      c.schoolId[i] = 0;
-      if (old) c.schoolDays[i] = 0;
-      if (!eligible || c.workId[i]) continue;
-      const home = byId.get(c.homeId[i]!)!;
-      let chosen: Building | undefined,
+      else c.schoolId[i] = 0;
+    }
+    for (const i of eligible) {
+      if (c.schoolId[i]) continue;
+      let chosen = 0,
         best = Infinity;
       for (const b of schools) {
-        const def = definitions.get(b.defId)!,
-          distance = Math.hypot(b.pos.x - home.pos.x, b.pos.z - home.pos.z);
-        if (
-          slots.get(b.id)! > 0 &&
-          def.capacity?.educationLevel === e + 1 &&
-          distance <= (def.radiusM ?? 0) &&
-          distance < best
-        ) {
-          chosen = b;
-          best = distance;
+        if (!slots.get(b.id)) continue;
+        const d = distance(i, b.id);
+        if (d < best) {
+          best = d;
+          chosen = b.id;
         }
       }
       if (chosen) {
-        c.schoolId[i] = chosen.id;
-        slots.set(chosen.id, slots.get(chosen.id)! - 1);
+        c.schoolId[i] = chosen;
+        slots.set(chosen, slots.get(chosen)! - 1);
       }
     }
   }
