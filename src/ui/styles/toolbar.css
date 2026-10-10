@@ -190,3 +190,15 @@
     width: min(260px, calc(100vw - 460px));
   }
 }
+
+/* Keep the city visible while exploring; selecting a construction tool restores its panel. */
+.road-controls[data-exploring='true'] .toolbar-content,
+#app:has(.road-controls[data-exploring='true']) .population-summary {
+  display: none;
+}
+.road-controls[data-exploring='true'][data-layout='phone-landscape'] {
+  width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
