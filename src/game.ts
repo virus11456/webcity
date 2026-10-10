@@ -85,6 +85,7 @@ declare global {
       generation: number;
       trees: number;
       signals: number;
+      lamps: number;
     };
     __webcityPick?: (x: number, y: number) => TerrainPick | null;
   }
@@ -310,7 +311,9 @@ if (canvas && status) {
         ((sim.mirror.clock?.ticks ?? 0) * TIME.secondsPerDay[1]) /
           TIME.ticksPerDay,
       );
-      city.registerMaterial(roadPreview.roads.material);
+      city.registerMaterial(roadPreview.roads.material, (previous) =>
+        roadPreview!.roads.installDetail(previous),
+      );
       roadTool = new RoadTool(
         {
           sim,

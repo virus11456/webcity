@@ -1,3 +1,4 @@
+import { createRoadDetailTexture, installRoadDetail } from './detail';
 import { Streetlights } from './streetlights';
 import { IntersectionProps } from './signals';
 import { bridgeMesh } from './structures';
@@ -34,6 +35,13 @@ export class RoadRenderer {
     roughness: 0.95,
     side: DoubleSide,
   });
+  private readonly detail = createRoadDetailTexture();
+  constructor() {
+    this.installDetail();
+  }
+  installDetail(previous?: MeshStandardMaterial['onBeforeCompile']): void {
+    installRoadDetail(this.material, this.detail, previous);
+  }
   private lamps: Streetlights | undefined;
   private lampKey = '';
   private night = 0;
@@ -273,6 +281,7 @@ export class RoadRenderer {
     }
     this.signals?.dispose();
     this.lamps?.dispose();
+    this.detail.dispose();
     this.material.dispose();
     this.group.clear();
   }
