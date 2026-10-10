@@ -1,3 +1,7 @@
+import {
+  summarizeRoadTraffic,
+  type RoadTraffic,
+} from '../../world/roadTraffic';
 import { TIME } from '../../data/config';
 import { PATHFINDING } from '../../data/pathfinding';
 import { TRAFFIC_RUNTIME as C, TrafficKind } from '../../data/traffic';
@@ -49,7 +53,8 @@ export class TrafficSystem {
   private arrived = 0;
   private removedStuck = 0;
   private sampledAt = 0;
-  readonly roadFlow = new Map<number, { ratio: number; count: number }>();
+  flowRevision = 0;
+  readonly roadFlow = new Map<number, RoadTraffic>();
   constructor(
     private readonly state: SimState,
     private readonly graph: LaneGraph,
@@ -602,27 +607,35 @@ export class TrafficSystem {
     }
     if (this.seconds - this.sampledAt >= C.congestionSampleSeconds) {
       this.sampledAt = this.seconds;
-      const sums = new Map<number, { sum: number; count: number }>();
-      for (const v of this.vehicles.values())
-        if (v.kind !== TrafficKind.pedestrian) {
-          const leg = v.route.legs[v.leg]!,
-            sum = sums.get(leg.segment) ?? { sum: 0, count: 0 };
-          sum.sum += Math.min(1, v.speed / leg.speedMps);
-          sum.count++;
-          sums.set(leg.segment, sum);
-        }
-      this.roadFlow.clear();
-      for (const s of this.state.segments) {
-        const value = sums.get(s.id);
-        this.roadFlow.set(s.id, {
-          ratio: value ? value.sum / value.count : 1,
-          count: value?.count ?? 0,
-        });
-      }
+      this.sampleFlow();
       this.planner.paths.setCongestion(
         new Map([...this.roadFlow].map(([id, v]) => [id, v.ratio])),
       );
     }
+  }
+  sampleFlow() {
+    const samples = Array.from(this.vehicles.values(), (v) => ({
+      segment: v.route.legs[v.leg]?.segment ?? 0,
+      kind: v.kind,
+      speed: v.speed,
+    }));
+    const flows = summarizeRoadTraffic(this.state.segments, samples);
+    if (
+      flows.length === this.roadFlow.size &&
+      flows.every((v) => {
+        const old = this.roadFlow.get(v.id);
+        return (
+          old &&
+          old.count === v.count &&
+          old.speedKmh === v.speedKmh &&
+          old.ratio === v.ratio
+        );
+      })
+    )
+      return;
+    this.roadFlow.clear();
+    for (const flow of flows) this.roadFlow.set(flow.id, flow);
+    this.flowRevision++;
   }
   frame(): { data: Float32Array; count: number } {
     const data = new Float32Array(this.count * C.streamStride);

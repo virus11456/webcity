@@ -58,20 +58,26 @@ export function createInfoControls(
     if (view) {
       select.value = view;
       legend.textContent = t(`info.legend.${view}`);
+      scale.style.background =
+        view === 'traffic'
+          ? `linear-gradient(to right,${UI_PALETTE.infoScale[0]} 0% 33.33%,${UI_PALETTE.infoScale[2]} 33.33% 66.66%,${UI_PALETTE.infoScale.at(-1)} 66.66% 100%)`
+          : `linear-gradient(to right,${UI_PALETTE.infoScale.join(',')})`;
       hint.textContent = t(
-        [
-          'power',
-          'water',
-          'sewage',
-          'crime',
-          'health',
-          'education',
-          'happiness',
-          'fireRisk',
-          'population',
-        ].includes(view)
-          ? 'info.sampled'
-          : 'info.continuous',
+        view === 'traffic'
+          ? 'info.trafficHint'
+          : [
+                'power',
+                'water',
+                'sewage',
+                'crime',
+                'health',
+                'education',
+                'happiness',
+                'fireRisk',
+                'population',
+              ].includes(view)
+            ? 'info.sampled'
+            : 'info.continuous',
       );
       position();
     }

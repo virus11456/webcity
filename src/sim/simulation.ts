@@ -133,6 +133,7 @@ export class Simulation {
       this.schedules,
       this.state.traffic,
     );
+    this.traffic.sampleFlow();
     this.fields = new FieldsSystem(this.state, () =>
       this.traffic.roadVehicleCounts(),
     );
@@ -274,7 +275,15 @@ export class Simulation {
     }
     if (kind === 'segment') {
       const value = s.segments.find((b) => b.id === id);
-      return value ? { kind, value: structuredClone(value) } : null;
+      return value
+        ? {
+            kind,
+            value: structuredClone({
+              ...value,
+              traffic: this.traffic.roadFlow.get(id),
+            }),
+          }
+        : null;
     }
     return null;
   }
@@ -1023,7 +1032,13 @@ export class Simulation {
       this.refreshPopulation();
     this.schedules.tick();
     this.routePlanner.tick();
+    const flowRevision = this.traffic.flowRevision;
     this.traffic.step(tickMs / 1000, (this.state.clock.ticks * tickMs) / 1000);
+    if (flowRevision !== this.traffic.flowRevision)
+      this.emit({
+        t: 'roadTraffic',
+        roads: [...this.traffic.roadFlow.values()].map((v) => ({ ...v })),
+      });
     const environment = this.fields.step();
     if (environment) {
       for (const which of environment.fields)

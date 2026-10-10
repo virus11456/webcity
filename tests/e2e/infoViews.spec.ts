@@ -77,7 +77,7 @@ test('implemented information layers switch heatmaps, instance colors and legend
   const choices = await select
     .locator('option')
     .evaluateAll((items) => items.map((o) => (o as HTMLOptionElement).value));
-  expect(choices).toHaveLength(18);
+  expect(choices).toHaveLength(19);
   for (const view of choices) {
     await select.selectOption(view);
     await expect(panel).toHaveAttribute('data-view', view);

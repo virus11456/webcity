@@ -53,7 +53,10 @@ export type FieldName =
 export type InspectInfo =
   | { kind: 'vehicle'; value: import('./traffic').TrafficInfo }
   | { kind: 'building'; value: Building }
-  | { kind: 'segment'; value: RoadSegment }
+  | {
+      kind: 'segment';
+      value: RoadSegment & { traffic?: import('./roadTraffic').RoadTraffic };
+    }
   | { kind: 'network'; net: NetworkKind; value: NetworkSegment };
 
 export interface EconomyState {

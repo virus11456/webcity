@@ -18,6 +18,8 @@ export function buildingInfo(
 ): number | undefined {
   if (b.state !== 'active') return undefined;
   switch (view) {
+    case 'traffic':
+      return undefined;
     case 'power':
       return b.kind === 'park' ? undefined : Number(!!(b.flags & POWER.flag));
     case 'water':

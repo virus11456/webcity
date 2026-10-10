@@ -1,5 +1,6 @@
-/** Only systems implemented through M2; traffic is added by M2-12. */
+/** Only systems implemented through M2. */
 export const INFO_VIEWS = [
+  'traffic',
   'power',
   'water',
   'sewage',
@@ -21,6 +22,8 @@ export const INFO_VIEWS = [
 ] as const;
 export type InfoView = (typeof INFO_VIEWS)[number];
 export const INFO = {
+  trafficWidthFraction: 0.72,
+  trafficHeightM: 0.24,
   refreshSeconds: 0.25,
   buildingSampleRadiusM: 24,
   densityMaxPerHectare: 1500,
