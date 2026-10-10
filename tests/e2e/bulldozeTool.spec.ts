@@ -47,7 +47,7 @@ async function road(
   await tap(page, ax, az, touch);
   await tap(page, bx, bz, touch);
   if (touch)
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   await expect(page.locator('.road-controls')).toHaveAttribute(
     'data-pending',
     'false',

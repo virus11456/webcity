@@ -1,3 +1,4 @@
+import { Icon } from '../components/Icon';
 import { dateForDay } from '../../world/calendar';
 import { TIME } from '../../data/config';
 import { Button } from '../components/Button';
@@ -47,11 +48,17 @@ export function SpeedControls({ model }: { model: TopBarModel }) {
         {([0, 1, 2, 4] as const).map((speed) => (
           <Button
             key={speed}
+            aria-label={t(speed === 0 ? 'sim.pause' : `sim.speed${speed}`)}
             disabled={!clock || failed || ended}
             aria-pressed={clock?.speed === speed}
             onClick={() => void model.setSpeed(speed)}
           >
-            {t(speed === 0 ? 'sim.pause' : `sim.speed${speed}`)}
+            <Icon
+              name={speed === 0 ? 'pause' : speed === 1 ? 'play' : 'fast'}
+            />
+            <span class="speed-label">
+              {t(speed === 0 ? 'sim.pause' : `sim.speed${speed}`)}
+            </span>
           </Button>
         ))}
       </div>

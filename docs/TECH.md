@@ -654,3 +654,6 @@ VehicleRenderer 的 16 款車輛與行人按型號／LOD 分批實例化；world
 
 ### M3-15 城市特效
 CityEffects 消費 ready／buildingsChanged，以兩個預配 InstancedBufferGeometry 顯示煙霧與升級光環；煙霧飄移在 GPU，主執行緒只更新來源及事件時序。game 讀取實際渲染畫質，同步各效果的開關，不修改模擬。電力／水務渲染快取最新建築，僅在火災狀態變化時重建；非同步素材完成亦使用最新狀態。見 EFFECTS.md。
+
+### M3-16 UI 美術與縮圖
+純資料 SVG paths 同時服務 Preact／DOM 控制與城市問題圖集。game 注入 BuildingThumbnails callback，render 在現有 WebGLRenderer 的離屏 target 渲染正式模型來源幾何，還原全部 renderer 狀態並限制快取；UI 只持有 PNG 字串，不跨層存取 Three。詳見 UI_ART.md。

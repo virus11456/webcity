@@ -68,7 +68,7 @@ test('builds elevated roads with accessible height controls and displays bridge 
   }
   if (info.project.use.hasTouch) {
     await expect(controls).toHaveAttribute('data-valid', 'true');
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   }
   await expect(controls).toHaveAttribute('data-segments', '4');
   await page.getByRole('button', { name: '降低 −', exact: true }).click();

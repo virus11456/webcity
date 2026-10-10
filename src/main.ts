@@ -1,3 +1,5 @@
+import { decorateControls } from './ui/icons';
+import './ui/styles/art.css';
 import { t } from './ui/i18n/t';
 import { registerPwa } from './pwa/register';
 import './ui/styles/tokens.css';
@@ -6,6 +8,8 @@ import './ui/styles/toolbar.css';
 
 const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('Missing #app element');
+const stopIcons = decorateControls(root);
+window.addEventListener('pagehide', stopIcons, { once: true });
 if (new URLSearchParams(location.search).get('asset-gallery') === '1')
   void import('./assetGallery').then(({ startAssetGallery }) =>
     startAssetGallery(root),

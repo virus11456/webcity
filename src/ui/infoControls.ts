@@ -1,3 +1,5 @@
+import { createIcon } from './icons';
+import { INFO_ICONS } from '../data/icons';
 import { INFO_VIEWS, type InfoView } from '../data/infoViews';
 import { UI_PALETTE } from '../data/palette';
 import { t } from './i18n/t';
@@ -36,7 +38,20 @@ export function createInfoControls(
   scale.setAttribute('aria-hidden', 'true');
   legend.className = 'info-legend';
   hint.className = 'info-hint';
-  panel.append(heading, close, select, scale, legend, hint);
+  const choices = document.createElement('div');
+  choices.className = 'info-view-buttons';
+  choices.setAttribute('role', 'group');
+  choices.setAttribute('aria-label', t('info.quickSelect'));
+  const choiceButtons = INFO_VIEWS.map((id) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.append(createIcon(INFO_ICONS[id]!), t(`info.${id}`));
+    b.dataset.view = id;
+    b.onclick = () => set(id);
+    choices.append(b);
+    return b;
+  });
+  panel.append(heading, close, select, choices, scale, legend, hint);
   parent.append(panel);
   (parent.querySelector('.road-tabs') ?? parent).append(trigger);
   let active: InfoView | null = null;
@@ -51,6 +66,8 @@ export function createInfoControls(
   window.addEventListener('resize', position);
   const set = (view: InfoView | null) => {
     active = view;
+    for (const b of choiceButtons)
+      b.setAttribute('aria-pressed', String(b.dataset.view === view));
     panel.hidden = view === null;
     trigger.setAttribute('aria-expanded', String(view !== null));
     parent.dataset.info = view ?? 'none';

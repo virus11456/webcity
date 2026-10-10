@@ -55,7 +55,7 @@ test('shows building warnings, clears repaired timers, abandons and collapses wi
   await tap(page, -240, -80, touch);
   await tap(page, -80, -80, touch);
   if (touch)
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   await page.waitForSelector('.road-controls[data-segments="1"]');
   await page.getByRole('button', { name: '分區', exact: true }).click();
   await tap(page, -200, -100, touch);

@@ -1,5 +1,11 @@
+import { Icon } from '../components/Icon';
+import { PROBLEM_ICONS } from '../../data/icons';
+import type { Building } from '../../world/types';
 import { ROADS } from '../../data/roads';
-import { hasBuildingProblem } from '../../world/buildingProblems';
+import {
+  BUILDING_PROBLEMS,
+  hasBuildingProblem,
+} from '../../world/buildingProblems';
 import { serviceDefinition } from '../../world/services';
 import type { ServiceId } from '../../data/services';
 import { render } from 'preact';
@@ -22,8 +28,10 @@ function Content({
   toggle,
   pending,
   failure,
+  thumbnail,
 }: {
   info: InspectInfo;
+  thumbnail?: string;
   locate?: (p: Vec2) => void;
   follow?: (id: number) => void;
   toggle?: (id: number, enabled: boolean) => void;
@@ -314,7 +322,28 @@ function Content({
   rows.push([t('inspect.paid'), `$${v.paidCost ?? 0}`]);
   return (
     <div class="inspect-data" data-kind={info.kind} data-id={v.id}>
+      {thumbnail && (
+        <img
+          class="inspect-thumbnail"
+          src={thumbnail}
+          alt={name}
+          width="256"
+          height="160"
+        />
+      )}
       <strong>{name}</strong>
+      {info.kind === 'building' && (
+        <div class="inspect-problem-icons">
+          {BUILDING_PROBLEMS.filter((key) =>
+            hasBuildingProblem(info.value as Building, key),
+          ).map((key) => (
+            <span key={key}>
+              <Icon name={PROBLEM_ICONS[key]!} />
+              {t(`problem.${key as keyof typeof PROBLEMS}`)}
+            </span>
+          ))}
+        </div>
+      )}
       <dl>
         {rows.map(([label, value]) => (
           <div key={label}>
@@ -359,6 +388,7 @@ export function createInspectPanel(
   locate?: (p: Vec2) => void,
   toggle?: (id: number, enabled: boolean) => Promise<boolean>,
   follow?: (id: number) => void,
+  thumbnail?: (building: Building) => string | undefined,
 ) {
   const host = document.createElement('div');
   host.className = 'inspect-host';
@@ -377,6 +407,9 @@ export function createInspectPanel(
     const body = (
       <Content
         info={current}
+        thumbnail={
+          current.kind === 'building' ? thumbnail?.(current.value) : undefined
+        }
         locate={locate}
         follow={follow}
         pending={pending}
