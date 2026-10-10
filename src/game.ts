@@ -11,6 +11,9 @@ import { NOTIFICATIONS } from './data/notifications';
 import { InfoOverlays } from './render/overlays';
 import { createInfoControls } from './ui/infoControls';
 import { FireRenderer } from './render/fire';
+import { BusTool } from './tools/busTool';
+import { BusStops } from './render/busStops';
+import { createBusControls } from './ui/busControls';
 import { ServiceRenderer } from './render/services';
 import { ServiceTool } from './tools/serviceTool';
 import { createServiceControls } from './ui/serviceControls';
@@ -67,6 +70,7 @@ import { App } from './ui/App';
 
 declare global {
   interface Window {
+    __webcityTransit?: () => ReturnType<SimClient['mirror']['readTransit']>;
     __webcityGraphics?: () => ReturnType<CityRenderer['readGraphics']>;
     __webcityStats?: () => ReturnType<SimClient['mirror']['readStats']>;
     __webcityBuildings?: () => ReturnType<SimClient['mirror']['readBuildings']>;
@@ -123,6 +127,9 @@ let inspectPanel: ReturnType<typeof createInspectPanel> | undefined;
 let inspectPreview: BulldozePreview | undefined;
 let facilityAssets: FacilityAssets | undefined;
 let serviceRenderer: ServiceRenderer | undefined;
+let busTool: BusTool | undefined;
+let busStops: BusStops | undefined;
+let busControls: ReturnType<typeof createBusControls> | undefined;
 let serviceTool: ServiceTool | undefined;
 let serviceControls: ReturnType<typeof createServiceControls> | undefined;
 let unsubscribeServices: (() => void) | undefined;
@@ -554,6 +561,14 @@ if (canvas && status) {
           serviceControls?.update(s);
         },
       );
+      busStops = new BusStops(city.scene, (x, z) =>
+        city!.terrain.heightAt(x, z),
+      );
+      busTool = new BusTool(sim, powerContext.pick, (s) => {
+        roadControls?.updateBus(s.active, s.pending);
+        busControls?.update(s);
+        busStops?.update(s.active, s.stops, s.lines);
+      });
       inspectPreview = new BulldozePreview(city.scene, UI_PALETTE.accent);
       followControls = createFollowControls(root, () => followCamera?.cancel());
       followCamera = new FollowCamera(
@@ -630,6 +645,11 @@ if (canvas && status) {
           tools!.select(zoneTool!);
           canvas.focus({ preventScroll: true });
         },
+        bus() {
+          mode(true);
+          tools!.select(busTool!);
+          canvas.focus({ preventScroll: true });
+        },
         service() {
           mode(true);
           tools!.select(serviceTool!);
@@ -684,6 +704,12 @@ if (canvas && status) {
             ? networkTool!.onCancel()
             : placeTool!.onCancel(),
       });
+      busControls = createBusControls(roadControls.busHost, busTool, () => {
+        tools!.select(serviceTool!);
+        serviceTool!.setDefinition('bus_depot');
+        canvas.focus({ preventScroll: true });
+      });
+      busControls.update(busTool.readState());
       serviceControls = createServiceControls(roadControls.serviceHost, {
         mode: (id) => serviceTool!.setDefinition(id),
         rotate: () => serviceTool!.rotate(),
@@ -805,6 +831,7 @@ if (canvas && status) {
           ...zoneRenderer!.readStats(),
         };
       };
+      window.__webcityTransit = () => sim!.mirror.readTransit();
       window.__webcityStats = () => sim!.mirror.readStats();
       window.__webcityBuildings = () => sim!.mirror.readBuildings();
       window.__webcityProblemIcons = () => problemIcons!.readStats();
@@ -832,6 +859,7 @@ if (import.meta.hot)
     delete window.__webcityBuildingStats;
     delete window.__webcityEffects;
     delete window.__webcityBuildings;
+    delete window.__webcityTransit;
     delete window.__webcityStats;
     delete window.__webcityGraphics;
     delete window.__webcityCamera;
@@ -857,6 +885,9 @@ if (import.meta.hot)
     buildingThumbnails?.dispose();
     inspectPreview?.dispose();
     unsubscribeServices?.();
+    busTool?.dispose();
+    busControls?.dispose();
+    busStops?.dispose();
     serviceTool?.dispose();
     serviceControls?.dispose();
     serviceRenderer?.dispose();

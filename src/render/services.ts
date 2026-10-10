@@ -204,7 +204,8 @@ export class ServiceRenderer {
       const color =
         b.enabled === false
           ? SERVICE_PALETTE.power
-          : SERVICE_PALETTE[def.service as keyof typeof SERVICE_PALETTE];
+          : (SERVICE_PALETTE[def.service as keyof typeof SERVICE_PALETTE] ??
+            UI_PALETTE.accent);
       const w = b.lotW * 8,
         d = b.lotD * 8,
         h = b.lotW >= 6 ? 18 : 9;

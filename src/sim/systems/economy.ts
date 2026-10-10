@@ -2,6 +2,7 @@ import { distance } from '../../core/math';
 import { CELL_SIZE, GAME_MODES, TIME } from '../../data/config';
 import {
   BUILDINGS,
+  TRANSIT,
   NETWORKS,
   type BuildingDefinition,
 } from '../../data/buildings';
@@ -111,6 +112,11 @@ export function weeklyAccounts(s: SimState) {
         upkeep[net] +=
           (distance(n.points[i - 1]!, n.points[i]!) / CELL_SIZE) * unit;
   }
+  upkeep.transit += s.transitLines.reduce(
+    (sum, line) =>
+      sum + (line.blocked ? 0 : line.buses.length) * TRANSIT.busUpkeepPerWeek,
+    0,
+  );
   for (const z of Object.keys(taxIncome) as ZoneType[])
     taxIncome[z] = moneyRound(taxIncome[z]);
   for (const dept of BUDGET_DEPARTMENTS)
@@ -122,7 +128,12 @@ export function weeklyAccounts(s: SimState) {
     taxIncome,
     upkeep,
     debtPayment,
-    income: moneyRound(Object.values(taxIncome).reduce((a, b) => a + b, 0)),
+    income: moneyRound(
+      Object.values(taxIncome).reduce(
+        (a, b) => a + b,
+        s.economy.transitUnsettled ?? 0,
+      ),
+    ),
     expenses: moneyRound(
       Object.values(upkeep).reduce((a, b) => a + b, debtPayment),
     ),
@@ -135,6 +146,8 @@ export function settleEconomy(s: SimState): void {
   s.economy = {
     ...s.economy,
     settledWeek: week,
+    transitIncome: s.economy.transitUnsettled ?? 0,
+    transitUnsettled: 0,
     taxIncome: a.taxIncome,
     upkeep: a.upkeep,
     debtPayment: a.debtPayment,

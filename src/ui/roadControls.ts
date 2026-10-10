@@ -12,6 +12,7 @@ interface RoadActions {
   power(): void;
   water(): void;
   service?(): void;
+  bus?(): void;
   bulldoze(): void;
   demo(): void;
   confirm(): void;
@@ -45,6 +46,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     servicePending = false;
   let waterActive = false,
     waterPending = false;
+  let busActive = false,
+    busPending = false;
   let latest: Readonly<RoadToolState> | undefined;
   const enter = button('road.enter', () => {
     construction = true;
@@ -70,6 +73,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     power = button('power.tab', actions.power),
     water = button('water.tab', actions.water),
     service = button('service.tab', () => actions.service?.()),
+    bus = button('bus.tab', () => actions.bus?.()),
     bulldoze = button('bulldoze.tab', actions.bulldoze),
     explore = button('road.explore', actions.explore),
     demo = button('road.demo', () => {
@@ -86,9 +90,10 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     [power, 'power'],
     [water, 'water'],
     [service, 'service'],
+    [bus, 'bus'],
   ] as const)
     button.prepend(catalogIcon(category));
-  tabs.append(draw, zones, power, water, service, bulldoze, explore, demo);
+  tabs.append(draw, zones, power, water, service, bus, bulldoze, explore, demo);
   const future = document.createElement('details');
   future.className = 'toolbar-future';
   const futureLabel = document.createElement('summary');
@@ -204,6 +209,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   powerHost.hidden = true;
   const waterHost = document.createElement('div');
   waterHost.hidden = true;
+  const busHost = document.createElement('div');
+  busHost.hidden = true;
   const serviceHost = document.createElement('div');
   serviceHost.hidden = true;
   const growthHost = document.createElement('div');
@@ -215,6 +222,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     powerHost,
     waterHost,
     serviceHost,
+    busHost,
     growthHost,
     note,
     future,
@@ -289,6 +297,12 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       enter.click();
       explore.click();
     },
+    busHost,
+    updateBus(active: boolean, pending: boolean) {
+      busActive = active;
+      busPending = pending;
+      if (latest) this.update(latest);
+    },
     serviceHost,
     updateService(active: boolean, pending: boolean) {
       serviceActive = active;
@@ -322,12 +336,24 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     },
     update(state: Readonly<RoadToolState>) {
       latest = state;
+      busHost.hidden = !busActive;
+      bus.setAttribute('aria-pressed', String(busActive));
+      bus.disabled =
+        state.pending ||
+        servicePending ||
+        powerPending ||
+        waterPending ||
+        bulldozePending ||
+        zonePending ||
+        busPending ||
+        !state.ready;
       details.hidden =
         zoneActive ||
         bulldozeActive ||
         powerActive ||
         waterActive ||
-        serviceActive;
+        serviceActive ||
+        busActive;
       serviceHost.hidden = !serviceActive;
       service.setAttribute('aria-pressed', String(serviceActive));
       service.disabled =
@@ -337,7 +363,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         bulldozePending ||
         powerPending ||
         waterPending ||
-        servicePending;
+        servicePending ||
+        busPending;
       waterHost.hidden = !waterActive;
       water.setAttribute('aria-pressed', String(waterActive));
       water.disabled =
@@ -347,9 +374,11 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         bulldozePending ||
         powerPending ||
         waterPending ||
-        servicePending;
+        servicePending ||
+        busPending;
       powerHost.hidden = !powerActive;
-      growthHost.hidden = powerActive || waterActive || serviceActive;
+      growthHost.hidden =
+        powerActive || waterActive || serviceActive || busActive;
       power.setAttribute('aria-pressed', String(powerActive));
       power.disabled =
         !state.ready ||
@@ -358,7 +387,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         bulldozePending ||
         powerPending ||
         waterPending ||
-        servicePending;
+        servicePending ||
+        busPending;
       bulldozeHost.hidden = !bulldozeActive;
       bulldoze.setAttribute('aria-pressed', String(bulldozeActive));
       bulldoze.disabled =
@@ -368,20 +398,23 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         bulldozePending ||
         powerPending ||
         waterPending ||
-        servicePending;
+        servicePending ||
+        busPending;
       zoneHost.hidden = !zoneActive;
       title.textContent = t(
-        serviceActive
-          ? 'service.title'
-          : waterActive
-            ? 'water.title'
-            : powerActive
-              ? 'power.title'
-              : bulldozeActive
-                ? 'bulldoze.title'
-                : zoneActive
-                  ? 'zone.title'
-                  : 'road.title',
+        busActive
+          ? 'bus.title'
+          : serviceActive
+            ? 'service.title'
+            : waterActive
+              ? 'water.title'
+              : powerActive
+                ? 'power.title'
+                : bulldozeActive
+                  ? 'bulldoze.title'
+                  : zoneActive
+                    ? 'zone.title'
+                    : 'road.title',
       );
       zones.setAttribute('aria-pressed', String(zoneActive));
       zones.disabled =
@@ -391,7 +424,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         bulldozePending ||
         powerPending ||
         waterPending ||
-        servicePending;
+        servicePending ||
+        busPending;
       panel.dataset.ready = String(state.ready);
       panel.dataset.phase = state.phase;
       panel.dataset.mode = state.mode;
@@ -434,7 +468,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
             !bulldozeActive &&
             !powerActive &&
             !waterActive &&
-            !serviceActive,
+            !serviceActive &&
+            !busActive,
         ),
       );
       panel.dataset.exploring = explore.getAttribute('aria-pressed') ?? 'false';
@@ -445,14 +480,16 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         bulldozePending ||
         powerPending ||
         waterPending ||
-        servicePending;
+        servicePending ||
+        busPending;
       explore.disabled = demo.disabled =
         state.pending ||
         zonePending ||
         bulldozePending ||
         powerPending ||
         waterPending ||
-        servicePending;
+        servicePending ||
+        busPending;
       options.hidden = !state.active;
       catalog.host.hidden = !state.active || state.mode === 'junction';
       select.disabled = state.pending;

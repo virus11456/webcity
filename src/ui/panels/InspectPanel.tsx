@@ -42,32 +42,42 @@ function Content({
     const v = info.value;
     const mission = v.citizenId < 0;
     const fire = v.purpose === 7;
-    const rows: [string, string | number][] = fire
-      ? [
-          [t('fire.station'), v.originId ?? 0],
-          [t('vehicle.destination'), v.destinationId],
-          [t('vehicle.purpose'), t('fire.responding')],
-          [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
-        ]
-      : mission
+    const rows: [string, string | number][] =
+      v.purpose === 8
         ? [
-            [t('cargo.origin'), v.originId || t('cargo.outside')],
-            [t('vehicle.destination'), v.destinationId || t('cargo.outside')],
-            [t('cargo.units'), v.cargo?.units.toFixed(0) ?? 0],
-            [t('vehicle.purpose'), t(`cargo.${v.cargo?.kind ?? 'local'}`)],
+            [t('bus.line'), v.bus?.line ?? v.destinationId],
+            [t('bus.onboard'), v.bus?.passengers ?? 0],
             [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
           ]
-        : [
-            [t('vehicle.citizen'), v.citizenId],
-            [t('vehicle.home'), v.homeId],
-            [t('vehicle.work'), v.workId || t('inspect.none')],
-            [t('vehicle.destination'), v.destinationId],
-            [
-              t('vehicle.purpose'),
-              t(`vehicle.purpose${v.purpose as 1 | 2 | 3 | 4 | 5}`),
-            ],
-            [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
-          ];
+        : fire
+          ? [
+              [t('fire.station'), v.originId ?? 0],
+              [t('vehicle.destination'), v.destinationId],
+              [t('vehicle.purpose'), t('fire.responding')],
+              [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
+            ]
+          : mission
+            ? [
+                [t('cargo.origin'), v.originId || t('cargo.outside')],
+                [
+                  t('vehicle.destination'),
+                  v.destinationId || t('cargo.outside'),
+                ],
+                [t('cargo.units'), v.cargo?.units.toFixed(0) ?? 0],
+                [t('vehicle.purpose'), t(`cargo.${v.cargo?.kind ?? 'local'}`)],
+                [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
+              ]
+            : [
+                [t('vehicle.citizen'), v.citizenId],
+                [t('vehicle.home'), v.homeId],
+                [t('vehicle.work'), v.workId || t('inspect.none')],
+                [t('vehicle.destination'), v.destinationId],
+                [
+                  t('vehicle.purpose'),
+                  t(`vehicle.purpose${v.purpose as 1 | 2 | 3 | 4 | 5}`),
+                ],
+                [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
+              ];
     return (
       <div
         class="inspect-data"
@@ -77,13 +87,17 @@ function Content({
       >
         <strong>
           {t(
-            fire
-              ? 'fire.truck'
-              : mission
-                ? 'cargo.truck'
-                : v.kind === 8
-                  ? 'vehicle.pedestrian'
-                  : 'vehicle.car',
+            v.purpose === 8
+              ? v.kind === 2
+                ? 'bus.vehicle'
+                : 'bus.walker'
+              : fire
+                ? 'fire.truck'
+                : mission
+                  ? 'cargo.truck'
+                  : v.kind === 8
+                    ? 'vehicle.pedestrian'
+                    : 'vehicle.car',
           )}{' '}
           #{Math.abs(v.citizenId)}
         </strong>

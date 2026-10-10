@@ -202,3 +202,26 @@
   border: 0;
   background: transparent;
 }
+
+.bus-line {
+  padding: 10px 0;
+  border-top: 1px solid var(--color-border);
+}
+.bus-line p {
+  margin: 6px 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.bus-controls button {
+  min-height: 44px;
+}
+.bus-controls output {
+  display: block;
+  font-size: 12px;
+}
+
+.bus-line strong {
+  border-left: 4px solid var(--color-accent);
+  padding-left: 8px;
+  color: var(--color-text);
+}

@@ -1,3 +1,6 @@
+import { TransitSystem } from './systems/transit';
+import { busLineViews } from '../world/transit';
+import { TRANSIT } from '../data/transit';
 import { updateHappiness } from './systems/happiness';
 import { updateLevels } from './systems/levels';
 import {
@@ -85,6 +88,7 @@ const tickMs = (TIME.secondsPerDay[1] * 1000) / TIME.ticksPerDay;
 export class Simulation {
   private readonly state: SimState;
   readonly laneGraph = new LaneGraph();
+  readonly transit: TransitSystem;
   readonly schedules: ScheduleSystem;
   readonly routePlanner: RoutePlanner;
   readonly traffic: TrafficSystem;
@@ -96,9 +100,18 @@ export class Simulation {
     if (event.t === 'roadsChanged') {
       this.laneGraph.sync(this.state.nodes, this.state.segments);
       this.traffic?.networkChanged();
+      this.transit?.networkChanged();
       this.cargo?.networkChanged();
       this.services?.networkChanged();
       this.fire?.networkChanged();
+    }
+    if (
+      event.t === 'buildingsChanged' &&
+      this.transit &&
+      this.state.transitLines.length > 0
+    ) {
+      this.transit.tick();
+      this.sink({ t: 'transit', lines: busLineViews(this.state.transitLines) });
     }
     this.sink(event);
   }
@@ -132,6 +145,12 @@ export class Simulation {
       this.routePlanner,
       this.schedules,
       this.state.traffic,
+    );
+    this.transit = new TransitSystem(
+      this.state,
+      this.routePlanner,
+      this.traffic,
+      this.schedules,
     );
     this.traffic.sampleFlow();
     this.fields = new FieldsSystem(this.state, () =>
@@ -255,10 +274,26 @@ export class Simulation {
         value.citizenId < 0
           ? s.cargo.shipments.find((j) => j.id === -value.citizenId)
           : undefined;
+      const busLine =
+        value.purpose === 8
+          ? s.transitLines.find((l) =>
+              l.buses.some((b) => b.mission === -value.citizenId),
+            )
+          : undefined;
+      const bus = busLine?.buses.find((b) => b.mission === -value.citizenId);
       return {
         kind,
         value: {
           ...value,
+          bus:
+            busLine && bus
+              ? {
+                  line: busLine.id,
+                  passengers: busLine.riders.filter(
+                    (p) => p.stage === 'riding' && p.bus === bus.id,
+                  ).length,
+                }
+              : undefined,
           originPos: position(value.originId ?? 0),
           cargo: shipment
             ? { units: shipment.units, kind: shipment.kind }
@@ -618,9 +653,26 @@ export class Simulation {
   }
 
   /** Copy all arrays; callers cannot mutate the authoritative city. */
+  busCommand(
+    command:
+      | { t: 'createBusLine'; stops: Vec2[] }
+      | { t: 'setBusVehicles'; id: number; vehicles: number }
+      | { t: 'deleteBusLine'; id: number },
+  ): Omit<Result, 't' | 'reqId'> {
+    const result =
+      command.t === 'createBusLine'
+        ? this.transit.create(command.stops)
+        : command.t === 'setBusVehicles'
+          ? this.transit.setVehicles(command.id, command.vehicles)
+          : this.transit.delete(command.id);
+    if (result.ok)
+      this.emit({ t: 'transit', lines: busLineViews(this.state.transitLines) });
+    return result;
+  }
   snapshot(): WorldSnapshot {
     this.cargo.reconcile();
     this.fire?.reconcile();
+    this.transit.tick();
     return structuredClone({ ...this.state, traffic: this.traffic.snapshot() });
   }
 
@@ -1063,6 +1115,12 @@ export class Simulation {
     }
     this.fire.tick();
     this.cargo.tick();
+    this.transit.tick();
+    if (
+      this.state.transitLines.length > 0 &&
+      this.state.clock.ticks % TRANSIT.refreshTicks === 0
+    )
+      this.emit({ t: 'transit', lines: busLineViews(this.state.transitLines) });
     const cargoPatches = [...this.fire.patches(), ...this.cargo.patches()];
     if (cargoPatches.length)
       this.emit({

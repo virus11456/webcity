@@ -321,6 +321,15 @@ export class TrafficSystem {
   reserveMission(): number {
     return this.nextMissionId++;
   }
+  recoverJourney(value: StrandedJourney): void {
+    this.stranded.set(value.journey.citizenId, value);
+    this.planner.strand(value);
+  }
+  missionPosition(id: number): { x: number; z: number } | undefined {
+    const v =
+      this.vehicles.get(this.byCitizen.get(-id) ?? 0) ?? this.stranded.get(-id);
+    return v && { x: v.x, z: v.z };
+  }
   hasMission(id: number): boolean {
     return this.byCitizen.has(-id);
   }
@@ -341,7 +350,7 @@ export class TrafficSystem {
     if (arrival >= 0) this.missionArrivals.splice(arrival, 1);
   }
   spawnMission(job: PlannedJourney, kind: number = TrafficKind.truck): boolean {
-    if (job.journey.citizenId >= 0 || ![6, 7].includes(job.journey.purpose))
+    if (job.journey.citizenId >= 0 || ![6, 7, 8].includes(job.journey.purpose))
       return false;
     return this.admit(job, kind);
   }
