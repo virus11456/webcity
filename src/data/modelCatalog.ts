@@ -19,4 +19,41 @@ export const MODEL_CATALOG = {
     ],
     variants: 2,
   },
+  CL: {
+    levels: 3,
+    lots: [
+      [1, 1],
+      [1, 2],
+      [2, 2],
+      [2, 3],
+    ],
+    variants: 3,
+  },
+  CH: {
+    levels: 3,
+    lots: [
+      [2, 2],
+      [3, 3],
+      [4, 4],
+    ],
+    variants: 2,
+  },
+  I: {
+    levels: 3,
+    lots: [
+      [2, 2],
+      [3, 3],
+      [4, 4],
+    ],
+    variants: 3,
+  },
+  O: {
+    levels: 3,
+    lots: [
+      [2, 2],
+      [3, 3],
+      [4, 4],
+    ],
+    variants: 2,
+  },
 } as const;

@@ -637,3 +637,7 @@ world/vegetation 從既有森林場與 seed 分批衍生植被與權威地物占
 ### M3-10 正式住宅素材
 
 world/modelCatalog 為穩定 recipe／資產選擇；scripts 離線輸出三段 LOD 與共用分區 atlas。CatalogAssets 將 GLTF 節點量化變換還原為 float geometry，資產完成後排入既有細節預算；分區材質保留 CSM、狀態與窗燈 hooks。未下載／不支援規格維持程序替代，無主執行緒世界寫入。詳見 RESIDENTIAL_MODELS.md。
+
+### M3-11 商業、工業與辦公素材
+
+MODEL_CATALOG 擴充 CL／CH／I／O，沿用 world mapping 與 CatalogAssets 無需改變 Worker、存檔或模擬。離線 catalogGeometry 提供各分區細節與完整高度的三段 LOD；共用 atlas 仍按分區去重。見 COMMERCIAL_MODELS.md。

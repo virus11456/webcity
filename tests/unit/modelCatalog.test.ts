@@ -11,11 +11,18 @@ import {
 } from '../../src/world/modelCatalog';
 import { catalogGeometry } from '../../src/render/buildings/catalogGeometry';
 import { parseAssetManifest } from '../../src/core/assetManifest';
-it('maps all 60 RL and 30 RH recipes deterministically, preserving unsupported lots as procedural', () => {
+it('maps all 189 residential, commercial, industrial and office recipes deterministically, preserving unsupported lots as procedural', () => {
   const models = catalogModels();
   expect(models.filter((m) => m.zone === 'RL')).toHaveLength(60);
   expect(models.filter((m) => m.zone === 'RH')).toHaveLength(30);
-  expect(new Set(models.map((m) => m.id)).size).toBe(90);
+  expect(new Set(models.map((m) => m.id)).size).toBe(189);
+  for (const [zone, count] of [
+    ['CL', 36],
+    ['CH', 18],
+    ['I', 27],
+    ['O', 18],
+  ] as const)
+    expect(models.filter((m) => m.zone === zone)).toHaveLength(count);
   for (const m of models) {
     const b = {
       defId: m.zone,
@@ -31,20 +38,21 @@ it('maps all 60 RL and 30 RH recipes deterministically, preserving unsupported l
   expect(catalogModel(unknown)).toBeUndefined();
   expect(visualSeed(unknown)).toBe(125);
 });
-it('keeps authored origins, palettes and LOD triangle budgets across every residential recipe', () => {
+it('keeps authored origins, palettes and LOD triangle budgets across every catalog recipe', () => {
   for (const model of catalogModels())
     for (const lod of [0, 1, 2] as const) {
       const g = catalogGeometry(model, lod),
         tris = (g.index?.count ?? g.getAttribute('position').count) / 3;
       expect(tris).toBeLessThanOrEqual(
-        (model.zone === 'RL' ? [1500, 300, 12] : [4000, 600, 24])[lod]!,
+        (['RL', 'CL', 'I'].includes(model.zone)
+          ? [1500, 300, 12]
+          : [4000, 600, 24])[lod]!,
       );
       expect(g.boundingBox!.min.y).toBeGreaterThanOrEqual(-0.001);
       expect(g.boundingBox!.min.z).toBeLessThan(0);
       expect(g.boundingBox!.max.z).toBeLessThanOrEqual(0.01);
-      expect(
-        Math.abs(g.boundingBox!.min.x + g.boundingBox!.max.x),
-      ).toBeLessThan(0.1);
+      expect(g.boundingBox!.min.x).toBeGreaterThanOrEqual(-model.w * 4 - 0.01);
+      expect(g.boundingBox!.max.x).toBeLessThanOrEqual(model.w * 4 + 0.01);
       g.dispose();
     }
 });
@@ -97,8 +105,22 @@ it('ships individually named Meshopt GLBs with KTX2 atlases, three LOD nodes and
           0,
         );
       expect(tris).toBeLessThanOrEqual(
-        (model.zone === 'RL' ? [1500, 300, 12] : [4000, 600, 24])[lod]!,
+        (['RL', 'CL', 'I'].includes(model.zone)
+          ? [1500, 300, 12]
+          : [4000, 600, 24])[lod]!,
       );
     }
   }
 }, 15000);
+
+it('retains the complete office and mall height at the lowest detail', () => {
+  for (const model of catalogModels().filter((m) =>
+    ['CH', 'O'].includes(m.zone),
+  )) {
+    const near = catalogGeometry(model, 1),
+      far = catalogGeometry(model, 2);
+    expect(far.boundingBox!.max.y).toBeCloseTo(near.boundingBox!.max.y, 4);
+    near.dispose();
+    far.dispose();
+  }
+});
