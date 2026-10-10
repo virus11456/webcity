@@ -1,0 +1,192 @@
+.road-controls[data-construction='true'] {
+  width: min(760px, calc(100% - 36px));
+  padding: 0;
+  border-radius: var(--radius-panel);
+  overflow: visible;
+}
+.toolbar-content {
+  padding: 12px;
+  max-height: min(280px, calc(100dvh - 250px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+.road-controls .road-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 8px;
+  margin: 0;
+  border-top: 1px solid var(--color-border);
+  overflow-x: auto;
+  touch-action: pan-x;
+  overscroll-behavior: contain;
+}
+.road-controls .road-tabs button {
+  flex: 0 0 auto;
+  min-width: 64px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.road-tabs svg,
+.build-card svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+.build-catalog {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  touch-action: pan-x;
+  overscroll-behavior: contain;
+}
+.build-catalog[hidden] {
+  display: none;
+}
+.road-controls .build-card {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-content: start;
+  align-items: center;
+  gap: 4px 6px;
+  flex: 0 0 172px;
+  padding: 10px;
+  border-radius: var(--radius-card);
+  text-align: left;
+  font-size: 12px;
+}
+.build-card strong {
+  font-size: 12px;
+}
+.build-card > span,
+.build-card > small {
+  grid-column: 1 / -1;
+}
+.build-lock {
+  color: var(--color-warning);
+}
+.road-controls .build-card:disabled {
+  opacity: 0.65;
+}
+.tool-mode {
+  font-size: 12px;
+  color: var(--color-secondary);
+}
+.toolbar-shortcuts {
+  display: block;
+  margin-top: 8px;
+}
+.toolbar-future {
+  font-size: 12px;
+  color: var(--color-secondary);
+}
+.toolbar-future summary {
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+}
+.toolbar-future p {
+  margin: 0 0 8px;
+}
+.tool-actions {
+  position: sticky;
+  bottom: -12px;
+  z-index: 1;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-panel);
+  backdrop-filter: blur(8px);
+}
+.tool-actions:has(> button:not([hidden])) {
+  display: flex;
+}
+.tool-actions:not(:has(> button:not([hidden]))) {
+  display: none;
+}
+.road-controls[data-layout='tablet'] button,
+.road-controls[data-layout='tablet'] select {
+  min-height: 48px;
+  min-width: 48px;
+}
+.road-controls[data-layout='phone-portrait'][data-construction='true'] {
+  left: max(8px, env(safe-area-inset-left));
+  right: max(8px, env(safe-area-inset-right));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  width: auto;
+  max-height: none;
+  overflow: visible;
+}
+.road-controls[data-layout='phone-portrait'] .toolbar-content {
+  max-height: min(260px, calc(100dvh - 410px));
+  padding: 8px;
+}
+.road-controls[data-layout='phone-portrait'] .road-heading,
+.road-controls[data-layout='phone-portrait'] .toolbar-shortcuts {
+  display: none;
+}
+.road-controls[data-layout='phone-portrait'] .road-tabs button {
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 8px;
+  min-width: 60px;
+  min-height: 48px;
+}
+.road-controls[data-layout='phone-landscape'][data-construction='true'] {
+  left: auto;
+  right: max(8px, env(safe-area-inset-right));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  top: var(--topbar-bottom, 88px);
+  width: 330px;
+  max-height: none;
+  overflow: visible;
+  backdrop-filter: none;
+}
+.road-controls[data-layout='phone-landscape'] .toolbar-content {
+  height: 100%;
+  max-height: 100%;
+  padding: 8px;
+}
+.road-controls[data-layout='phone-landscape'] .road-tabs {
+  position: fixed;
+  top: var(--topbar-bottom, 88px);
+  bottom: max(8px, env(safe-area-inset-bottom));
+  left: max(8px, env(safe-area-inset-left));
+  width: 84px;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  touch-action: pan-y;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-panel);
+}
+.road-controls[data-layout='phone-landscape'] .road-tabs button {
+  flex-direction: column;
+  gap: 2px;
+  min-width: 48px;
+  padding: 4px;
+}
+.road-controls[data-layout='phone-landscape'] .road-body {
+  height: 100%;
+}
+.road-controls[data-layout='phone-landscape'] .road-heading,
+.road-controls[data-layout='phone-landscape'] .toolbar-shortcuts {
+  display: none;
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  #app[data-construction='true'] .population-summary {
+    left: max(102px, calc(env(safe-area-inset-left) + 94px));
+    width: min(260px, calc(100vw - 460px));
+  }
+}

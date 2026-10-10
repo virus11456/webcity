@@ -21,7 +21,7 @@ async function tap(page: Page, x: number, z: number, touch: boolean) {
   else await page.mouse.click(p.x, p.y);
 }
 async function setup(page: Page) {
-  await page.goto('./?quality=low&debug=1');
+  await page.goto('./?play=1&quality=low&debug=1');
   await expect(page.locator('.road-controls')).toHaveAttribute(
     'data-ready',
     'true',

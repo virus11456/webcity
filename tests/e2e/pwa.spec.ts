@@ -17,7 +17,7 @@ test('has an installable manifest and works after an offline reload', async ({
   });
   try {
     const page = await context.newPage();
-    await page.goto('./');
+    await page.goto('./?play=1');
     await page.evaluate(() =>
       navigator.serviceWorker.ready.then(() => undefined),
     );

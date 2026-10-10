@@ -14,6 +14,7 @@ import type {
 } from './types';
 
 export interface CitySettings {
+  starterRoads?: boolean;
   seed: number;
   mapId: string;
   mode: GameMode;

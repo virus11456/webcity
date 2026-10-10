@@ -70,7 +70,7 @@ test('renders shadows, reports real draw statistics and resizes without stretchi
         );
       });
   });
-  await page.goto('./?quality=high&debug=1');
+  await page.goto('./?play=1&quality=high&debug=1');
   const canvas = page.locator('canvas'),
     panel = page.locator('.debug-panel');
   await expect(canvas).toHaveAttribute('data-ready', 'true');
@@ -143,7 +143,7 @@ test('quality overrides control DPR and shadow passes, debug stays opt-in', asyn
     ['low', '0', 1.5],
     ['medium', '1', 2],
   ] as const) {
-    await page.goto(`./?quality=${quality}&debug=1`);
+    await page.goto(`./?play=1&quality=${quality}&debug=1`);
     const panel = page.locator('.debug-panel');
     await expect(panel).toHaveAttribute('data-quality', quality);
     await expect(panel).toHaveAttribute('data-shadows', shadows);
@@ -152,13 +152,13 @@ test('quality overrides control DPR and shadow passes, debug stays opt-in', asyn
     );
     expect(Number(await panel.getAttribute('data-calls'))).toBeGreaterThan(10);
   }
-  await page.goto('./');
+  await page.goto('./?play=1');
   await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'true');
   await expect(page.locator('.debug-panel')).toHaveCount(0);
 });
 
 test('recovers after a lost WebGL context', async ({ page }) => {
-  await page.goto('./?quality=medium&debug=1');
+  await page.goto('./?play=1&quality=medium&debug=1');
   await expect(page.locator('.debug-panel')).toHaveAttribute(
     'data-quality',
     'medium',

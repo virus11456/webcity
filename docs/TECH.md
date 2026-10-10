@@ -20,7 +20,7 @@
 | 測試 | Vitest（單元）、Playwright（E2E，3 種 viewport） | |
 | 程式風格 | ESLint（typescript-eslint）+ Prettier | |
 | CI | GitHub Actions | |
-| 部署 | GitHub Pages（`main` 合併後自動部署） | |
+| 部署 | Vercel（使用者指定正式站）；GitHub Pages workflow 保留為原規劃 | |
 
 **禁止**：React / Vue / Angular、遊戲引擎（Babylon、PlayCanvas 等）、CSS 框架、jQuery、lodash（需要時自己寫小工具函式）。新增任何 runtime 依賴都要在 PR 說明理由。
 
@@ -499,3 +499,11 @@ M1-18：`WorldSnapshot.economy` 保存已結算週與破產連續週狀態，`ec
 
 
 M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/store.ts` 提供每座城市獨立的統計／時鐘 signals。鏡像 cityName getter 只讀字串，時鐘事件不複製 stats；資金事件即時刷新 HUD，速度仍須 Worker 確認。手機摘要與 BottomSheet、版面避讓和驗證約定見 `TOPBAR.md`。
+
+### M1-24 存檔轉接層補充
+
+`sim/worker.ts` 是序列化 I/O 的組裝點，唯一允許 import `save/serializer` 的 sim 檔案；它將非同步 codec 注入 CommandDispatcher。其餘 sim 邊界不變，Worker 仍禁止 DOM／UI／Three。IndexedDB 只在主執行緒 save/controller 使用；UI 取得 game 提供的 SaveActions，不能直接 import save 層。v1 header 與還原／驗證約定見 `SAVES.md`。
+
+### M1-25／M1-26 啟動與整合
+
+預設主選單以動態 import 載入，不配置 Worker／WebGL；一次性新遊戲或讀檔請求經 sessionStorage 交給 bootstrap，再建立 Game。新遊戲 `CitySettings.starterRoads?` 為 Worker 初始化選項，缺省保留既有空白測試世界；存檔保留實際路網。`RoadSegment.regional?` 僅標記起始地塊外的預鋪高速公路維護歸屬，並排除自動水管。這兩個可選欄位與 version 1 存檔向後相容。

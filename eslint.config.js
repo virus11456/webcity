@@ -30,7 +30,7 @@ const dependencies = {
   ui: ['data', 'core', 'world', 'bridge', 'tools'],
 };
 
-const boundaries = Object.entries(dependencies).map(([layer, allowed]) => {
+const boundaries = Object.entries(dependencies).flatMap(([layer, allowed]) => {
   const forbidden = layers.filter(
     (target) => target !== layer && !allowed.includes(target),
   );
@@ -57,10 +57,28 @@ const boundaries = Object.entries(dependencies).map(([layer, allowed]) => {
       message: 'UI dependencies belong in the UI layer.',
     });
   }
-  return {
+  const rule = {
     files: [`src/${layer}/**/*.{ts,tsx}`],
+    ignores: layer === 'sim' ? ['src/sim/worker.ts'] : [],
     rules: { 'no-restricted-imports': ['error', { patterns }] },
   };
+  if (layer !== 'sim') return [rule];
+  return [
+    rule,
+    {
+      files: ['src/sim/worker.ts'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: patterns.filter(
+              (p) => p.message !== 'TECH §2.1: sim cannot depend on save.',
+            ),
+          },
+        ],
+      },
+    },
+  ];
 });
 
 export default [

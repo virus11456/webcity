@@ -835,3 +835,27 @@ h1 {
   font-size: var(--font-size-body);
   font-variant-numeric: tabular-nums;
 }
+
+.finance-ledger {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.finance-ledger caption {
+  text-align: left;
+  padding: 8px 0;
+  font-size: 14px;
+}
+.finance-ledger th,
+.finance-ledger td {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+.finance-ledger th {
+  text-align: left;
+  font-weight: 400;
+}
+.finance-ledger td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

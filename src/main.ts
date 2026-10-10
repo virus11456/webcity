@@ -1,6 +1,8 @@
+import { t } from './ui/i18n/t';
 import { registerPwa } from './pwa/register';
 import './ui/styles/tokens.css';
 import './ui/styles/base.css';
+import './ui/styles/toolbar.css';
 
 const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('Missing #app element');
@@ -14,5 +16,45 @@ else if (new URLSearchParams(location.search).get('district') === '1')
   void import('./buildingDistrict').then(({ startDistrict }) =>
     startDistrict(root),
   );
-else void import('./game');
+else if (
+  new URLSearchParams(location.search).get('play') === '1' ||
+  sessionStorage.getItem('webcity-load') !== null ||
+  sessionStorage.getItem('webcity-new') !== null
+)
+  void import('./bootstrap')
+    .then(async ({ prepareStartup }) => {
+      await prepareStartup();
+      await import('./game');
+    })
+    .catch(() => {
+      const message = document.createElement('p');
+      message.textContent = t('save.failed');
+      const back = document.createElement('button');
+      back.textContent = t('menu.back');
+      back.onclick = () => {
+        const url = new URL(location.href);
+        url.searchParams.delete('play');
+        location.assign(url);
+      };
+      root.append(message, back);
+    });
+else
+  void Promise.all([
+    import('./ui/screens/MainMenu'),
+    import('./save/storage'),
+  ]).then(async ([{ showMainMenu }, { listSaves }]) => {
+    const saves = await listSaves().catch(() => []);
+    showMainMenu(
+      root,
+      saves,
+      (settings) => {
+        sessionStorage.setItem('webcity-new', JSON.stringify(settings));
+        location.reload();
+      },
+      (id) => {
+        sessionStorage.setItem('webcity-load', id);
+        location.reload();
+      },
+    );
+  });
 if (import.meta.env.PROD) void registerPwa();

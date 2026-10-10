@@ -43,7 +43,7 @@ test('supplies homes through powered water networks, validates shores and drains
   const touch = !!info.project.use.hasTouch,
     errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('./?quality=high&debug=1');
+  await page.goto('./?play=1&quality=high&debug=1');
   await page.waitForSelector('.road-controls[data-ready="true"]');
   await page.getByRole('button', { name: '暫停', exact: true }).click();
   await page.getByRole('button', { name: '開始鋪路', exact: true }).click();

@@ -8,7 +8,7 @@ test('worker clock pauses and changes speed through controls, including offline'
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   const workerReady = page.waitForEvent('worker');
-  await page.goto('./?quality=low&debug=1');
+  await page.goto('./?play=1&quality=low&debug=1');
   const worker = await workerReady;
   expect(worker.url()).toContain('worker-');
   const controls = page.getByRole('region', { name: '模擬速度' });

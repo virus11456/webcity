@@ -25,7 +25,8 @@ export class BulldozePreview {
   private readonly mesh = new Mesh(new BufferGeometry(), this.material);
   private key = '';
   private heights: Float32Array | undefined;
-  constructor(scene: Scene) {
+  constructor(scene: Scene, color: string = UI_PALETTE.negative) {
+    this.material.color.set(color);
     scene.add(this.mesh);
     this.mesh.renderOrder = 3;
     this.mesh.visible = false;

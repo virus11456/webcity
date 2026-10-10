@@ -67,8 +67,15 @@ export class Simulation {
   constructor(
     settings: CitySettings,
     private readonly emit: (event: SimEvent) => void = () => {},
+    restored?: WorldSnapshot,
   ) {
     this.state = createState(settings);
+    if (restored) {
+      const copy = structuredClone(restored),
+        terrain = this.state.terrain;
+      Object.assign(terrain, copy.terrain);
+      Object.assign(this.state, copy, { terrain });
+    }
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
       const power = [...updatePower(this.state), ...updateWater(this.state)];
@@ -101,6 +108,23 @@ export class Simulation {
       this.emit({ t: 'fundsChanged', money: this.state.money });
       this.emit({ t: 'economy', finance: financeView(this.state) });
     });
+  }
+
+  /** Return one copied asset without exposing mutable simulation state. */
+  inspect(
+    kind: string,
+    id: number,
+  ): import('../world/snapshot').InspectInfo | null {
+    const s = this.state;
+    if (kind === 'building') {
+      const value = s.buildings.find((b) => b.id === id);
+      return value ? { kind, value: structuredClone(value) } : null;
+    }
+    if (kind === 'segment') {
+      const value = s.segments.find((b) => b.id === id);
+      return value ? { kind, value: structuredClone(value) } : null;
+    }
+    return null;
   }
 
   get gameOver(): boolean {

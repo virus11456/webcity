@@ -1,3 +1,4 @@
+import { addStarterCity } from './starterCity';
 import { updateDemand } from './systems/demand';
 import { SERVICE_TYPES } from '../data/buildings';
 import { MAP_TILES, WORLD } from '../data/config';
@@ -92,6 +93,7 @@ export function createState(settings: CitySettings): SimState {
     statsHistory: [],
     nextId: 1,
   };
+  if (settings.starterRoads) addStarterCity(state);
   updateDemand(state);
   return state;
 }

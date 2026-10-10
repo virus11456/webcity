@@ -8,7 +8,7 @@ test('normal speed averages one game day every 2.4 seconds within five percent',
     'Wall-clock precision check runs once; touch date controls run in simulation.spec.',
   );
   test.setTimeout(30_000);
-  await page.goto('./?quality=low');
+  await page.goto('./?play=1&quality=low');
   await expect(page.locator('.sim-controls')).toHaveAttribute(
     'data-ready',
     'true',

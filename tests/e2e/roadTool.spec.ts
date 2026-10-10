@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 async function ready(page: Page, quality = 'low') {
-  await page.goto(`./?quality=${quality}&debug=1`);
+  await page.goto(`./?play=1&quality=${quality}&debug=1`);
   await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'true');
   await expect(page.locator('.road-controls')).toHaveAttribute(
     'data-ready',

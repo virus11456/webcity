@@ -20,6 +20,7 @@ export interface RoadNode {
   control: 'none' | 'lights' | 'stop';
 }
 export interface RoadSegment {
+  regional?: boolean; // Prefabricated highway beyond the initial city; region pays upkeep.
   id: Id;
   type: RoadTypeId; // data/roads.ts 的 key
   start: Id;

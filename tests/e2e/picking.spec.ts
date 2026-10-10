@@ -7,7 +7,7 @@ test('debug picking follows terrain, reports cells, and keeps camera gestures se
   test.setTimeout(90_000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('./?quality=low&debug=1');
+  await page.goto('./?play=1&quality=low&debug=1');
   await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'true');
   const panel = page.locator('.picking-debug');
   const viewport = page.viewportSize()!,
@@ -77,7 +77,7 @@ test('debug picking follows terrain, reports cells, and keeps camera gestures se
     scale: 'css',
   });
   expect(await page.evaluate(() => window.__webcityPick!(-10, -10))).toBeNull();
-  await page.goto('./?quality=low');
+  await page.goto('./?play=1&quality=low');
   await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'true');
   await expect(panel).toHaveCount(0);
   expect(await page.evaluate(() => typeof window.__webcityPick)).toBe(

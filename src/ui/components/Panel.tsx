@@ -1,5 +1,4 @@
 import type { ComponentChildren } from 'preact';
-import { useId } from 'preact/hooks';
 import { IconButton } from './IconButton';
 import { t } from '../i18n/t';
 
@@ -15,11 +14,10 @@ export function Panel({
   actions?: ComponentChildren;
   onClose?: () => void;
 }) {
-  const id = useId();
   return (
-    <section class="ui-panel" aria-labelledby={id}>
+    <section class="ui-panel" aria-label={title}>
       <header class="ui-panel-header">
-        <h2 id={id}>{title}</h2>
+        <h2>{title}</h2>
         {onClose && (
           <IconButton icon="close" label={t('ui.close')} onClick={onClose} />
         )}

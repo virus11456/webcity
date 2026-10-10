@@ -1,8 +1,10 @@
+import { serialize, deserialize } from '../save/serializer';
 import { SIM_RUNTIME } from '../data/simRuntime';
 import { CommandDispatcher } from './commands';
 
-const dispatcher = new CommandDispatcher((event) =>
-  globalThis.postMessage(event),
+const dispatcher = new CommandDispatcher(
+  (event) => globalThis.postMessage(event),
+  { serialize, deserialize },
 );
 let last = performance.now();
 const pulse = () => {

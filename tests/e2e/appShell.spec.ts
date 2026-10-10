@@ -9,9 +9,9 @@ test('shows the WebCity shell without overflow or browser errors', async ({
     if (message.type() === 'error') errors.push(message.text());
   });
 
-  const response = await page.goto('./');
+  const response = await page.goto('./?play=1');
   expect(response?.status()).toBe(200);
-  await expect(page).toHaveURL(/\/webcity\/$/);
+  await expect(page).toHaveURL(/\/webcity\/\?play=1$/);
   await expect(page).toHaveTitle('WebCity');
   await expect(
     page.getByRole('heading', { name: 'WebCity', exact: true }),

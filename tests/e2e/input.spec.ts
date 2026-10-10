@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 const state = (page: Page) =>
   page.evaluate(() => window.__webcityCamera!.readState());
 async function ready(page: Page) {
-  await page.goto('./?quality=medium&debug=1');
+  await page.goto('./?play=1&quality=medium&debug=1');
   await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'true');
 }
 test('mouse, keyboard, focus loss and optional edge scrolling', async ({

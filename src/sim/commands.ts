@@ -29,7 +29,18 @@ const futureCommands = new Set([
 /** Runtime validation at the worker boundary; future commands fail explicitly. */
 export class CommandDispatcher {
   private simulation: Simulation | undefined;
-  constructor(private readonly emit: (event: SimEvent) => void) {}
+  private loading = false;
+  constructor(
+    private readonly emit: (event: SimEvent) => void,
+    private readonly persistence?: {
+      serialize(
+        snapshot: import('../world/snapshot').WorldSnapshot,
+      ): Promise<ArrayBuffer>;
+      deserialize(
+        data: ArrayBuffer,
+      ): Promise<import('../world/snapshot').WorldSnapshot>;
+    },
+  ) {}
 
   /** Dispatch an untrusted structured-clone payload without exposing authority. */
   handle(value: unknown): void {
@@ -50,6 +61,53 @@ export class CommandDispatcher {
       fail('err.invalidCommand');
       return;
     }
+    if (this.loading) {
+      fail('err.notReady');
+      return;
+    }
+    if (value.t === 'load' && this.persistence) {
+      if (!('data' in value) || !(value.data instanceof ArrayBuffer)) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.loading = true;
+      void this.persistence
+        .deserialize(value.data)
+        .then((snapshot) => {
+          const next = new Simulation(snapshot.settings, this.emit, snapshot);
+          const restored = next.snapshot();
+          this.simulation = next;
+          this.emit({ t: 'ready', reqId, snapshot: restored });
+        })
+        .catch(() => fail('err.invalidCommand'))
+        .finally(() => {
+          this.loading = false;
+        });
+      return;
+    }
+    if (value.t === 'save' && this.persistence) {
+      if (!this.simulation) {
+        fail('err.notReady');
+        return;
+      }
+      const snapshot = this.simulation.snapshot();
+      void this.persistence
+        .serialize(snapshot)
+        .then((data) =>
+          this.emit({
+            t: 'saved',
+            reqId,
+            data,
+            metadata: {
+              settings: snapshot.settings,
+              population: snapshot.stats.population,
+              day: snapshot.clock.day,
+            },
+          }),
+        )
+        .catch(() => fail('err.invalidCommand'));
+      return;
+    }
     if (value.t === 'init') {
       if (
         !('seed' in value) ||
@@ -68,6 +126,9 @@ export class CommandDispatcher {
             mapId: value.mapId,
             mode: value.mode,
             cityName: value.cityName,
+            ...('starterRoads' in value && value.starterRoads === true
+              ? { starterRoads: true }
+              : {}),
           } as CitySettings,
           this.emit,
         );
@@ -91,6 +152,27 @@ export class CommandDispatcher {
     }
     if (!this.simulation) {
       fail('err.notReady');
+      return;
+    }
+    if (value.t === 'inspect') {
+      if (
+        !('target' in value) ||
+        !value.target ||
+        typeof value.target !== 'object' ||
+        !('kind' in value.target) ||
+        typeof value.target.kind !== 'string' ||
+        !('id' in value.target) ||
+        !Number.isSafeInteger(value.target.id)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      const info = this.simulation.inspect(
+        value.target.kind,
+        value.target.id as number,
+      );
+      if (info) this.emit({ t: 'inspectResult', reqId, info });
+      else fail('err.bulldozeMissing');
       return;
     }
     if (this.simulation.gameOver) {
@@ -252,6 +334,7 @@ export class CommandDispatcher {
 
   /** Send one compact clock event after each batch of fixed steps. */
   advance(elapsedMs: number): void {
+    if (this.loading) return;
     if (this.simulation?.advance(elapsedMs))
       this.emit({ t: 'clock', clock: this.simulation.readClock() });
   }

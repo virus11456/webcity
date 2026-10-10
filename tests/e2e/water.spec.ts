@@ -8,7 +8,7 @@ test('river shader animates with a stationary camera without browser errors', as
   page.on('console', (m) => {
     if (m.type() === 'error') errors.push(m.text());
   });
-  await page.goto('./?quality=medium&debug=1');
+  await page.goto('./?play=1&quality=medium&debug=1');
   await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'true');
   await page.getByRole('button', { name: '河岸', exact: true }).click();
   await expect

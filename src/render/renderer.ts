@@ -39,6 +39,8 @@ export interface RenderStats {
   shadows: number;
 }
 export interface RendererOptions {
+  seed?: number;
+  mapId?: string;
   search?: string;
   onBeforeFrame?: (seconds: number) => void;
   onAfterCamera?: () => void;
@@ -62,13 +64,14 @@ export class CityRenderer {
     Material,
     ((previous?: ShaderHook) => void) | undefined
   >();
-  readonly terrain = new Terrain(MAP_PRESETS[0].seed);
-  private readonly land = new TerrainRenderer(this.terrain);
-  private readonly town = new CityPreview(this.terrain);
-  private readonly water = new WaterRenderer(this.terrain);
+  readonly terrain: Terrain;
+  private readonly land: TerrainRenderer;
+  private readonly town: CityPreview;
+  private readonly water: WaterRenderer;
   private readonly sky = createSky();
   private lighting: Lighting;
-  private readonly forced: QualityLevel | null;
+  private forced: QualityLevel | null;
+  private readonly automaticQuality: QualityLevel;
   private readonly startup = new StartupQuality();
   private readonly observer: ResizeObserver;
   private readonly stats: RenderStats;
@@ -82,6 +85,13 @@ export class CityRenderer {
     private readonly canvas: HTMLCanvasElement,
     private readonly options: RendererOptions = {},
   ) {
+    this.terrain = new Terrain(
+      options.seed ?? MAP_PRESETS[0].seed,
+      MAP_PRESETS.find((p) => p.id === options.mapId) ?? MAP_PRESETS[0],
+    );
+    this.land = new TerrainRenderer(this.terrain);
+    this.town = new CityPreview(this.terrain);
+    this.water = new WaterRenderer(this.terrain);
     this.renderer = new WebGLRenderer({
       canvas,
       antialias: false,
@@ -100,15 +110,14 @@ export class CityRenderer {
       ? String(gl.getParameter(extension.UNMASKED_RENDERER_WEBGL))
       : '';
     this.forced = qualityOverride(options.search ?? location.search);
-    const level =
-      this.forced ??
-      detectQuality({
-        userAgent: navigator.userAgent,
-        touchPoints: navigator.maxTouchPoints,
-        screenWidth: screen.width,
-        screenHeight: screen.height,
-        gpu,
-      });
+    this.automaticQuality = detectQuality({
+      userAgent: navigator.userAgent,
+      touchPoints: navigator.maxTouchPoints,
+      screenWidth: screen.width,
+      screenHeight: screen.height,
+      gpu,
+    });
+    const level = this.forced ?? this.automaticQuality;
     this.stats = {
       fps: 0,
       calls: 0,
@@ -152,6 +161,15 @@ export class CityRenderer {
     this.resize();
     this.visibility();
   }
+  /** Capture after an explicit render so non-preserved WebGL buffers still produce a thumbnail. */
+  thumbnail(width: number, height: number, quality: number): string {
+    this.renderer.render(this.scene, this.camera);
+    const output = document.createElement('canvas');
+    output.width = width;
+    output.height = height;
+    output.getContext('2d')!.drawImage(this.canvas, 0, 0, width, height);
+    return output.toDataURL('image/jpeg', quality);
+  }
   /** Separate decorative city assets from the authoritative construction world. */
   setConstructionMode(enabled: boolean): void {
     this.town.group.visible = !enabled;
@@ -182,6 +200,17 @@ export class CityRenderer {
   unregisterMaterial(material: Material): void {
     this.extraMaterials.delete(material);
     this.lighting.csm?.shaders.delete(material);
+  }
+  /** Apply saved quality without reloading or losing the current city. */
+  setQuality(value: QualityLevel | 'auto'): void {
+    this.forced = value === 'auto' ? null : value;
+    const level = this.forced ?? this.automaticQuality;
+    this.startup.reset();
+    if (level === this.stats.quality) return;
+    this.lighting.dispose();
+    this.stats.quality = level;
+    this.lighting = this.createLighting(level);
+    this.resize();
   }
   private createLighting(level: QualityLevel): Lighting {
     this.renderer.shadowMap.enabled = level !== 'low';

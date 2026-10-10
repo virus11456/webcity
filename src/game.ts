@@ -1,3 +1,13 @@
+import { readPreferences } from './ui/preferences';
+import { createPauseMenu } from './ui/screens/PauseMenu';
+import { startup } from './bootstrap';
+import { SAVE } from './data/persistence';
+import { createSaveController } from './save/controller';
+import { createSaveControls } from './ui/saveControls';
+import './ui/styles/save.css';
+import { InspectTool } from './tools/inspectTool';
+import { createInspectPanel } from './ui/panels/InspectPanel';
+import { UI_PALETTE } from './data/palette';
 import { ProblemIcons } from './render/icons';
 import { WaterTool } from './tools/waterTool';
 import { WaterUtilityRenderer } from './render/waterUtilities';
@@ -26,7 +36,7 @@ import { ROAD_TOOL_RENDER } from './data/roadTool';
 import { PickingPreview } from './input/pickingPreview';
 import { createPickingDebug } from './ui/pickingDebug';
 import type { TerrainPick } from './world/picking';
-import { CITY_PREVIEW, MAP_PRESETS, type CityView } from './data/terrain';
+import { CITY_PREVIEW, type CityView } from './data/terrain';
 import { SimClient } from './bridge/simClient';
 import { createSimControls } from './ui/simControls';
 import { CameraController } from './input/cameraController';
@@ -66,6 +76,12 @@ const root = document.querySelector<HTMLDivElement>('#app');
 
 if (!root) throw new Error('Missing #app element');
 
+let pauseMenu: ReturnType<typeof createPauseMenu> | undefined;
+let saveController: ReturnType<typeof createSaveController> | undefined;
+let saveControls: ReturnType<typeof createSaveControls> | undefined;
+let inspectTool: InspectTool | undefined;
+let inspectPanel: ReturnType<typeof createInspectPanel> | undefined;
+let inspectPreview: BulldozePreview | undefined;
 let waterTool: WaterTool | undefined;
 let waterUtilities: WaterUtilityRenderer | undefined;
 let waterControls: ReturnType<typeof createWaterControls> | undefined;
@@ -120,15 +136,14 @@ try {
   );
   simControls = createSimControls(root, sim);
   void sim
-    .send({
-      t: 'init',
-      seed: MAP_PRESETS[0].seed,
-      mapId: MAP_PRESETS[0].id,
-      mode: 'normal',
-      cityName: t('city.name'),
-    })
+    .send(
+      startup.data
+        ? { t: 'load', data: startup.data }
+        : { t: 'init', ...startup.settings },
+    )
     .then((response) => {
       if (response.t !== 'ready') simControls?.showError();
+      else if (startup.construction) roadControls?.showCity();
     })
     .catch(() => simControls?.showError());
 } catch {
@@ -139,7 +154,18 @@ try {
 }
 if (canvas && status) {
   try {
+    const preferences = readPreferences();
+    document.documentElement.style.setProperty(
+      '--ui-scale',
+      String(preferences.uiScale / 100),
+    );
+    const renderSearch = new URLSearchParams(location.search);
+    if (!renderSearch.has('quality') && preferences.quality !== 'auto')
+      renderSearch.set('quality', preferences.quality);
     city = new CityRenderer(canvas, {
+      search: `?${renderSearch}`,
+      seed: startup.settings.seed,
+      mapId: startup.settings.mapId,
       onStats: debug?.update,
       onBeforeFrame: (seconds) => {
         frameSeconds = seconds;
@@ -183,8 +209,12 @@ if (canvas && status) {
         );
     }
     input = new CameraController(canvas, city.cameraController, {
-      onTap: (p) => picking?.tap(p.x, p.y),
+      onTap: (p) => {
+        picking?.tap(p.x, p.y);
+        if (root.dataset.construction === 'true') inspectTool?.tap(p.x, p.y);
+      },
       onShortcut: (action) => {
+        if (action === 'cancel') inspectTool?.clear();
         const speed = sim?.mirror.clock?.speed;
         if (action === 'pause') void simControls?.setSpeed(speed === 0 ? 1 : 0);
         else if (action === 'speed1') void simControls?.setSpeed(1);
@@ -192,6 +222,7 @@ if (canvas && status) {
         else if (action === 'speed3') void simControls?.setSpeed(4);
       },
     });
+    input.setEdgeScrolling(preferences.edgeScrolling);
     if (sim) {
       buildings = new BuildingRenderer(city.scene, {
         heightAt: (x, z) => city!.terrain.heightAt(x, z),
@@ -337,7 +368,18 @@ if (canvas && status) {
           root.dataset.underground = String(underground);
         },
       );
-      tools = new ToolManager((tool) => input?.setTool(tool));
+      inspectPreview = new BulldozePreview(city.scene, UI_PALETTE.accent);
+      inspectPanel = createInspectPanel(root, () => inspectTool?.clear());
+      inspectTool = new InspectTool(
+        sim,
+        powerContext.pick,
+        (info) => inspectPanel?.update(info),
+        (shapes, heights) => inspectPreview?.show(shapes, heights),
+      );
+      tools = new ToolManager((tool) => {
+        inspectTool?.clear();
+        input?.setTool(tool);
+      });
       const mode = (construction: boolean) => {
         const first = construction && root.dataset.construction !== 'true';
         root.dataset.construction = String(construction);
@@ -429,6 +471,26 @@ if (canvas && status) {
         root,
       );
       financeControls = createFinanceControls(root, sim!);
+      saveController = createSaveController(
+        sim,
+        () =>
+          city?.thumbnail(
+            SAVE.thumbnailWidth,
+            SAVE.thumbnailHeight,
+            SAVE.thumbnailQuality,
+          ) ?? null,
+        (failed) => saveControls?.notify(failed),
+      );
+      saveControls = createSaveControls(root, saveController);
+      pauseMenu = createPauseMenu(
+        root,
+        sim,
+        (value) => {
+          input?.setEdgeScrolling(value.edgeScrolling);
+          city?.setQuality(value.quality);
+        },
+        () => saveController!.save(SAVE.autoId),
+      );
       roadControls.update(roadTool.readState());
       zoneControls = createZoneControls(roadControls.zoneHost, {
         zone: (zone) => zoneTool!.setZone(zone),
@@ -489,7 +551,13 @@ if (import.meta.hot)
     delete window.__webcityRoadStats;
     delete window.__webcityZoneStats;
     delete window.__webcityPick;
+    pauseMenu?.dispose();
+    saveController?.dispose();
+    saveControls?.dispose();
     tools?.dispose();
+    inspectTool?.dispose();
+    inspectPanel?.dispose();
+    inspectPreview?.dispose();
     unsubscribeWater?.();
     waterTool?.dispose();
     waterControls?.dispose();

@@ -77,7 +77,12 @@ export type Result = {
 export type Response =
   | Result
   | { t: 'ready'; reqId: number; snapshot: WorldSnapshot }
-  | { t: 'saved'; reqId: number; data: ArrayBuffer }
+  | {
+      t: 'saved';
+      reqId: number;
+      data: ArrayBuffer;
+      metadata: { settings: CitySettings; population: number; day: number };
+    }
   | { t: 'inspectResult'; reqId: number; info: InspectInfo };
 export type SimEvent =
   | Response

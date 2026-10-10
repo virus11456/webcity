@@ -4,7 +4,7 @@ test('finances: change linked tax, borrow, settle a week and repay with touch/ke
 }, info) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('./?quality=high&debug=1');
+  await page.goto('./?play=1&quality=high&debug=1');
   await page.waitForSelector('.road-controls[data-ready="true"]');
   await page.getByRole('button', { name: '暫停', exact: true }).click();
   await expect(page.locator('.sim-controls')).toHaveAttribute(
