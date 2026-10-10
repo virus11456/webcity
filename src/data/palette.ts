@@ -135,3 +135,24 @@ export const BUILDING_DETAIL_PALETTE = {
   scaffold: '#C0C0C0',
   crane: '#E8B931',
 } as const;
+
+export const VEHICLE_PALETTE = {
+  paint: [
+    '#E8E7DF',
+    '#34383F',
+    '#A9AFB3',
+    '#28496C',
+    '#B54C43',
+    '#64816A',
+    '#D8B857',
+    '#83604C',
+    '#83B2CA',
+  ],
+  glass: '#344B59',
+  rubber: '#272B30',
+  chrome: '#A8ADB1',
+  headlight: '#F1E9CD',
+  taillight: '#C13D36',
+  skin: '#D8AB89',
+  clothes: ['#3A6EA8', '#C8443A', '#E08A2E', '#5D8F72', '#ADA08F'],
+} as const;

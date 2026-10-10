@@ -24,3 +24,14 @@
   margin: 0;
   text-align: right;
 }
+
+.inspect-locations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.inspect-locations button {
+  flex: 1 1 auto;
+  min-height: 44px;
+}

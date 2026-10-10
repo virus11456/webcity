@@ -4,12 +4,72 @@ import { ZONES, type ZoneType } from '../../data/zones';
 import { PROBLEMS } from '../../data/simulation';
 import type { InspectInfo } from '../../world/snapshot';
 import { layout, observeLayout } from '../store';
+import { Button } from '../components/Button';
+import type { Vec2 } from '../../world/types';
 import { Panel } from '../components/Panel';
 import { BottomSheet } from '../components/BottomSheet';
 import { t } from '../i18n/t';
 import '../styles/inspect.css';
 
-function Content({ info }: { info: InspectInfo }) {
+function Content({
+  info,
+  locate,
+}: {
+  info: InspectInfo;
+  locate?: (p: Vec2) => void;
+}) {
+  if (info.kind === 'vehicle') {
+    const v = info.value;
+    const rows: [string, string | number][] = [
+      [t('vehicle.citizen'), v.citizenId],
+      [t('vehicle.home'), v.homeId],
+      [t('vehicle.work'), v.workId || t('inspect.none')],
+      [t('vehicle.destination'), v.destinationId],
+      [
+        t('vehicle.purpose'),
+        t(`vehicle.purpose${v.purpose as 1 | 2 | 3 | 4 | 5}`),
+      ],
+      [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
+    ];
+    return (
+      <div
+        class="inspect-data"
+        data-kind="vehicle"
+        data-id={v.id}
+        data-citizen={v.citizenId}
+      >
+        <strong>
+          {t(v.kind === 8 ? 'vehicle.pedestrian' : 'vehicle.car')} #
+          {v.citizenId}
+        </strong>
+        <dl>
+          {rows.map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+        <div class="inspect-locations">
+          {v.homePos && (
+            <Button onClick={() => locate?.(v.homePos!)}>
+              {t('vehicle.locateHome')}
+            </Button>
+          )}
+          {v.workPos && (
+            <Button onClick={() => locate?.(v.workPos!)}>
+              {t('vehicle.locateWork')}
+            </Button>
+          )}
+          {v.destinationPos && (
+            <Button onClick={() => locate?.(v.destinationPos!)}>
+              {t('vehicle.locateDestination')}
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
   const v = info.value;
   const street = t(`inspect.street${(v.id % 4) as 0 | 1 | 2 | 3}`);
   const rows: [string, string | number][] = [
@@ -78,7 +138,11 @@ function Content({ info }: { info: InspectInfo }) {
   );
 }
 /** Mount a live read-only inspector, switching to a modal sheet on phone layouts. */
-export function createInspectPanel(parent: HTMLElement, dismiss: () => void) {
+export function createInspectPanel(
+  parent: HTMLElement,
+  dismiss: () => void,
+  locate?: (p: Vec2) => void,
+) {
   const host = document.createElement('div');
   host.className = 'inspect-host';
   parent.append(host);
@@ -89,7 +153,7 @@ export function createInspectPanel(parent: HTMLElement, dismiss: () => void) {
       render(null, host);
       return;
     }
-    const body = <Content info={current} />;
+    const body = <Content info={current} locate={locate} />;
     render(
       layout.value.startsWith('phone') ? (
         <BottomSheet open title={t('inspect.title')} onDismiss={dismiss}>

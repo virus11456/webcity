@@ -51,6 +51,7 @@ export type FieldName =
   | Exclude<keyof Fields, 'size' | 'coverage'>
   | `coverage.${keyof Fields['coverage']}`;
 export type InspectInfo =
+  | { kind: 'vehicle'; value: import('./traffic').TrafficInfo }
   | { kind: 'building'; value: Building }
   | { kind: 'segment'; value: RoadSegment }
   | { kind: 'network'; net: NetworkKind; value: NetworkSegment };

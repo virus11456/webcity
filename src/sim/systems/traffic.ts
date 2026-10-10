@@ -9,6 +9,7 @@ import { signalGroups, greenGroup } from '../../world/intersections';
 import { JourneyStatus, TravelMode } from '../../world/schedules';
 import {
   saveRoute,
+  type TrafficInfo,
   type SavedVehicle,
   type TrafficState,
   type StrandedJourney,
@@ -32,19 +33,6 @@ interface Junction {
   node: RoadNode;
   groups: number[][];
   owner: number;
-}
-export interface TrafficInfo {
-  id: number;
-  citizenId: number;
-  kind: number;
-  homeId: number;
-  workId: number;
-  destinationId: number;
-  purpose: number;
-  x: number;
-  y: number;
-  z: number;
-  speed: number;
 }
 /** Deterministic lane following. Every admission and arrival corresponds to a real personal journey. */
 export class TrafficSystem {

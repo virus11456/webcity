@@ -561,8 +561,10 @@
 - **參考**：ART §8；TECH §6
 - **內容**：`render/vehicles.ts`：每車型 InstancedMesh、位置插值、轉向平滑、車色、距離剔除、程序生成低模車（M3 換正式模型）。
 - **驗收標準**：
-  - [ ] 車輛移動平滑無跳動；iPhone viewport 1,000 輛 ≥ 30 FPS
-  - [ ] 依居民實際步行行程顯示移動行人；可追蹤住家、工作地點、目前行程，縮放不混合不同目的地
+  - [x] 車輛移動平滑無跳動；iPhone viewport 1,000 輛 ≥ 30 FPS
+  - [x] 依居民實際步行行程顯示移動行人；可追蹤住家、工作地點、目前行程，縮放不混合不同目的地
+
+驗證紀錄（2026-10-10）：個別車輛／行人 Instanced 渲染、位置與朝向插值、LOD／距離剔除、真實居民行程檢視與地點跳轉完成。778 項單元測試及 lint/typecheck/build 通過；三裝置交通 E2E 與既有檢視器回歸通過。1,000 車輛批次繪製均約 60 FPS，p95 16.7 ms（Chrome viewport，不代表 iPhone Safari 實機）。詳見 `VEHICLE_RENDERING.md`，截圖 `screenshots/m2-11/`。
 
 ### M2-12　交通流量資訊
 - **分支**：`feature/m2-12-traffic-info`｜**相依**：M2-10、M2-22｜**估時**：2
