@@ -547,3 +547,7 @@ Pathfinder 重用數值化車道相位圖、TypedArray 搜索工作區、二元�
 ### M2-10 權威交通
 
 TrafficSystem 於 ScheduleSystem／RoutePlanner 之後更新，車道排序占用表供跟车與雙車道換道檢查，路口 mutex 管理號誌／讓行。`vehicles` 每 50 ms 傳送十欄 Float32Array，附 tick/speed，Worker 移交 buffer。WorldSnapshot 增加可遷移的 traffic 集合；路徑去重並保存腿／進度與少量獨立幾何，載入後重建道路引用。詳見 `TRAFFIC.md`。
+
+### M2-11 移動實體畫面
+
+VehicleRenderer 消費十欄 vehicles 封包，以 tick/speed 決定插值時間、最短弧轉向，重複封包不重啟插值。每車型／LOD 使用預配 InstancedMesh；畫面點選送 inspect vehicle，Worker 回傳真實居民的家／工作／目的地資訊。鏡頭縮放不改變個人身份，畫面只做 400/900 m 車輛 LOD／剔除及 120 m 行人剔除。見 `VEHICLE_RENDERING.md`。

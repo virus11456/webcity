@@ -1,3 +1,4 @@
+import { VehicleRenderer } from './render/vehicles';
 import { TIME } from './data/config';
 import { readPreferences } from './ui/preferences';
 import { createPauseMenu } from './ui/screens/PauseMenu';
@@ -55,6 +56,10 @@ declare global {
     __webcityProblemIcons?: () => ReturnType<ProblemIcons['readStats']>;
     __webcityBuildingStats?: () => ReturnType<BuildingRenderer['readStats']>;
     __webcityCamera?: RtsCamera;
+    __webcityVehicles?: {
+      stats: VehicleRenderer['stats'];
+      samples: VehicleRenderer['samples'];
+    };
     __webcityZoneStats?: () => {
       blocks: number;
       valid: number;
@@ -109,6 +114,7 @@ let input: CameraController | undefined;
 let city: CityRenderer | undefined;
 let buildings: BuildingRenderer | undefined;
 let problemIcons: ProblemIcons | undefined;
+let vehicles: VehicleRenderer | undefined;
 let frameSeconds = 0;
 let unsubscribeBuildings: (() => void) | undefined;
 let picking: PickingPreview | undefined;
@@ -187,6 +193,7 @@ if (canvas && status) {
             window.innerHeight,
           );
         powerRenderer?.update(frameSeconds);
+        if (city) vehicles?.update(frameSeconds, city.camera);
       },
       onContextState(lost) {
         status.hidden = !lost;
@@ -233,6 +240,12 @@ if (canvas && status) {
           city!.registerMaterial(material, install),
         unregisterMaterial: (material) => city!.unregisterMaterial(material),
       });
+      vehicles = new VehicleRenderer(
+        city.scene,
+        (m) => city!.registerMaterial(m),
+        (m) => city!.unregisterMaterial(m),
+      );
+      vehicles.group.visible = false;
       buildings.group.visible = false;
       buildings.reset(sim.mirror.readBuildings());
       problemIcons = new ProblemIcons(city.scene, (id, out) =>
@@ -245,6 +258,7 @@ if (canvas && status) {
           roadPreview?.roads.setTime(
             (event.clock.ticks * TIME.secondsPerDay[1]) / TIME.ticksPerDay,
           );
+        vehicles!.accept(event);
         buildings!.accept(event);
         problemIcons!.accept(event);
       });
@@ -380,12 +394,21 @@ if (canvas && status) {
         },
       );
       inspectPreview = new BulldozePreview(city.scene, UI_PALETTE.accent);
-      inspectPanel = createInspectPanel(root, () => inspectTool?.clear());
+      inspectPanel = createInspectPanel(
+        root,
+        () => inspectTool?.clear(),
+        (p) => {
+          inspectTool?.clear();
+          city!.cameraController.flyTo(p, 160);
+        },
+      );
       inspectTool = new InspectTool(
         sim,
         powerContext.pick,
         (info) => inspectPanel?.update(info),
         (shapes, heights) => inspectPreview?.show(shapes, heights),
+        (x, y) =>
+          vehicles?.pick(x, y, innerWidth, innerHeight, city!.camera) ?? null,
       );
       tools = new ToolManager((tool) => {
         inspectTool?.clear();
@@ -399,6 +422,7 @@ if (canvas && status) {
         zoneRenderer!.group.visible = construction;
         buildings!.group.visible = construction;
         problemIcons!.group.visible = construction;
+        vehicles!.group.visible = construction;
         powerRenderer!.group.visible = construction;
         waterUtilities!.group.visible = construction;
         if (first)
@@ -520,6 +544,10 @@ if (canvas && status) {
     }
     if (debug) {
       window.__webcityCamera = city.cameraController;
+      window.__webcityVehicles = {
+        stats: () => vehicles!.stats(),
+        samples: (n) => vehicles!.samples(n),
+      };
       window.__webcityZoneStats = () => {
         const blocks = sim?.mirror.readZoneBlocks() ?? [];
         const codes: Record<number, number> = {};
@@ -562,6 +590,7 @@ if (import.meta.hot)
     delete window.__webcityBuildings;
     delete window.__webcityStats;
     delete window.__webcityCamera;
+    delete window.__webcityVehicles;
     delete window.__webcityRoadStats;
     delete window.__webcityZoneStats;
     delete window.__webcityPick;
@@ -569,6 +598,7 @@ if (import.meta.hot)
     saveController?.dispose();
     saveControls?.dispose();
     tools?.dispose();
+    vehicles?.dispose();
     inspectTool?.dispose();
     inspectPanel?.dispose();
     inspectPreview?.dispose();

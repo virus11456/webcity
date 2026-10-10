@@ -11,7 +11,8 @@ import type { BulldozeTarget } from '../world/bulldoze';
 export class InspectTool {
   private selection?: BulldozeSelection;
   private heights?: Float32Array;
-  private target?: BulldozeTarget;
+  private target?: BulldozeTarget | { kind: 'vehicle'; id: number };
+  private vehicleTick = -1;
   private epoch = 0;
   private pending = false;
   private dirty = false;
@@ -25,6 +26,7 @@ export class InspectTool {
       shapes: readonly BulldozeShape[],
       heights?: Float32Array,
     ) => void,
+    private readonly pickVehicle?: (x: number, y: number) => number | null,
   ) {
     this.off = client.onEvent((e) => {
       if (
@@ -35,6 +37,14 @@ export class InspectTool {
         if (e.t !== 'buildingsChanged' || e.added.length || e.removed.length)
           this.refresh();
         if (this.target) void this.request();
+      }
+      if (
+        e.t === 'vehicles' &&
+        this.target?.kind === 'vehicle' &&
+        e.tick !== this.vehicleTick
+      ) {
+        this.vehicleTick = e.tick ?? this.vehicleTick + 1;
+        void this.request();
       }
       if (e.t === 'error') this.clear();
     });
@@ -47,6 +57,13 @@ export class InspectTool {
   }
   /** Select the closest building first, then road; empty ground dismisses the panel. */
   tap(x: number, y: number): void {
+    const vehicle = this.pickVehicle?.(x, y);
+    if (vehicle != null) {
+      this.clear();
+      this.target = { kind: 'vehicle', id: vehicle };
+      void this.request();
+      return;
+    }
     const p = this.pick(x, y);
     const target =
       p &&
@@ -74,7 +91,12 @@ export class InspectTool {
         return;
       }
       this.changed(result.info);
-      this.highlight(this.selection?.outlines([target]) ?? [], this.heights);
+      this.highlight(
+        target.kind === 'vehicle'
+          ? []
+          : (this.selection?.outlines([target]) ?? []),
+        this.heights,
+      );
     } catch {
       if (epoch === this.epoch) this.clear();
     } finally {

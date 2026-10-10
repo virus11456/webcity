@@ -150,6 +150,23 @@ export class Simulation {
     id: number,
   ): import('../world/snapshot').InspectInfo | null {
     const s = this.state;
+    if (kind === 'vehicle') {
+      const value = this.traffic.inspect(id);
+      if (!value) return null;
+      const position = (id: number) => {
+        const p = s.buildings.find((b) => b.id === id)?.pos;
+        return p ? { ...p } : undefined;
+      };
+      return {
+        kind,
+        value: {
+          ...value,
+          homePos: position(value.homeId),
+          workPos: position(value.workId),
+          destinationPos: position(value.destinationId),
+        },
+      };
+    }
     if (kind === 'building') {
       const value = s.buildings.find((b) => b.id === id);
       return value ? { kind, value: structuredClone(value) } : null;

@@ -63,3 +63,20 @@ export function saveRoute(route: Route): SavedRoute {
     }),
   };
 }
+
+export interface TrafficInfo {
+  id: number;
+  citizenId: number;
+  kind: number;
+  homeId: number;
+  workId: number;
+  destinationId: number;
+  purpose: number;
+  x: number;
+  y: number;
+  z: number;
+  speed: number;
+  homePos?: { x: number; z: number };
+  workPos?: { x: number; z: number };
+  destinationPos?: { x: number; z: number };
+}
