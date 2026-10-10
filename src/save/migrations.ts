@@ -74,6 +74,9 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
       s.terrain.resources?.[key] instanceof Uint8Array &&
         s.terrain.resources[key].length === WORLD.fieldCells ** 2,
     );
+  requireValue(
+    s.environmentVersion === undefined || s.environmentVersion === 1,
+  );
   requireValue(s.fields?.size === WORLD.fieldCells);
   for (const key of [
     'pollution',
@@ -83,7 +86,8 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
   ] as const)
     requireValue(
       s.fields[key] instanceof Float32Array &&
-        s.fields[key].length === WORLD.fieldCells ** 2,
+        s.fields[key].length === WORLD.fieldCells ** 2 &&
+        s.fields[key].every((v) => Number.isFinite(v) && v >= 0 && v <= 100),
     );
   for (const key of SERVICE_TYPES)
     requireValue(
@@ -223,6 +227,17 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
       if (value !== undefined)
         requireValue(Number.isFinite(value) && value >= 0);
     if (b.landValue !== undefined) requireValue(b.landValue <= 100);
+    if (b.sewageDischarge !== undefined)
+      requireValue(
+        Number.isFinite(b.sewageDischarge) && b.sewageDischarge >= 0,
+      );
+    if (b.environment)
+      for (const key of ['pollution', 'noise', 'waterPollution'] as const)
+        requireValue(
+          Number.isFinite(b.environment[key]) &&
+            b.environment[key] >= 0 &&
+            b.environment[key] <= 100,
+        );
     if (b.education)
       requireValue(
         Number.isSafeInteger(b.education.enrolled) &&

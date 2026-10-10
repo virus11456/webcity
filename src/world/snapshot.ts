@@ -95,6 +95,7 @@ export interface WorldSnapshot {
   buildings: Building[];
   networks: Record<NetworkKind, NetworkSegment[]>;
   fields: Fields;
+  environmentVersion?: 1;
   // Reserved empty collections; concrete schemas belong to M2 / M4.
   citizens: CitizenTable;
   traffic: TrafficState;

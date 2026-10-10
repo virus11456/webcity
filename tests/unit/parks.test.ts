@@ -1,3 +1,4 @@
+import { updateLandValue as updateParks } from '../../src/sim/systems/fields';
 import { CommandDispatcher } from '../../src/sim/commands';
 import { updatePower } from '../../src/sim/systems/power';
 import type { SimEvent } from '../../src/bridge/protocol';
@@ -5,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { createState } from '../../src/sim/state';
 import { Simulation } from '../../src/sim/simulation';
 import { RoadGraph } from '../../src/world/roadGraph';
-import { parkField, updateParks } from '../../src/sim/systems/parks';
+import { parkField } from '../../src/sim/systems/parks';
 import { previewTrees, treeBrush } from '../../src/world/parks';
 import { fieldIndex } from '../../src/world/fieldSampling';
 import { districtFixture } from '../../src/render/buildings/districtFixture';

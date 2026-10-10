@@ -181,6 +181,27 @@ function Content({
           `${t(`finance.${service as keyof NonNullable<typeof b.coverage>}`)} ${t('service.coverage')}`,
           `${Math.round(value * 100)}%`,
         ]);
+    if (b.environment) {
+      rows.push(
+        [t('environment.pollution'), b.environment.pollution.toFixed(1)],
+        [t('environment.noise'), b.environment.noise.toFixed(1)],
+      );
+      if (b.defId.startsWith('water_'))
+        rows.push([
+          t('environment.waterPollution'),
+          b.environment.waterPollution.toFixed(1),
+        ]);
+    }
+    if (b.kind === 'zoned')
+      rows.push([
+        t('environment.drinkingWater'),
+        `${(b.drinkingWaterPollution ?? 0).toFixed(1)}%`,
+      ]);
+    if (b.sewageDischarge)
+      rows.push([
+        t('environment.discharge'),
+        `${b.sewageDischarge.toFixed(0)} m³ / ${t('environment.week')}`,
+      ]);
     if (b.landValue !== undefined)
       rows.push([t('park.landValue'), b.landValue.toFixed(1)]);
     if (b.parkBonus !== undefined)

@@ -178,6 +178,13 @@ describe('physical personal traffic', () => {
       structuredClone(saved),
     );
     expect(restored.frame()).toEqual(before);
+    expect(
+      [...f.traffic.roadVehicleCounts().values()].reduce(
+        (sum, v) => sum + v.count,
+        0,
+      ),
+    ).toBe(1);
+    expect(restored.roadVehicleCounts()).toEqual(f.traffic.roadVehicleCounts());
     f.traffic.step(0.24);
     restored.step(0.24);
     expect(restored.frame()).toEqual(f.traffic.frame());
