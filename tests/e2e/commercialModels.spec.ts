@@ -120,7 +120,7 @@ test('loads formal commercial, industrial and office models in the real city and
         .getByRole('combobox', { name: '模型', exact: true })
         .locator('option')
         .count(),
-    ).toBe(190);
+    ).toBeGreaterThanOrEqual(190);
     await page.screenshot({
       path: `docs/screenshots/m3-11/${slug}-${model}.jpg`,
       type: 'jpeg',

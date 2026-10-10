@@ -1,0 +1,735 @@
+[
+  {
+    "id": "svc_power_wind",
+    "defId": "power_wind",
+    "w": 2,
+    "d": 2,
+    "definition": {
+      "id": "power_wind",
+      "kind": "utility",
+      "cost": 2000,
+      "upkeepPerWeek": 64,
+      "unlock": 0,
+      "footprintCells": [2, 2],
+      "power": { "maxMW": 4, "mode": "wind" },
+      "pollution": "noise",
+      "placement": "land"
+    },
+    "triangles": [84, 84, 12],
+    "bytes": 19640,
+    "url": "models/svc_power_wind.e3f883680acf.glb"
+  },
+  {
+    "id": "svc_power_coal",
+    "defId": "power_coal",
+    "w": 6,
+    "d": 6,
+    "definition": {
+      "id": "power_coal",
+      "kind": "utility",
+      "cost": 19000,
+      "upkeepPerWeek": 640,
+      "unlock": 0,
+      "footprintCells": [6, 6],
+      "power": { "maxMW": 40, "mode": "constant" },
+      "pollution": "high-ground-air",
+      "placement": "land"
+    },
+    "triangles": [156, 132, 12],
+    "bytes": 22976,
+    "url": "models/svc_power_coal.4c796bee8563.glb"
+  },
+  {
+    "id": "svc_power_oil",
+    "defId": "power_oil",
+    "w": 6,
+    "d": 6,
+    "definition": {
+      "id": "power_oil",
+      "kind": "utility",
+      "cost": 28000,
+      "upkeepPerWeek": 880,
+      "unlock": 3,
+      "footprintCells": [6, 6],
+      "power": { "maxMW": 64, "mode": "constant" },
+      "pollution": "medium",
+      "placement": "land"
+    },
+    "triangles": [204, 180, 12],
+    "bytes": 25328,
+    "url": "models/svc_power_oil.41c02f670a63.glb"
+  },
+  {
+    "id": "svc_power_solar",
+    "defId": "power_solar",
+    "w": 8,
+    "d": 8,
+    "definition": {
+      "id": "power_solar",
+      "kind": "utility",
+      "cost": 45000,
+      "upkeepPerWeek": 1040,
+      "unlock": 5,
+      "footprintCells": [8, 8],
+      "power": { "maxMW": 64, "mode": "daylight" },
+      "pollution": "none",
+      "placement": "land"
+    },
+    "triangles": [396, 204, 12],
+    "bytes": 29316,
+    "url": "models/svc_power_solar.f5747a395624.glb"
+  },
+  {
+    "id": "svc_power_hydro",
+    "defId": "power_hydro",
+    "w": 12,
+    "d": 4,
+    "definition": {
+      "id": "power_hydro",
+      "kind": "utility",
+      "cost": 80000,
+      "upkeepPerWeek": 1280,
+      "unlock": 6,
+      "footprintCells": null,
+      "power": { "maxMW": null, "mode": "head-dependent" },
+      "pollution": "none",
+      "placement": "across-river"
+    },
+    "triangles": [132, 132, 12],
+    "bytes": 18068,
+    "url": "models/svc_power_hydro.7ebe68c808c6.glb"
+  },
+  {
+    "id": "svc_water_pump",
+    "defId": "water_pump",
+    "w": 2,
+    "d": 2,
+    "definition": {
+      "id": "water_pump",
+      "kind": "utility",
+      "cost": 2500,
+      "upkeepPerWeek": 120,
+      "unlock": 0,
+      "footprintCells": [2, 2],
+      "water": {
+        "capacityM3PerWeek": 12000,
+        "output": "water",
+        "pollutionReduction": 0
+      },
+      "placement": "shore-intake-submerged"
+    },
+    "triangles": [44, 36, 12],
+    "bytes": 18304,
+    "url": "models/svc_water_pump.d4f5d539806d.glb"
+  },
+  {
+    "id": "svc_water_tower",
+    "defId": "water_tower",
+    "w": 2,
+    "d": 2,
+    "definition": {
+      "id": "water_tower",
+      "kind": "utility",
+      "cost": 3000,
+      "upkeepPerWeek": 160,
+      "unlock": 0,
+      "footprintCells": [2, 2],
+      "water": {
+        "capacityM3PerWeek": 6000,
+        "output": "water",
+        "pollutionReduction": 0
+      },
+      "placement": "flat-groundwater"
+    },
+    "triangles": [156, 156, 12],
+    "bytes": 18580,
+    "url": "models/svc_water_tower.9ac00fa34877.glb"
+  },
+  {
+    "id": "svc_water_drain",
+    "defId": "water_drain",
+    "w": 2,
+    "d": 2,
+    "definition": {
+      "id": "water_drain",
+      "kind": "utility",
+      "cost": 2500,
+      "upkeepPerWeek": 120,
+      "unlock": 0,
+      "footprintCells": [2, 2],
+      "water": {
+        "capacityM3PerWeek": 30000,
+        "output": "sewage",
+        "pollutionReduction": 0
+      },
+      "placement": "shore"
+    },
+    "triangles": [36, 36, 12],
+    "bytes": 16320,
+    "url": "models/svc_water_drain.efb5af628e52.glb"
+  },
+  {
+    "id": "svc_water_treatment",
+    "defId": "water_treatment",
+    "w": 4,
+    "d": 4,
+    "definition": {
+      "id": "water_treatment",
+      "kind": "utility",
+      "cost": 25000,
+      "upkeepPerWeek": 800,
+      "unlock": 4,
+      "footprintCells": [4, 4],
+      "water": {
+        "capacityM3PerWeek": 30000,
+        "output": "sewage",
+        "pollutionReduction": 0.85
+      },
+      "placement": "land"
+    },
+    "triangles": [152, 144, 12],
+    "bytes": 23492,
+    "url": "models/svc_water_treatment.863642397ce3.glb"
+  },
+  {
+    "id": "svc_garbage_landfill",
+    "defId": "garbage_landfill",
+    "w": 4,
+    "d": 4,
+    "definition": {
+      "id": "garbage_landfill",
+      "kind": "utility",
+      "cost": 6000,
+      "upkeepPerWeek": 240,
+      "unlock": 1,
+      "footprintCells": null,
+      "garbage": {
+        "storageUnits": 80000,
+        "processingUnitsPerDay": null,
+        "trucks": 6
+      }
+    },
+    "triangles": [60, 60, 12],
+    "bytes": 16276,
+    "url": "models/svc_garbage_landfill.3c4194ea4eba.glb"
+  },
+  {
+    "id": "svc_garbage_incinerator",
+    "defId": "garbage_incinerator",
+    "w": 4,
+    "d": 4,
+    "definition": {
+      "id": "garbage_incinerator",
+      "kind": "utility",
+      "cost": 32000,
+      "upkeepPerWeek": 960,
+      "unlock": 4,
+      "footprintCells": null,
+      "garbage": {
+        "storageUnits": null,
+        "processingUnitsPerDay": 2000,
+        "trucks": 10
+      },
+      "power": { "maxMW": 8, "mode": "constant" }
+    },
+    "triangles": [156, 132, 12],
+    "bytes": 23276,
+    "url": "models/svc_garbage_incinerator.64b28137d787.glb"
+  },
+  {
+    "id": "svc_garbage_recycling",
+    "defId": "garbage_recycling",
+    "w": 4,
+    "d": 4,
+    "definition": {
+      "id": "garbage_recycling",
+      "kind": "utility",
+      "cost": 18000,
+      "upkeepPerWeek": 640,
+      "unlock": 6,
+      "footprintCells": null,
+      "garbage": {
+        "storageUnits": null,
+        "processingUnitsPerDay": 1000,
+        "trucks": 8
+      }
+    },
+    "triangles": [76, 60, 12],
+    "bytes": 19656,
+    "url": "models/svc_garbage_recycling.6f362a7b8392.glb"
+  },
+  {
+    "id": "svc_police_station",
+    "defId": "police_station",
+    "w": 4,
+    "d": 4,
+    "definition": {
+      "id": "police_station",
+      "kind": "service",
+      "cost": 4000,
+      "upkeepPerWeek": 240,
+      "unlock": 1,
+      "footprintCells": [4, 4],
+      "service": "police",
+      "radiusM": 500,
+      "capacity": { "vehicles": 6 }
+    },
+    "triangles": [100, 84, 12],
+    "bytes": 20640,
+    "url": "models/svc_police_station.4d6cb3e58272.glb"
+  },
+  {
+    "id": "svc_police_hq",
+    "defId": "police_hq",
+    "w": 6,
+    "d": 6,
+    "definition": {
+      "id": "police_hq",
+      "kind": "service",
+      "cost": 18000,
+      "upkeepPerWeek": 800,
+      "unlock": 5,
+      "footprintCells": [6, 6],
+      "service": "police",
+      "radiusM": 900,
+      "capacity": { "vehicles": 20, "detention": true }
+    },
+    "triangles": [116, 84, 12],
+    "bytes": 21036,
+    "url": "models/svc_police_hq.78d2a29050b0.glb"
+  },
+  {
+    "id": "svc_fire_station",
+    "defId": "fire_station",
+    "w": 4,
+    "d": 4,
+    "definition": {
+      "id": "fire_station",
+      "kind": "service",
+      "cost": 4000,
+      "upkeepPerWeek": 240,
+      "unlock": 1,
+      "footprintCells": [4, 4],
+      "service": "fire",
+      "radiusM": 500,
+      "capacity": { "vehicles": 5 }
+    },
+    "triangles": [100, 84, 12],
+    "bytes": 20608,
+    "url": "models/svc_fire_station.9cde95bc5b18.glb"
+  },
+  {
+    "id": "svc_fire_hq",
+    "defId": "fire_hq",
+    "w": 6,
+    "d": 6,
+    "definition": {
+      "id": "fire_hq",
+      "kind": "service",
+      "cost": 20000,
+      "upkeepPerWeek": 880,
+      "unlock": 5,
+      "footprintCells": [6, 6],
+      "service": "fire",
+      "radiusM": 900,
+      "capacity": { "vehicles": 15 }
+    },
+    "triangles": [116, 84, 12],
+    "bytes": 21060,
+    "url": "models/svc_fire_hq.f5126bd9671c.glb"
+  },
+  {
+    "id": "svc_clinic",
+    "defId": "clinic",
+    "w": 3,
+    "d": 3,
+    "definition": {
+      "id": "clinic",
+      "kind": "service",
+      "cost": 5000,
+      "upkeepPerWeek": 320,
+      "unlock": 1,
+      "footprintCells": [3, 3],
+      "service": "health",
+      "radiusM": 500,
+      "capacity": { "patients": 100, "vehicles": 4 }
+    },
+    "triangles": [88, 72, 12],
+    "bytes": 20196,
+    "url": "models/svc_clinic.07fcab2ed7fb.glb"
+  },
+  {
+    "id": "svc_hospital",
+    "defId": "hospital",
+    "w": 6,
+    "d": 6,
+    "definition": {
+      "id": "hospital",
+      "kind": "service",
+      "cost": 25000,
+      "upkeepPerWeek": 1200,
+      "unlock": 4,
+      "footprintCells": [6, 6],
+      "service": "health",
+      "radiusM": 1000,
+      "capacity": { "patients": 1000, "vehicles": 10 }
+    },
+    "triangles": [128, 72, 12],
+    "bytes": 21040,
+    "url": "models/svc_hospital.c2b748bfe28c.glb"
+  },
+  {
+    "id": "svc_school_elementary",
+    "defId": "school_elementary",
+    "w": 5,
+    "d": 5,
+    "definition": {
+      "id": "school_elementary",
+      "kind": "service",
+      "cost": 6000,
+      "upkeepPerWeek": 360,
+      "unlock": 2,
+      "footprintCells": [5, 5],
+      "service": "education",
+      "radiusM": 600,
+      "capacity": { "students": 300, "educationLevel": 1 }
+    },
+    "triangles": [76, 60, 12],
+    "bytes": 19752,
+    "url": "models/svc_school_elementary.463bd96ff898.glb"
+  },
+  {
+    "id": "svc_school_high",
+    "defId": "school_high",
+    "w": 6,
+    "d": 6,
+    "definition": {
+      "id": "school_high",
+      "kind": "service",
+      "cost": 16000,
+      "upkeepPerWeek": 640,
+      "unlock": 3,
+      "footprintCells": [6, 6],
+      "service": "education",
+      "radiusM": 900,
+      "capacity": { "students": 1000, "educationLevel": 2 }
+    },
+    "triangles": [76, 60, 12],
+    "bytes": 19632,
+    "url": "models/svc_school_high.e9ae36bf723b.glb"
+  },
+  {
+    "id": "svc_university",
+    "defId": "university",
+    "w": 8,
+    "d": 8,
+    "definition": {
+      "id": "university",
+      "kind": "service",
+      "cost": 50000,
+      "upkeepPerWeek": 1600,
+      "unlock": 5,
+      "footprintCells": [8, 8],
+      "service": "education",
+      "radiusM": 1500,
+      "capacity": { "students": 4500, "educationLevel": 3 }
+    },
+    "triangles": [98, 66, 12],
+    "bytes": 20316,
+    "url": "models/svc_university.f8ac734a86a8.glb"
+  },
+  {
+    "id": "svc_cemetery",
+    "defId": "cemetery",
+    "w": 4,
+    "d": 4,
+    "definition": {
+      "id": "cemetery",
+      "kind": "service",
+      "cost": 3000,
+      "upkeepPerWeek": 120,
+      "unlock": 2,
+      "footprintCells": null,
+      "service": "deathcare",
+      "radiusM": 600,
+      "capacity": { "graves": 2000, "vehicles": 4 }
+    },
+    "triangles": [294, 150, 12],
+    "bytes": 25452,
+    "url": "models/svc_cemetery.85091a7a5503.glb"
+  },
+  {
+    "id": "svc_crematorium",
+    "defId": "crematorium",
+    "w": 4,
+    "d": 4,
+    "definition": {
+      "id": "crematorium",
+      "kind": "service",
+      "cost": 15000,
+      "upkeepPerWeek": 600,
+      "unlock": 4,
+      "footprintCells": null,
+      "service": "deathcare",
+      "radiusM": 900,
+      "capacity": { "processingPerDay": 100 }
+    },
+    "triangles": [74, 66, 12],
+    "bytes": 19636,
+    "url": "models/svc_crematorium.55541482cfe8.glb"
+  },
+  {
+    "id": "svc_park_small",
+    "defId": "park_small",
+    "w": 2,
+    "d": 2,
+    "definition": {
+      "id": "park_small",
+      "kind": "park",
+      "cost": 600,
+      "upkeepPerWeek": 24,
+      "unlock": 0,
+      "footprintCells": [2, 2],
+      "landValueBonus": 10,
+      "radiusM": 160
+    },
+    "triangles": [348, 36, 12],
+    "bytes": 25304,
+    "url": "models/svc_park_small.cf57339a941b.glb"
+  },
+  {
+    "id": "svc_park_playground",
+    "defId": "park_playground",
+    "w": 2,
+    "d": 2,
+    "definition": {
+      "id": "park_playground",
+      "kind": "park",
+      "cost": 1200,
+      "upkeepPerWeek": 48,
+      "unlock": 1,
+      "footprintCells": [2, 2],
+      "landValueBonus": 12,
+      "radiusM": 200
+    },
+    "triangles": [372, 60, 12],
+    "bytes": 26396,
+    "url": "models/svc_park_playground.acb5fcbe81a9.glb"
+  },
+  {
+    "id": "svc_park_plaza",
+    "defId": "park_plaza",
+    "w": 3,
+    "d": 3,
+    "definition": {
+      "id": "park_plaza",
+      "kind": "park",
+      "cost": 2000,
+      "upkeepPerWeek": 64,
+      "unlock": 2,
+      "footprintCells": [3, 3],
+      "landValueBonus": 14,
+      "radiusM": 240
+    },
+    "triangles": [396, 84, 12],
+    "bytes": 27612,
+    "url": "models/svc_park_plaza.6b6db1df722d.glb"
+  },
+  {
+    "id": "svc_park_large",
+    "defId": "park_large",
+    "w": 6,
+    "d": 6,
+    "definition": {
+      "id": "park_large",
+      "kind": "park",
+      "cost": 5000,
+      "upkeepPerWeek": 160,
+      "unlock": 5,
+      "footprintCells": [6, 6],
+      "landValueBonus": 20,
+      "radiusM": 400
+    },
+    "triangles": [396, 84, 12],
+    "bytes": 27192,
+    "url": "models/svc_park_large.569ad6491a30.glb"
+  },
+  {
+    "id": "svc_tree",
+    "defId": "tree",
+    "w": 1,
+    "d": 1,
+    "definition": {
+      "id": "tree",
+      "kind": "park",
+      "cost": 5,
+      "upkeepPerWeek": 0,
+      "unlock": 0,
+      "footprintCells": [1, 1],
+      "landValueBonus": 0.2,
+      "radiusM": 24,
+      "landValueBonusCap": 10,
+      "reducesNoise": true
+    },
+    "triangles": [72, 12, 12],
+    "bytes": 16556,
+    "url": "models/svc_tree.873cf7a83db8.glb"
+  },
+  {
+    "id": "svc_bus_depot",
+    "defId": "bus_depot",
+    "w": 4,
+    "d": 4,
+    "definition": {
+      "id": "bus_depot",
+      "kind": "service",
+      "cost": 6000,
+      "upkeepPerWeek": 300,
+      "unlock": 4,
+      "footprintCells": null,
+      "service": "transit",
+      "capacity": { "vehicles": 20 }
+    },
+    "triangles": [100, 84, 12],
+    "bytes": 20600,
+    "url": "models/svc_bus_depot.da5efa4e2582.glb"
+  },
+  {
+    "id": "svc_metro_station",
+    "defId": "metro_station",
+    "w": 4,
+    "d": 4,
+    "definition": {
+      "id": "metro_station",
+      "kind": "service",
+      "cost": 9000,
+      "upkeepPerWeek": 360,
+      "unlock": 7,
+      "footprintCells": null,
+      "service": "transit"
+    },
+    "triangles": [100, 84, 12],
+    "bytes": 20724,
+    "url": "models/svc_metro_station.97043d7d0878.glb"
+  },
+  {
+    "id": "svc_unique_city_hall",
+    "defId": "unique_city_hall",
+    "w": 6,
+    "d": 6,
+    "landmark": 0,
+    "triangles": [186, 162, 12],
+    "bytes": 24408,
+    "url": "models/svc_unique_city_hall.ff8de8572943.glb"
+  },
+  {
+    "id": "svc_unique_museum",
+    "defId": "unique_museum",
+    "w": 6,
+    "d": 6,
+    "landmark": 1,
+    "triangles": [180, 156, 12],
+    "bytes": 23948,
+    "url": "models/svc_unique_museum.975d7fc4436b.glb"
+  },
+  {
+    "id": "svc_unique_observatory",
+    "defId": "unique_observatory",
+    "w": 6,
+    "d": 6,
+    "landmark": 2,
+    "triangles": [104, 96, 12],
+    "bytes": 21140,
+    "url": "models/svc_unique_observatory.78ba9ba98c56.glb"
+  },
+  {
+    "id": "svc_unique_stadium",
+    "defId": "unique_stadium",
+    "w": 6,
+    "d": 6,
+    "landmark": 3,
+    "triangles": [72, 72, 12],
+    "bytes": 16532,
+    "url": "models/svc_unique_stadium.3f6811de3039.glb"
+  },
+  {
+    "id": "svc_unique_clock_tower",
+    "defId": "unique_clock_tower",
+    "w": 6,
+    "d": 6,
+    "landmark": 4,
+    "triangles": [84, 84, 12],
+    "bytes": 16944,
+    "url": "models/svc_unique_clock_tower.40263103eb4d.glb"
+  },
+  {
+    "id": "svc_unique_botanical_garden",
+    "defId": "unique_botanical_garden",
+    "w": 6,
+    "d": 6,
+    "landmark": 5,
+    "triangles": [126, 126, 12],
+    "bytes": 18876,
+    "url": "models/svc_unique_botanical_garden.65a2a2fbbb6e.glb"
+  },
+  {
+    "id": "svc_unique_convention_center",
+    "defId": "unique_convention_center",
+    "w": 6,
+    "d": 6,
+    "landmark": 6,
+    "triangles": [192, 168, 12],
+    "bytes": 24544,
+    "url": "models/svc_unique_convention_center.23e5241ed7df.glb"
+  },
+  {
+    "id": "svc_unique_opera_house",
+    "defId": "unique_opera_house",
+    "w": 6,
+    "d": 6,
+    "landmark": 7,
+    "triangles": [42, 42, 12],
+    "bytes": 15952,
+    "url": "models/svc_unique_opera_house.c1cd61a21238.glb"
+  },
+  {
+    "id": "svc_unique_science_center",
+    "defId": "unique_science_center",
+    "w": 6,
+    "d": 6,
+    "landmark": 8,
+    "triangles": [176, 168, 12],
+    "bytes": 24416,
+    "url": "models/svc_unique_science_center.d8007fddf12b.glb"
+  },
+  {
+    "id": "svc_unique_memorial",
+    "defId": "unique_memorial",
+    "w": 6,
+    "d": 6,
+    "landmark": 9,
+    "triangles": [78, 78, 12],
+    "bytes": 16816,
+    "url": "models/svc_unique_memorial.9e90a4f66bdd.glb"
+  },
+  {
+    "id": "svc_unique_lighthouse",
+    "defId": "unique_lighthouse",
+    "w": 6,
+    "d": 6,
+    "landmark": 10,
+    "triangles": [162, 162, 12],
+    "bytes": 18856,
+    "url": "models/svc_unique_lighthouse.2036c93c98ef.glb"
+  },
+  {
+    "id": "svc_unique_sky_tower",
+    "defId": "unique_sky_tower",
+    "w": 6,
+    "d": 6,
+    "landmark": 11,
+    "triangles": [60, 60, 12],
+    "bytes": 16416,
+    "url": "models/svc_unique_sky_tower.b7a6bca41487.glb"
+  }
+]

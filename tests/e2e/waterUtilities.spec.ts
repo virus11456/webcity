@@ -1,3 +1,5 @@
+import { utilityCity } from '../fixtures/utilityCity';
+import { loadFixture } from './loadFixture';
 import { test, expect, type Page } from '@playwright/test';
 async function fly(page: Page, x: number, z: number, distance = 850) {
   await page.evaluate(
@@ -43,21 +45,10 @@ test('supplies homes through powered water networks, validates shores and drains
   const touch = !!info.project.use.hasTouch,
     errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('./?play=1&quality=high&debug=1');
-  await page.waitForSelector('.road-controls[data-ready="true"]');
-  await page.getByRole('button', { name: '暫停', exact: true }).click();
-  await page.getByRole('button', { name: '開始鋪路', exact: true }).click();
-  await fly(page, -120, -80);
-  await tap(page, -240, -80, touch);
-  await tap(page, -80, -80, touch);
-  if (touch)
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
-  await page.waitForSelector('.road-controls[data-segments="1"]');
-  await page.getByRole('button', { name: '分區', exact: true }).click();
-  await tap(page, -200, -100, touch);
-  await page.getByRole('button', { name: '×4', exact: true }).click();
-  await page.waitForFunction(() => window.__webcityStats!()!.population > 0);
-  await page.getByRole('button', { name: '暫停', exact: true }).click();
+  await loadFixture(page, await utilityCity());
+  expect(
+    await page.evaluate(() => window.__webcityStats!()!.population),
+  ).toBeGreaterThan(0);
   await page.getByRole('button', { name: '水務', exact: true }).click();
   await tap(page, -80, -200, touch);
   await expect(page.locator('.water-controls')).toHaveAttribute(

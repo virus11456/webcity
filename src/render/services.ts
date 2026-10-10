@@ -1,3 +1,5 @@
+import type { FacilityAssets } from './facilities/assets';
+import { facilityModel } from '../world/facilityModels';
 import { PARKS } from '../data/parks';
 import {
   BoxGeometry,
@@ -34,6 +36,8 @@ import type { Building, Vec2 } from '../world/types';
 export class ServiceRenderer {
   readonly group = new Group();
   private assets = new Group();
+  private dirty = false;
+  private catalogTree = false;
   private plantedTrees: InstancedMesh[] = [];
   private buildings = new Map<number, Building>();
   private preview = new Mesh(
@@ -51,6 +55,7 @@ export class ServiceRenderer {
   constructor(
     scene: Scene,
     private height: (x: number, z: number) => number,
+    private catalog?: FacilityAssets,
   ) {
     scene.add(this.group);
     this.group.add(this.assets, this.preview);
@@ -76,6 +81,69 @@ export class ServiceRenderer {
       this.group.add(mesh);
     }
   }
+  private supports(id: string) {
+    return (
+      serviceDefinition(id) ||
+      (this.catalog &&
+        !id.startsWith('power_') &&
+        !id.startsWith('water_') &&
+        facilityModel(id))
+    );
+  }
+  update() {
+    if (this.dirty) {
+      this.dirty = false;
+      this.rebuild();
+    }
+  }
+  private installTree() {
+    if (!this.catalog || this.catalogTree) return;
+    const tree = this.catalog.request(
+      { defId: 'tree', lotW: 1, lotD: 1, state: 'active' },
+      () => {
+        this.dirty = true;
+      },
+    );
+    if (!tree) return;
+    tree.updateMatrixWorld(true);
+    let mesh: Mesh | undefined;
+    tree.traverse((o) => {
+      if (o instanceof Mesh) mesh ??= o;
+    });
+    if (!mesh) return;
+    const geometry = mesh.geometry.clone();
+    for (const name of ['position', 'normal']) {
+      const a = geometry.getAttribute(name),
+        data = new Float32Array(a.count * 3);
+      for (let i = 0; i < a.count; i++) {
+        data[i * 3] = a.getX(i);
+        data[i * 3 + 1] = a.getY(i);
+        data[i * 3 + 2] = a.getZ(i);
+      }
+      geometry.setAttribute(name, new Float32BufferAttribute(data, 3));
+    }
+    geometry.applyMatrix4(mesh.matrixWorld);
+    geometry.translate(0, 0, -4);
+    for (const old of this.plantedTrees) {
+      old.removeFromParent();
+      old.geometry.dispose();
+      (old.material as MeshStandardMaterial).dispose();
+      old.dispose();
+    }
+    const instances = new InstancedMesh(
+      geometry,
+      mesh.material,
+      PARKS.maxTrees,
+    );
+    instances.castShadow = instances.receiveShadow = true;
+    instances.count = 0;
+    this.plantedTrees = [instances];
+    this.group.add(instances);
+    this.catalogTree = true;
+    tree.traverse((o) => {
+      if (o instanceof Mesh) o.geometry.dispose();
+    });
+  }
   private clear() {
     this.assets.traverse((o) => {
       if (o instanceof Mesh) o.geometry.dispose();
@@ -84,6 +152,7 @@ export class ServiceRenderer {
   }
   private rebuild() {
     this.clear();
+    this.installTree();
     const batches = new Map<string, BufferGeometry[]>();
     const treeMatrix = new Matrix4(),
       treeColor = new Color();
@@ -101,9 +170,11 @@ export class ServiceRenderer {
             treeColor.set(
               b.fire?.burning || b.state === 'burned'
                 ? FIRE_PALETTE.char
-                : i
-                  ? ROAD_PALETTE.tree_leaf
-                  : ROAD_PALETTE.tree_trunk,
+                : this.catalogTree
+                  ? BUILDING_PALETTE.RL.accents[0]
+                  : i
+                    ? ROAD_PALETTE.tree_leaf
+                    : ROAD_PALETTE.tree_trunk,
             ),
           );
         }
@@ -117,7 +188,19 @@ export class ServiceRenderer {
     }
     for (const b of this.buildings.values()) {
       const def = serviceDefinition(b.defId);
-      if (!def || b.defId === 'tree') continue;
+      if (!this.supports(b.defId) || b.defId === 'tree') continue;
+      const formal = this.catalog?.request(b, () => {
+        this.dirty = true;
+      });
+      if (formal) {
+        const placed = new Group();
+        placed.position.set(b.pos.x, this.height(b.pos.x, b.pos.z), b.pos.z);
+        placed.rotation.y = b.rotation;
+        placed.add(formal);
+        this.assets.add(placed);
+        continue;
+      }
+      if (!def) continue;
       const color =
         b.enabled === false
           ? SERVICE_PALETTE.power
@@ -267,7 +350,7 @@ export class ServiceRenderer {
     if (e.t === 'ready') {
       this.buildings = new Map(
         e.snapshot.buildings
-          .filter((b) => serviceDefinition(b.defId))
+          .filter((b) => this.supports(b.defId))
           .map((b) => [b.id, b]),
       );
       this.rebuild();
@@ -277,7 +360,7 @@ export class ServiceRenderer {
       for (const id of e.removed)
         changed = this.buildings.delete(id) || changed;
       for (const b of e.added)
-        if (serviceDefinition(b.defId)) {
+        if (this.supports(b.defId)) {
           this.buildings.set(b.id, b);
           changed = true;
         }
@@ -344,7 +427,7 @@ export class ServiceRenderer {
     this.clear();
     for (const mesh of this.plantedTrees) {
       mesh.geometry.dispose();
-      (mesh.material as MeshStandardMaterial).dispose();
+      if (!this.catalogTree) (mesh.material as MeshStandardMaterial).dispose();
       mesh.dispose();
     }
     this.preview.geometry.dispose();

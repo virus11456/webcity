@@ -1,3 +1,4 @@
+import { FacilityAssets } from './render/facilities/assets';
 import { CatalogAssets } from './render/buildings/catalogAssets';
 import { FollowCamera } from './render/followCamera';
 import { createFollowControls } from './ui/followControls';
@@ -65,6 +66,8 @@ declare global {
     __webcityStats?: () => ReturnType<SimClient['mirror']['readStats']>;
     __webcityBuildings?: () => ReturnType<SimClient['mirror']['readBuildings']>;
     __webcityProblemIcons?: () => ReturnType<ProblemIcons['readStats']>;
+    __webcityFacilityStats?: () => ReturnType<FacilityAssets['readStats']> &
+      ReturnType<PowerRenderer['readStats']>;
     __webcityBuildingStats?: () => ReturnType<BuildingRenderer['readStats']>;
     __webcityCamera?: RtsCamera;
     __webcityVehicles?: {
@@ -111,6 +114,7 @@ let unsubscribeInfo: (() => void) | undefined;
 let inspectTool: InspectTool | undefined;
 let inspectPanel: ReturnType<typeof createInspectPanel> | undefined;
 let inspectPreview: BulldozePreview | undefined;
+let facilityAssets: FacilityAssets | undefined;
 let serviceRenderer: ServiceRenderer | undefined;
 let serviceTool: ServiceTool | undefined;
 let serviceControls: ReturnType<typeof createServiceControls> | undefined;
@@ -207,6 +211,9 @@ if (canvas && status) {
         frameSeconds = seconds;
         if (city) {
           buildings?.setHour(city.dayNight.hour.value);
+          if (facilityAssets)
+            facilityAssets.hour.value = city.dayNight.hour.value;
+          serviceRenderer?.update();
           roadPreview?.roads.setNight(city.dayNight.night);
           vehicles?.setNight(city.dayNight.night);
         }
@@ -398,8 +405,15 @@ if (canvas && status) {
           roadControls?.updateBulldoze(state.active, state.pending);
         },
       );
-      powerRenderer = new PowerRenderer(city.scene, (x, z) =>
-        city!.terrain.heightAt(x, z),
+      facilityAssets = new FacilityAssets(
+        city.renderer,
+        (m, install) => city!.registerMaterial(m, install),
+        (m) => city!.unregisterMaterial(m),
+      );
+      powerRenderer = new PowerRenderer(
+        city.scene,
+        (x, z) => city!.terrain.heightAt(x, z),
+        facilityAssets,
       );
       powerRenderer.group.visible = false;
       const powerSnapshot = sim.mirror.readSnapshot();
@@ -433,8 +447,10 @@ if (canvas && status) {
       };
       placeTool = new PlaceTool(powerContext, powerChanged);
       networkTool = new NetworkTool(powerContext, powerChanged);
-      waterUtilities = new WaterUtilityRenderer(city.scene, (x, z) =>
-        city!.terrain.heightAt(x, z),
+      waterUtilities = new WaterUtilityRenderer(
+        city.scene,
+        (x, z) => city!.terrain.heightAt(x, z),
+        facilityAssets,
       );
       waterUtilities.group.visible = false;
       if (powerSnapshot)
@@ -456,8 +472,10 @@ if (canvas && status) {
           root.dataset.underground = String(underground);
         },
       );
-      serviceRenderer = new ServiceRenderer(city.scene, (x, z) =>
-        city!.terrain.heightAt(x, z),
+      serviceRenderer = new ServiceRenderer(
+        city.scene,
+        (x, z) => city!.terrain.heightAt(x, z),
+        facilityAssets,
       );
       serviceRenderer.group.visible = false;
       if (powerSnapshot)
@@ -723,6 +741,10 @@ if (canvas && status) {
       window.__webcityStats = () => sim!.mirror.readStats();
       window.__webcityBuildings = () => sim!.mirror.readBuildings();
       window.__webcityProblemIcons = () => problemIcons!.readStats();
+      window.__webcityFacilityStats = () => ({
+        ...facilityAssets!.readStats(),
+        ...powerRenderer!.readStats(),
+      });
       window.__webcityBuildingStats = () => buildings!.readStats();
       window.__webcityVegetation = () => city!.vegetation.readStats();
       window.__webcityRoadStats = () => roadPreview!.roads.readStats();
@@ -735,6 +757,7 @@ if (canvas && status) {
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
     delete window.__webcityProblemIcons;
+    delete window.__webcityFacilityStats;
     delete window.__webcityBuildingStats;
     delete window.__webcityBuildings;
     delete window.__webcityStats;
@@ -772,6 +795,7 @@ if (import.meta.hot)
     networkTool?.dispose();
     powerControls?.dispose();
     powerRenderer?.dispose();
+    facilityAssets?.dispose();
     bulldozeTool?.dispose();
     bulldozeControls?.dispose();
     bulldozePreview?.dispose();

@@ -1,3 +1,4 @@
+import type { FacilityAssets } from './facilities/assets';
 import {
   BoxGeometry,
   BufferGeometry,
@@ -70,6 +71,7 @@ export class WaterUtilityRenderer {
   constructor(
     scene: Scene,
     private height: (x: number, z: number) => number,
+    private catalog?: FacilityAssets,
   ) {
     this.group.add(this.pipes, this.preview);
     this.pipes.visible = false;
@@ -141,39 +143,47 @@ export class WaterUtilityRenderer {
         if (support > 0.3)
           this.cylinder(g, 0.7, support, x, -support / 2, z, this.concrete);
       }
-    this.box(g, width, 1, depth, 0, 0.5, depth / 2);
-    if (b.defId === 'water_tower') {
-      for (const x of [-4, 4])
-        for (const z of [4, 12]) this.cylinder(g, 0.6, 20, x, 11, z);
-      this.cylinder(g, 6, 8, 0, 25, 8, this.blue);
-      this.cylinder(g, 6.3, 0.6, 0, 29.3, 8);
-      this.cylinder(g, 0.8, 21, 0, 11, 8, this.blue);
-    } else if (b.defId === 'water_treatment') {
-      this.box(g, 10, 8, depth - 4, -9, 5, depth / 2);
-      for (const z of [8, 24]) {
-        this.cylinder(g, 6, 2, 7, 2, z);
-        this.cylinder(g, 5, 1, 7, 3, z, this.blue);
+    const formal = this.catalog?.request(b, () => {
+      if (this.assets.has(b.id)) this.plant(b);
+    });
+    if (formal) g.add(formal);
+    else {
+      this.box(g, width, 1, depth, 0, 0.5, depth / 2);
+      if (b.defId === 'water_tower') {
+        for (const x of [-4, 4])
+          for (const z of [4, 12]) this.cylinder(g, 0.6, 20, x, 11, z);
+        this.cylinder(g, 6, 8, 0, 25, 8, this.blue);
+        this.cylinder(g, 6.3, 0.6, 0, 29.3, 8);
+        this.cylinder(g, 0.8, 21, 0, 11, 8, this.blue);
+      } else if (b.defId === 'water_treatment') {
+        this.box(g, 10, 8, depth - 4, -9, 5, depth / 2);
+        for (const z of [8, 24]) {
+          this.cylinder(g, 6, 2, 7, 2, z);
+          this.cylinder(g, 5, 1, 7, 3, z, this.blue);
+        }
+      } else {
+        this.box(
+          g,
+          12,
+          b.defId === 'water_pump' ? 7 : 4,
+          10,
+          0,
+          b.defId === 'water_pump' ? 4.5 : 3,
+          9,
+        );
+        this.box(
+          g,
+          13,
+          0.7,
+          11,
+          0,
+          b.defId === 'water_pump' ? 8.4 : 5.4,
+          9,
+          this.blue,
+        );
       }
-    } else {
-      this.box(
-        g,
-        12,
-        b.defId === 'water_pump' ? 7 : 4,
-        10,
-        0,
-        b.defId === 'water_pump' ? 4.5 : 3,
-        9,
-      );
-      this.box(
-        g,
-        13,
-        0.7,
-        11,
-        0,
-        b.defId === 'water_pump' ? 8.4 : 5.4,
-        9,
-        this.blue,
-      );
+    }
+    if (b.defId === 'water_pump' || b.defId === 'water_drain') {
       // A visible intake/outlet reaches below the water, while the main footprint remains dry.
       const a = new Vector3(0, 2, 0),
         end = new Vector3(

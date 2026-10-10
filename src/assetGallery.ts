@@ -121,7 +121,7 @@ export function startAssetGallery(root: HTMLElement): void {
       model = replacement;
       scene.add(model);
       model.traverse((node) => {
-        if (/^LOD[12]$/.test(node.name)) node.visible = false;
+        if (/^(LOD|Rotor)[12]$/.test(node.name)) node.visible = false;
       });
       resetCamera();
       let triangles = 0,
