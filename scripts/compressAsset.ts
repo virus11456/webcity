@@ -8,15 +8,21 @@ import { fileURLToPath } from 'node:url';
 export async function compressAsset(
   input: string,
   output: string,
+  cliPath?: string,
 ): Promise<void> {
   if (!input.endsWith('.glb') || !output.endsWith('.glb'))
     throw new Error('Expected input.glb output.glb');
   if (resolve(input) === resolve(output))
     throw new Error('Keep the source GLB');
   const work = await mkdtemp(resolve(tmpdir(), 'webcity-asset-'));
-  const cli = fileURLToPath(
-    new URL('../node_modules/@gltf-transform/cli/bin/cli.js', import.meta.url),
-  );
+  const cli =
+    cliPath ??
+    fileURLToPath(
+      new URL(
+        '../node_modules/@gltf-transform/cli/bin/cli.js',
+        import.meta.url,
+      ),
+    );
   const run = (args: string[]) => {
     const result = spawnSync(process.execPath, [cli, ...args], {
       stdio: 'inherit',

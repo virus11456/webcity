@@ -1,5 +1,7 @@
 import {
   ACESFilmicToneMapping,
+  Box3,
+  Vector3,
   Color,
   DirectionalLight,
   HemisphereLight,
@@ -38,7 +40,9 @@ export function startAssetGallery(root: HTMLElement): void {
   reload.textContent = t('asset.reload');
   const reset = document.createElement('button');
   reset.textContent = t('asset.reset');
-  footer.append(status, reload, reset);
+  const select = document.createElement('select');
+  select.setAttribute('aria-label', t('asset.model'));
+  footer.append(select, status, reload, reset);
   root.append(header, canvas, footer);
   let renderer: WebGLRenderer;
   try {
@@ -58,11 +62,27 @@ export function startAssetGallery(root: HTMLElement): void {
   controls.maxDistance = 80;
   controls.maxPolarAngle = Math.PI * 0.48;
   const resetCamera = () => {
+    if (model) {
+      const box = new Box3().setFromObject(model),
+        center = box.getCenter(new Vector3()),
+        size = box.getSize(new Vector3()).length();
+      const vertical = (camera.fov * Math.PI) / 360,
+        horizontal = Math.atan(Math.tan(vertical) * camera.aspect),
+        distance = (size * 0.55) / Math.sin(Math.min(vertical, horizontal));
+      controls.target.copy(center);
+      camera.position
+        .copy(center)
+        .add(new Vector3(0.9, 0.7, 1).normalize().multiplyScalar(distance));
+      camera.far = Math.max(200, size * 10);
+      controls.maxDistance = Math.max(80, size * 5);
+      camera.updateProjectionMatrix();
+      controls.update();
+      return;
+    }
     camera.position.set(23, 20, 26);
     controls.target.set(0, 3, -8);
     controls.update();
   };
-  resetCamera();
   reset.onclick = resetCamera;
   const sun = new DirectionalLight(LIGHT_PALETTE.sun, LIGHTING.sunIntensity);
   sun.position.set(-30, 50, 35);
@@ -77,20 +97,37 @@ export function startAssetGallery(root: HTMLElement): void {
   const library = new AssetLibrary(renderer);
   let model: Object3D | undefined;
   let disposed = false;
+  let selected =
+    new URLSearchParams(location.search).get('model') ?? 'bld_rl_l2_2x2_sample';
+  resetCamera();
   const load = async () => {
-    reload.disabled = true;
+    reload.disabled = select.disabled = true;
     canvas.dataset.ready = 'false';
     status.textContent = t('asset.loading');
     try {
-      const replacement = await library.load('bld_rl_l2_2x2_sample');
+      if (!select.options.length) {
+        const entries = await library.list();
+        for (const entry of entries) {
+          const option = document.createElement('option');
+          option.value = entry.id;
+          option.textContent = entry.id;
+          select.append(option);
+        }
+        select.value = selected;
+      }
+      const replacement = await library.load(selected);
       if (disposed) return;
       model?.removeFromParent();
       model = replacement;
       scene.add(model);
+      model.traverse((node) => {
+        if (/^LOD[12]$/.test(node.name)) node.visible = false;
+      });
+      resetCamera();
       let triangles = 0,
         textures = 0;
       model.traverse((node) => {
-        if (!(node instanceof Mesh)) return;
+        if (!(node instanceof Mesh) || !node.visible) return;
         triangles +=
           (node.geometry.index?.count ??
             node.geometry.getAttribute('position').count) / 3;
@@ -99,6 +136,7 @@ export function startAssetGallery(root: HTMLElement): void {
           : [node.material])
           if ('map' in mat && mat.map) textures++;
       });
+      canvas.dataset.model = selected;
       canvas.dataset.triangles = String(triangles);
       canvas.dataset.textures = String(textures);
       canvas.dataset.ready = 'true';
@@ -106,8 +144,12 @@ export function startAssetGallery(root: HTMLElement): void {
     } catch {
       if (!disposed) status.textContent = t('asset.failed');
     } finally {
-      if (!disposed) reload.disabled = false;
+      if (!disposed) reload.disabled = select.disabled = false;
     }
+  };
+  select.onchange = () => {
+    selected = select.value;
+    void load();
   };
   reload.onclick = () => {
     void load();

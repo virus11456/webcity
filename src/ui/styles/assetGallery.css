@@ -29,6 +29,7 @@
   min-height: 0;
   touch-action: none;
 }
+.asset-gallery select,
 .asset-gallery button,
 .asset-gallery a {
   min-width: 44px;
@@ -45,4 +46,8 @@
   .asset-gallery footer {
     padding-block: 4px;
   }
+}
+
+.asset-gallery select {
+  max-width: min(100%, 280px);
 }
