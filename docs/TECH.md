@@ -601,3 +601,7 @@ render/FollowCamera 只讀 VehicleRenderer 的重用座標輸出；RtsCamera 追
 
 ### M3-01 素材管線
 `render/assets.ts` 是 scene-scoped GLTFLoader / MeshoptDecoder / KTX2Loader 管理器；Promise 去重、失敗重試、共享 GPU 資源統一釋放。`core/assetManifest.ts` 驗證內容雜湊路徑及授權 metadata；decoder 在本站預快取，模型使用既有 media CacheFirst。工具依賴只加入 devDependencies，正常 build 不需 KTX CLI。詳見 `ASSET_PIPELINE.md`。
+
+
+### M3-02 地形細節
+`world/terrainDetail.ts` 產生確定性週期 RGBA 灰階細節，render 封裝 mipmapped DataTexture。TerrainRenderer 以 world-space 三平面投影組合既有 lighting hook／資訊圖層，所有 Chunk 共用一張貼圖與中央差分法線。詳見 `TERRAIN_DETAIL.md`。

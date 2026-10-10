@@ -17,8 +17,13 @@ import {
   WORLD,
 } from '../../data/config';
 import { ENVIRONMENT_PALETTE, PWA_PALETTE } from '../../data/palette';
-import { TERRAIN } from '../../data/terrain';
+import { TERRAIN, TERRAIN_DETAIL as D } from '../../data/terrain';
 import type { Terrain } from '../../world/terrain';
+
+import {
+  createTerrainDetailTexture,
+  TERRAIN_DETAIL_GLSL,
+} from './detailTexture';
 
 /** 64-cell terrain chunks with a shared lit terrain shader and per-chunk frustum culling. */
 export class TerrainRenderer {
@@ -26,6 +31,7 @@ export class TerrainRenderer {
   readonly material = new MeshStandardMaterial({
     roughness: 1,
   });
+  private readonly detail = createTerrainDetailTexture();
   private readonly geometries: BufferGeometry[] = [];
   private readonly boundaryMaterial = new LineBasicMaterial({
     color: PWA_PALETTE.skyline,
@@ -62,7 +68,7 @@ export class TerrainRenderer {
           new Float32BufferAttribute(positions, 3),
         );
         geometry.setIndex(indices);
-        geometry.computeVertexNormals();
+        this.updateNormals(geometry, x0, z0);
         geometry.computeBoundingSphere();
         this.geometries.push(geometry);
         const mesh = new Mesh(geometry, this.material);
@@ -121,17 +127,43 @@ export class TerrainRenderer {
           changed = true;
         }
       }
+      this.updateNormals(geometry, child.position.x, child.position.z);
       if (changed) {
         position.needsUpdate = true;
-        geometry.computeVertexNormals();
         geometry.computeBoundingSphere();
       }
     }
+  }
+  private updateNormals(
+    geometry: BufferGeometry,
+    x0: number,
+    z0: number,
+  ): void {
+    const positions = geometry.getAttribute('position');
+    let normals = geometry.getAttribute('normal');
+    if (!normals) {
+      normals = new Float32BufferAttribute(positions.count * 3, 3);
+      geometry.setAttribute('normal', normals);
+    }
+    const step = WORLD.heightmapSpacingM;
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i) + x0,
+        z = positions.getZ(i) + z0;
+      const nx =
+        this.terrain.heightAt(x - step, z) - this.terrain.heightAt(x + step, z);
+      const nz =
+        this.terrain.heightAt(x, z - step) - this.terrain.heightAt(x, z + step);
+      const ny = step * 2,
+        length = Math.hypot(nx, ny, nz);
+      normals.setXYZ(i, nx / length, ny / length, nz / length);
+    }
+    normals.needsUpdate = true;
   }
   /** Compose terrain shading after the optional CSM hook, preserving Three lighting and fog. */
   installShader(lightingHook?: Material['onBeforeCompile']): void {
     this.material.onBeforeCompile = (shader, renderer) => {
       lightingHook?.call(this.material, shader, renderer);
+      shader.uniforms.terrainDetail = { value: this.detail };
       for (const [name, color] of Object.entries(ENVIRONMENT_PALETTE))
         shader.uniforms[`terrain_${name}`] = { value: new Color(color) };
       shader.vertexShader =
@@ -144,6 +176,7 @@ export class TerrainRenderer {
       shader.fragmentShader = `
         varying vec3 terrainPosition;
         varying vec3 terrainNormal;
+        ${TERRAIN_DETAIL_GLSL}
         uniform vec3 terrain_grass;
         uniform vec3 terrain_grass_dry;
         uniform vec3 terrain_dirt;
@@ -154,17 +187,19 @@ export class TerrainRenderer {
         `
           #include <color_fragment>
           float terrainSlope = length(terrainNormal.xz) / max(terrainNormal.y, 0.001);
+          float detailFade = 1.0 - smoothstep(${D.nearFadeM.toFixed(1)}, ${D.farFadeM.toFixed(1)}, distance(cameraPosition, terrainPosition));
+          vec4 detail = mix(vec4(1.0), vec4(1.0) + (terrainSurfaceDetail(terrainPosition, terrainNormal) - 0.5) * ${D.contrast.toFixed(2)}, detailFade);
           vec3 terrainColor = mix(terrain_grass, terrain_grass_dry,
-            clamp((terrainPosition.y - ${TERRAIN.dryHeight.toFixed(1)}) / 150.0, 0.0, 1.0));
-          terrainColor = mix(terrainColor, terrain_dirt,
+            clamp((terrainPosition.y - ${TERRAIN.dryHeight.toFixed(1)}) / 150.0, 0.0, 1.0)) * detail.r;
+          terrainColor = mix(terrainColor, terrain_dirt * detail.g,
             smoothstep(${TERRAIN.dirtSlope}, ${TERRAIN.rockSlope}, terrainSlope));
-          terrainColor = mix(terrainColor, terrain_rock,
+          terrainColor = mix(terrainColor, terrain_rock * detail.b,
             smoothstep(${TERRAIN.rockSlope}, ${TERRAIN.rockSlope + 0.12}, terrainSlope));
-          terrainColor = mix(terrain_sand, terrainColor,
+          terrainColor = mix(terrain_sand * detail.a, terrainColor,
             smoothstep(${(SEA_LEVEL + TERRAIN.shoreHeight - 1).toFixed(1)},
               ${(SEA_LEVEL + TERRAIN.shoreHeight + 1).toFixed(1)}, terrainPosition.y));
-          float terrainNoise = sin(terrainPosition.x / 32.0 + cos(terrainPosition.z / 32.0)) * 0.035
-            + sin(terrainPosition.x / 256.0) * cos(terrainPosition.z / 256.0) * 0.065;
+          float terrainNoise = terrainVariation(terrainPosition.xz / ${D.variationSmallM.toFixed(1)}) * ${D.variationSmall.toFixed(2)}
+            + terrainVariation(terrainPosition.xz / ${D.variationLargeM.toFixed(1)}) * ${D.variationLarge.toFixed(2)};
           terrainColor *= 1.0 + terrainNoise;
           if (max(abs(terrainPosition.x), abs(terrainPosition.z)) > ${(TILE_SIZE / 2).toFixed(1)}) {
             float luma = dot(terrainColor, vec3(0.2126, 0.7152, 0.0722));
@@ -174,12 +209,13 @@ export class TerrainRenderer {
         `,
       );
     };
-    this.material.customProgramCacheKey = () => 'webcity-terrain-v1';
+    this.material.customProgramCacheKey = () => 'webcity-terrain-detail-v2';
     this.material.needsUpdate = true;
   }
   /** Release chunk buffers and shared materials. */
   dispose(): void {
     for (const geometry of this.geometries) geometry.dispose();
+    this.detail.dispose();
     this.material.dispose();
     this.boundaryMaterial.dispose();
     this.group.clear();
