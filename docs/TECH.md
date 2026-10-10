@@ -511,3 +511,7 @@ M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/st
 ### M2-01 曲線道路
 
 道路與控制點沿用現有 RoadDraft／RoadSegment。`world/roadCurves.ts` 負責形狀、投影、交叉與精確分段，RoadGraph 與工具共用；Worker 改為接受有限地面三次貝茲載荷，並以同一份幾何驗證重新計價。無新增 runtime 依賴或存檔版本。操作及容差見 `CURVED_ROADS.md`。
+
+### M2-02 道路車道
+
+`world/roadLanes.ts` 從路段推導 Lane，與道路 Mesh 共用橫斷面；車道屬可重建資料，不新增存檔權威。路樹使用單一 InstancedMesh，重建時釋放舊 GPU 資源。詳見 `ROAD_TYPES.md`。

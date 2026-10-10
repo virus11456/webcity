@@ -28,6 +28,8 @@ export const ROAD_PALETTE = {
   curb: '#9A968E',
   gravel: '#9C9078',
   median_grass: '#6E9A45',
+  tree_leaf: '#47783D',
+  tree_trunk: '#72553C',
 } as const;
 export const ZONE_PALETTE = {
   RL: {

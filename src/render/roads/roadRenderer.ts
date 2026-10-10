@@ -1,3 +1,4 @@
+import { roadTrees } from './trees';
 import {
   BufferGeometry,
   DoubleSide,
@@ -30,6 +31,7 @@ export class RoadRenderer {
     roughness: 0.95,
     side: DoubleSide,
   });
+  private trees: ReturnType<typeof roadTrees> = null;
   private cache = new Map<string, Cached>();
   private job: Generator<void> | undefined;
   private batches = new Map<number, { key: string; mesh: Mesh }>();
@@ -58,9 +60,15 @@ export class RoadRenderer {
     } while (performance.now() - start < C.rebuildBudgetMs);
   }
   /** Diagnostic counts expose actual batches rather than guessing from segment count. */
-  readStats(): { batches: number; pending: boolean; generation: number } {
+  readStats(): {
+    batches: number;
+    pending: boolean;
+    generation: number;
+    trees: number;
+  } {
     return {
       batches: this.batches.size,
+      trees: this.trees?.count ?? 0,
       pending: Boolean(this.job),
       generation: this.generation,
     };
@@ -192,6 +200,15 @@ export class RoadRenderer {
       }
     for (const [id, batch] of replacement)
       if (this.batches.get(id) !== batch) this.group.add(batch.mesh);
+    if (this.trees) {
+      this.group.remove(this.trees);
+      this.trees.geometry.dispose();
+      const m = this.trees.material;
+      if (Array.isArray(m)) m.forEach((v) => v.dispose());
+      else m.dispose();
+    }
+    this.trees = roadTrees(arms);
+    if (this.trees) this.group.add(this.trees);
     this.batches = replacement;
     this.pending.clear();
     for (const id of this.cache.keys())
@@ -204,6 +221,13 @@ export class RoadRenderer {
     for (const b of this.batches.values()) b.mesh.geometry.dispose();
     this.batches.clear();
     this.cache.clear();
+    if (this.trees) {
+      this.trees.geometry.dispose();
+      const m = this.trees.material;
+      if (Array.isArray(m)) m.forEach((v) => v.dispose());
+      else m.dispose();
+      this.trees = null;
+    }
     this.material.dispose();
     this.group.clear();
   }
