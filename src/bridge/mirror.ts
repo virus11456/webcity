@@ -27,6 +27,11 @@ export class WorldMirror {
     return this.state && Object.freeze({ ...this.state.clock });
   }
 
+  /** Read city identity without cloning terrain or other world arrays. */
+  get cityName(): string | undefined {
+    return this.state?.settings.cityName;
+  }
+
   get gameOver(): boolean {
     return this.state?.economy.status === 'gameOver';
   }

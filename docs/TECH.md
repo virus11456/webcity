@@ -496,3 +496,6 @@ M1-17：`problemSinceTick`／`abandonedAtTick` 是 Building 的 optional 絕對�
 
 
 M1-18：`WorldSnapshot.economy` 保存已結算週與破產連續週狀態，`economy` 事件／`readFinance()` 同步小型財政資料。Worker 於 onWeek 結算，所有既有付費建造統一 `chargeConstruction`，四種財政命令完成驗證與回覆；稅率／預算不由 UI 直接寫入。原型操作使用現有 DOM 控制模式，共用 UI 仍待 M1-19／M1-23。詳見 `ECONOMY.md`。
+
+
+M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/store.ts` 提供每座城市獨立的統計／時鐘 signals。鏡像 cityName getter 只讀字串，時鐘事件不複製 stats；資金事件即時刷新 HUD，速度仍須 Worker 確認。手機摘要與 BottomSheet、版面避讓和驗證約定見 `TOPBAR.md`。

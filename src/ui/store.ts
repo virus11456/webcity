@@ -1,4 +1,6 @@
 import { signal } from '@preact/signals';
+import type { CityStats } from '../world/types';
+import type { SimClock } from '../world/snapshot';
 export type Layout =
   'desktop' | 'tablet' | 'phone-portrait' | 'phone-landscape';
 export const layout = signal<Layout>('phone-portrait');
@@ -44,5 +46,16 @@ export function observeLayout(): () => void {
       detach?.();
       detach = undefined;
     }
+  };
+}
+
+/** Each mounted city owns its HUD signals; no state leaks into a later city. */
+export function createCityHudState() {
+  return {
+    stats: signal<CityStats | undefined>(undefined),
+    clock: signal<Readonly<SimClock> | undefined>(undefined),
+    cityName: signal(''),
+    failed: signal(false),
+    gameOver: signal(false),
   };
 }

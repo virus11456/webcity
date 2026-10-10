@@ -1,4 +1,18 @@
 export const ZH_TW = {
+  'hud.population': '人口',
+  'hud.money': '資金',
+  'hud.weekly': '上週收支',
+  'hud.migration': '今日淨移入',
+  'hud.happiness': '幸福度',
+  'hud.demand': '分區需求',
+  'hud.demandR': '住宅需求',
+  'hud.demandC': '商業需求',
+  'hud.demandI': '工業需求',
+  'hud.demandO': '辦公需求',
+  'hud.expand': '展開城市詳細資訊',
+  'hud.details': '詳情',
+  'hud.weeklyHint': '收支顯示上週已結算的收入減支出；需求於每天結算後更新。',
+
   'ui.close': '關閉面板',
   'ui.dismissToast': '關閉通知',
   'ui.galleryEyebrow': 'WebCity · M1-19',

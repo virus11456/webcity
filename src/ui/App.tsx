@@ -18,19 +18,6 @@ export function App({
         aria-describedby="input-help"
       />
       <p className="render-status" role="status" hidden />
-      <header className="city-header">
-        <div className="brand-mark" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-          <i />
-        </div>
-        <div>
-          <h1>{t('app.name')}</h1>
-          <span>{t('city.name')}</span>
-        </div>
-        <span className="preview-badge">{t('city.preview')}</span>
-      </header>
       <nav className="view-nav" aria-label={t('city.views')}>
         <button onClick={() => onViewChange('center')}>
           <span aria-hidden="true">▥</span>
