@@ -27,6 +27,7 @@ export const ROAD_PALETTE = {
   sidewalk: '#B8B3AA',
   curb: '#9A968E',
   gravel: '#9C9078',
+  concrete: '#B5B2AA',
   median_grass: '#6E9A45',
   tree_leaf: '#47783D',
   tree_trunk: '#72553C',

@@ -519,3 +519,7 @@ M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/st
 ### M2-03 道路升級
 
 `world/roadUpgrade.ts` 共用報價、命中與拆除範圍；`upgradeRoad` 指令由 Worker 重新報價，保留路段 ID，透過 roads/zones/buildings/funds 事件同步。`RoadSegment.zoningReversed?` 保留實體分區方向並傳給切割子路段；`Building.frontageSetbackM?` 保存縮窄後退縮距離。兩個欄位為可選，舊 v1 存檔可直接載入，讀檔檢查型別與範圍。操作與退款政策見 `ROAD_UPGRADE.md`。
+
+### M2-04 高架與橋樑
+
+`RoadDraft.startHeight/endHeight` 為可選海拔；明確高架草稿必須包含兩端高度。`roadGeometry` 共用垂直吸附、全寬地形驗證、曲線坡度與立體交叉淨高檢查。建造命令傳遞 `elevated` 到 RoadGraph，沿用既有分層拓撲與 earthworks 排除高架的邏輯。`render/roads/structures.ts` 生成混凝土橋面與橋墩，併入原有批次快取；下方道路變動會重建相關橋墩。規則見 `BRIDGES.md`。

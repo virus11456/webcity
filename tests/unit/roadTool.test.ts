@@ -302,3 +302,32 @@ describe('road upgrade gestures', () => {
     expect(tool.readState().pending).toBe(false);
   });
 });
+describe('road elevation controls', () => {
+  it('keeps the first height while changing the far end and carries the built endpoint forward', async () => {
+    const { tool, tap, transport, respond } = setup();
+    tool.setElevation(6);
+    tap(-160, -80);
+    tool.setElevation(12);
+    tap(-80, -80);
+    expect(tool.readState().preview?.preview?.cost).toBe(600);
+    tool.onConfirm();
+    expect(transport.sent[0]).toMatchObject({
+      t: 'buildRoad',
+      points: { elevated: true, startHeight: 66, endHeight: 72 },
+    });
+    await respond();
+    tool.setElevation(6);
+    tap(0, -80);
+    tool.onConfirm();
+    expect(transport.sent[1]).toMatchObject({
+      t: 'buildRoad',
+      points: { elevated: true, startHeight: 72, endHeight: 66 },
+    });
+    await respond();
+    tool.onCancel();
+    tool.setElevation(100);
+    expect(tool.readState().elevation).toBe(30);
+    tool.setElevation(-5);
+    expect(tool.readState().elevation).toBe(0);
+  });
+});

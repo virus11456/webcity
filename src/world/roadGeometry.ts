@@ -1,5 +1,6 @@
 import {
   curveSamples,
+  curveIntersections,
   curveLength,
   curveTangent,
   projectCurve,
@@ -32,6 +33,8 @@ export type RoadBuildReason =
   | 'err.landNotOwned'
   | 'err.roadInWater'
   | 'err.slopeTooSteep'
+  | 'err.elevationTooHigh'
+  | 'err.roadClearance'
   | 'err.buildingConflict'
   | 'err.roadOverlap'
   | 'err.angleTooSmall';
@@ -58,6 +61,8 @@ export interface StraightRoadRequest {
   c1?: Vec2;
   c2?: Vec2;
   snap?: RoadSnapOptions;
+  startHeight?: number;
+  endHeight?: number;
 }
 export interface RoadPreview {
   draft: RoadDraft;
@@ -82,15 +87,16 @@ const inMap = (p: Vec2) =>
 const height = (world: RoadGeometryWorld, p: Vec2) =>
   meshHeightAt(world.heights, p.x, p.z);
 
-/** Snap to the nearest ground node, then ground segment, strictly within 8 m; ties use ID. */
+/** Snap on the selected vertical layer, nodes before segments, within 8 m; ties use ID. */
 export function snapRoadPoint(
   point: Vec2,
   world: RoadGeometryWorld,
   enabled: boolean | 'exact' = true,
+  targetHeight?: number,
 ): RoadSnap {
   const free: RoadSnap = {
     pos: { ...point },
-    height: height(world, point),
+    height: targetHeight ?? height(world, point),
     kind: 'none',
   };
   if (!enabled) return free;
@@ -99,13 +105,14 @@ export function snapRoadPoint(
     enabled === 'exact' ? EPS.positionM : ROAD_RULES.nodeSnapDistanceM;
   for (const node of [...world.nodes].sort((a, b) => a.id - b.id)) {
     const d = distance(point, node.pos);
-    // This MVP only connects ground roads; bridge picking belongs to M2-04.
+    // Match explicit deck elevation; default placement selects the ground layer.
     if (
       d < nearest &&
-      (world.segments.some(
-        (s) => !s.elevated && (s.start === node.id || s.end === node.id),
-      ) ||
-        Math.abs(node.height - height(world, node.pos)) <= EPS.heightM)
+      (targetHeight !== undefined
+        ? Math.abs(node.height - targetHeight) <= ROAD_RULES.elevationSnapM
+        : world.segments.some(
+            (s) => !s.elevated && (s.start === node.id || s.end === node.id),
+          ) || Math.abs(node.height - height(world, node.pos)) <= EPS.heightM)
     ) {
       nearest = d;
       best = {
@@ -119,10 +126,16 @@ export function snapRoadPoint(
   if (best) return best;
   const nodes = new Map(world.nodes.map((node) => [node.id, node]));
   for (const segment of [...world.segments].sort((a, b) => a.id - b.id)) {
-    if (segment.elevated) continue;
+    if (segment.elevated && targetHeight === undefined) continue;
     const a = nodes.get(segment.start)!,
       b = nodes.get(segment.end)!;
     const hit = projectCurve(point, [a.pos, segment.c1, segment.c2, b.pos]);
+    const deck = a.height * (1 - hit.t) + b.height * hit.t;
+    if (
+      targetHeight !== undefined &&
+      Math.abs(deck - targetHeight) > ROAD_RULES.elevationSnapM
+    )
+      continue;
     if (hit.distance < nearest) {
       nearest = hit.distance;
       best = {
@@ -159,12 +172,18 @@ export function snapRoadVector(
   };
 }
 
-/** Ground-road cost is proportional to planar metres, rounded up once to whole currency. */
-export function roadConstructionCost(type: RoadTypeId, length: number): number {
+/** Cost uses planar metres and the bridge multiplier, rounded up once to whole currency. */
+export function roadConstructionCost(
+  type: RoadTypeId,
+  length: number,
+  elevated = false,
+): number {
   return Math.ceil(
     Math.max(
       0,
-      (length / CELL_SIZE) * ROADS[type].costPer8M -
+      (length / CELL_SIZE) *
+        ROADS[type].costPer8M *
+        (elevated ? ROAD_RULES.elevatedCostMultiplier : 1) -
         ROAD_GEOMETRY_PRECISION.currency,
     ),
   );
@@ -306,13 +325,22 @@ function terrainProfile(
   world: RoadGeometryWorld,
   ux: number,
   uz: number,
-): { minHeight: number; slope: number; valid: boolean } {
+  deckAt?: (p: Vec2) => number,
+): {
+  minHeight: number;
+  slope: number;
+  valid: boolean;
+  minClearance: number;
+  maxElevation: number;
+} {
   const box = bounds(footprint),
     spacing = WORLD.heightmapSpacingM,
     size = WORLD.heightmapVertices;
   const index = (v: number) =>
     Math.max(0, Math.min(size - 2, Math.floor((v + MAP_SIZE / 2) / spacing)));
   let minHeight = Infinity,
+    minClearance = Infinity,
+    maxElevation = -Infinity,
     slope = 0;
   for (let j = index(box.minZ); j <= index(box.maxZ); j++) {
     const row = clip(
@@ -331,7 +359,7 @@ function terrainProfile(
         c = world.heights[k + size]!,
         d = world.heights[k + size + 1]!;
       if (![a, b, c, d].every(Number.isFinite))
-        return { minHeight, slope, valid: false };
+        return { minHeight, slope, minClearance, maxElevation, valid: false };
       const triangles = [
         {
           polygon: [
@@ -362,20 +390,32 @@ function terrainProfile(
         const intersection = clip(footprint, triangle.polygon);
         if (area(intersection) <= EPS.positionM ** 2) continue;
         slope = Math.max(slope, Math.abs(triangle.gx * ux + triangle.gz * uz));
-        for (const p of intersection)
-          minHeight = Math.min(
-            minHeight,
+        for (const p of intersection) {
+          const h =
             triangle.h +
-              triangle.gx * (p.x - triangle.x) +
-              triangle.gz * (p.z - triangle.z),
-          );
+            triangle.gx * (p.x - triangle.x) +
+            triangle.gz * (p.z - triangle.z);
+          minHeight = Math.min(minHeight, h);
+          if (deckAt) {
+            const deck = deckAt(p);
+            minClearance = Math.min(minClearance, deck - h);
+            // Ground datum, including riverbed, bounds structural height conservatively.
+            maxElevation = Math.max(maxElevation, deck - h);
+          }
+        }
       }
     }
   }
-  return { minHeight, slope, valid: Number.isFinite(minHeight) };
+  return {
+    minHeight,
+    slope,
+    minClearance,
+    maxElevation,
+    valid: Number.isFinite(minHeight),
+  };
 }
 
-/** Shared ground-road cubic preview; omitted controls retain straight-road snapping. */
+/** Shared cubic preview, terrain and deck validation; omitted controls retain straight snapping. */
 export function previewStraightRoad(
   request: StraightRoadRequest,
   world: RoadGeometryWorld,
@@ -385,6 +425,9 @@ export function previewStraightRoad(
     preview: RoadPreview | null = null,
   ): RoadPreviewResult => ({ canBuild: false, reason, preview });
   if (
+    (request.startHeight !== undefined &&
+      !Number.isFinite(request.startHeight)) ||
+    (request.endHeight !== undefined && !Number.isFinite(request.endHeight)) ||
     !finitePoint(request.start) ||
     !finitePoint(request.end) ||
     !Object.hasOwn(ROADS, request.type) ||
@@ -397,11 +440,13 @@ export function previewStraightRoad(
     request.start,
     world,
     request.snap?.connections ?? true,
+    request.startHeight,
   );
   let end = snapRoadPoint(
     request.end,
     world,
     request.snap?.connections ?? true,
+    request.endHeight,
   );
   // An exact connection wins over angle/length rounding; never round a T junction off its road.
   if (end.kind === 'none' && !request.c1) {
@@ -411,7 +456,12 @@ export function previewStraightRoad(
       roadReferenceAngle(start, request.end, world),
       request.snap,
     );
-    end = snapRoadPoint(pos, world, request.snap?.connections ?? true);
+    end = snapRoadPoint(
+      pos,
+      world,
+      request.snap?.connections ?? true,
+      request.endHeight,
+    );
   }
   // Ground roads follow the sampled surface, including the interior of existing roads.
   const curve: Cubic = [
@@ -486,9 +536,92 @@ export function previewStraightRoad(
     slope: Math.max(...profiles.map((p) => p.slope)),
   };
   if (!profile.valid) return reject('err.invalidCommand', preview);
-  preview.slope = Math.max(preview.slope, profile.slope);
-  if (profile.minHeight < SEA_LEVEL - EPS.heightM)
+  if (
+    start.height <
+      height(world, start.pos) - ROAD_RULES.terrainClearanceToleranceM ||
+    end.height < height(world, end.pos) - ROAD_RULES.terrainClearanceToleranceM
+  )
+    return reject('err.roadClearance', preview);
+  const water = profile.minHeight < SEA_LEVEL - EPS.heightM;
+  const raised =
+    start.height >
+      height(world, start.pos) + ROAD_RULES.terrainClearanceToleranceM ||
+    end.height > height(world, end.pos) + ROAD_RULES.terrainClearanceToleranceM;
+  const elevated = raised || water;
+  if (
+    water &&
+    Math.min(start.height, end.height) <= SEA_LEVEL + ROAD_RULES.deckDepthM
+  )
     return reject('err.roadInWater', preview);
+  preview.draft.elevated = elevated;
+  if (elevated) {
+    preview.draft.startHeight = start.height;
+    preview.draft.endHeight = end.height;
+    preview.cost = roadConstructionCost(request.type, length, true);
+    const dense = curveSamples(curve);
+    for (let i = 1; i < dense.length; i++) {
+      const a = dense[i - 1]!,
+        b = dense[i]!,
+        l = distance(a.point, b.point);
+      if (l > EPS.positionM)
+        preview.slope = Math.max(
+          preview.slope,
+          Math.abs((end.height - start.height) * (b.t - a.t)) / l,
+        );
+    }
+    for (let i = 1; i < dense.length; i++) {
+      const a = dense[i - 1]!,
+        b = dense[i]!,
+        l = distance(a.point, b.point);
+      if (l <= EPS.positionM) continue;
+      const ux = (b.point.x - a.point.x) / l,
+        uz = (b.point.z - a.point.z) / l;
+      const offset = (p: Vec2, side: number) => ({
+        x: p.x - uz * halfWidth * side,
+        z: p.z + ux * halfWidth * side,
+      });
+      const polygon = [
+        offset(a.point, -1),
+        offset(b.point, -1),
+        offset(b.point, 1),
+        offset(a.point, 1),
+      ];
+      const profile = terrainProfile(polygon, world, ux, uz, (p) => {
+        const t =
+          a.t +
+          (b.t - a.t) *
+            Math.max(
+              0,
+              Math.min(
+                1,
+                ((p.x - a.point.x) * ux + (p.z - a.point.z) * uz) / l,
+              ),
+            );
+        return start.height + (end.height - start.height) * t;
+      });
+      if (!profile.valid) return reject('err.invalidCommand', preview);
+      if (profile.maxElevation > ROAD_RULES.maxElevationM + EPS.heightM)
+        return reject('err.elevationTooHigh', preview);
+      if (profile.minClearance < -ROAD_RULES.terrainClearanceToleranceM)
+        return reject('err.roadClearance', preview);
+    }
+  } else preview.slope = Math.max(preview.slope, profile.slope);
+  const nodes = new Map(world.nodes.map((n) => [n.id, n]));
+  for (const s of world.segments) {
+    if (!elevated && !s.elevated) continue;
+    const a = nodes.get(s.start)!,
+      b = nodes.get(s.end)!;
+    for (const hit of curveIntersections(curve, [a.pos, s.c1, s.c2, b.pos])) {
+      const gap = Math.abs(
+        start.height +
+          (end.height - start.height) * hit.t -
+          a.height -
+          (b.height - a.height) * hit.u,
+      );
+      if (gap > EPS.heightM && gap < ROAD_RULES.bridgeClearanceM)
+        return reject('err.roadClearance', preview);
+    }
+  }
   const maxSlope =
     request.type === 'highway' || request.type === 'highway_ramp'
       ? ROAD_RULES.highwayMaxSlope
@@ -513,6 +646,7 @@ export function previewStraightRoad(
         endHeight: end.height,
         type: request.type,
         builtDay: 0,
+        elevated,
       },
       (point) =>
         roadHeightAt(world.nodes, world.segments, world.heights, point),

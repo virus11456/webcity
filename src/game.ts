@@ -436,6 +436,7 @@ if (canvas && status) {
         type: (type) => roadTool!.setType(type),
         mode: (mode) => roadTool!.setMode(mode),
         angle: (enabled) => roadTool!.setAngleSnap(enabled),
+        elevation: (value) => roadTool!.setElevation(value),
       });
       powerControls = createPowerControls(roadControls.powerHost, {
         plant(id) {

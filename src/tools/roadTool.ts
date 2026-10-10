@@ -3,7 +3,8 @@ import { distance, lerp, normalize } from '../core/math';
 import { ROAD_CURVES } from '../data/roadCurves';
 import { buildingsChangeFootprints } from '../bridge/buildingChanges';
 import type { FailureReason } from '../bridge/protocol';
-import { ROADS, type RoadTypeId } from '../data/roads';
+import { meshHeightAt } from '../world/heightField';
+import { ROAD_RULES, ROADS, type RoadTypeId } from '../data/roads';
 import {
   previewStraightRoad,
   snapRoadPoint,
@@ -25,6 +26,7 @@ export interface RoadToolState {
   pending: boolean;
   phase: 'start' | 'control' | 'end' | 'confirm';
   mode: RoadMode;
+  elevation: number;
   upgradeCount: number;
   demolitions: number;
   type: RoadTypeId;
@@ -40,6 +42,7 @@ export class RoadTool implements Tool {
   readonly id = 'road';
   private world: RoadConstructionWorld | undefined;
   private anchor: Vec2 | null = null;
+  private anchorHeight: number | undefined;
   private end: Vec2 | null = null;
   private control: Vec2 | null = null;
   private stroke: Vec2[] = [];
@@ -55,6 +58,7 @@ export class RoadTool implements Tool {
     pending: false,
     phase: 'start',
     mode: 'straight',
+    elevation: 0,
     upgradeCount: 0,
     demolitions: 0,
     type: 'road_small',
@@ -160,6 +164,11 @@ export class RoadTool implements Tool {
                 start: this.anchor,
                 end: this.end,
                 ...this.handles(),
+                startHeight: this.anchorHeight,
+                endHeight:
+                  this.state.elevation > 0
+                    ? this.heightAt(this.end)
+                    : undefined,
                 snap: { angle: this.state.angleSnap && !this.shift },
               },
               this.world,
@@ -194,6 +203,27 @@ export class RoadTool implements Tool {
       };
     }
     return {};
+  }
+  private heightAt(p: Vec2): number {
+    return meshHeightAt(this.world!.heights, p.x, p.z) + this.state.elevation;
+  }
+  setElevation(value: number): void {
+    if (this.state.pending || !Number.isFinite(value)) return;
+    this.state.elevation = Math.max(
+      0,
+      Math.min(ROAD_RULES.maxElevationM, value),
+    );
+    this.recalculate();
+  }
+  private setAnchor(p: Vec2): void {
+    const snapped = snapRoadPoint(
+      p,
+      this.world!,
+      true,
+      this.state.elevation > 0 ? this.heightAt(p) : undefined,
+    );
+    this.anchor = snapped.pos;
+    this.anchorHeight = this.state.elevation > 0 ? snapped.height : undefined;
   }
   setMode(mode: RoadMode): void {
     if (
@@ -251,8 +281,8 @@ export class RoadTool implements Tool {
       if (this.state.mode === 'free' && this.world) {
         const p = this.ctx.pick(event.x, event.y);
         if (p) {
-          this.anchor = snapRoadPoint(p, this.world).pos;
-          this.stroke = [this.anchor];
+          this.setAnchor(p);
+          this.stroke = [this.anchor!];
           this.end = null;
           this.state.phase = 'end';
           this.recalculate();
@@ -326,7 +356,7 @@ export class RoadTool implements Tool {
     if (!point) return;
     this.state.reason = null;
     if (!this.anchor) {
-      this.anchor = snapRoadPoint(point, this.world).pos;
+      this.setAnchor(point);
       this.end = null;
       this.state.phase = this.state.mode === 'curve' ? 'control' : 'end';
       this.recalculate();
@@ -357,6 +387,7 @@ export class RoadTool implements Tool {
     this.epoch++;
     this.down = null;
     this.anchor = this.end = this.control = null;
+    this.anchorHeight = undefined;
     this.stroke = [];
     this.upgradeIds.clear();
     this.state.upgradeCount = this.state.demolitions = 0;
@@ -413,6 +444,7 @@ export class RoadTool implements Tool {
       if (epoch !== this.epoch || !this.state.active) return;
       if (response.t === 'result' && response.ok) {
         this.anchor = { ...points.end };
+        this.anchorHeight = points.endHeight;
         this.end = this.control = null;
         this.stroke = [];
         this.state.phase = this.state.mode === 'curve' ? 'control' : 'end';

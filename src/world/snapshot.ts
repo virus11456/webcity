@@ -33,6 +33,8 @@ export interface RoadDraft {
   c2: Vec2;
   end: Vec2;
   elevated: boolean;
+  startHeight?: number;
+  endHeight?: number;
 }
 export interface NetworkSegment {
   id: Id;
