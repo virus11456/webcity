@@ -651,3 +651,6 @@ VehicleRenderer 的 16 款車輛與行人按型號／LOD 分批實例化；world
 
 ### M3-14 全城建築 LOD
 正式城市以 world/buildingLod 的 250／900 m 與 20 m 遲滯決定各棟細節；render 按模型／LOD 實例化近中景，遠景合併共用盒子批次。InstancePool 保存帶正負號的漸變屬性，buildingMaterial 採互補抖色切換，舊批次在 0.3 秒後回收；相機跳轉與素材完成排入每幀 2 ms／8 棟佇列。施工仍有獨立近景預算。詳見 BUILDING_LOD.md。
+
+### M3-15 城市特效
+CityEffects 消費 ready／buildingsChanged，以兩個預配 InstancedBufferGeometry 顯示煙霧與升級光環；煙霧飄移在 GPU，主執行緒只更新來源及事件時序。game 讀取實際渲染畫質，同步各效果的開關，不修改模擬。電力／水務渲染快取最新建築，僅在火災狀態變化時重建；非同步素材完成亦使用最新狀態。見 EFFECTS.md。

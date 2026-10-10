@@ -1,5 +1,6 @@
 import {
   Color,
+  Vector3,
   Group,
   InstancedBufferAttribute,
   InstancedBufferGeometry,
@@ -48,10 +49,20 @@ export class FireRenderer {
     new Float32Array(F.maxSprites),
     1,
   );
+  private readonly roofPoint = new Vector3();
   private disposed = false;
+  private enabled = true;
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    if (!enabled) this.geometry.instanceCount = 0;
+  }
+  readStats() {
+    return { enabled: this.enabled, sprites: this.geometry.instanceCount };
+  }
   constructor(
     parent: Scene | Group,
     private readonly height: (x: number, z: number) => number,
+    private readonly roof?: (id: number, out: Vector3) => boolean,
   ) {
     const plane = new PlaneGeometry(1, 1);
     this.geometry.setIndex(plane.index);
@@ -90,6 +101,10 @@ export class FireRenderer {
     }
   }
   update(dt: number, camera: PerspectiveCamera): void {
+    if (!this.enabled) {
+      this.geometry.instanceCount = 0;
+      return;
+    }
     this.material.uniforms.time!.value += dt;
     let n = 0;
     for (const b of this.burning.values()) {
@@ -102,7 +117,16 @@ export class FireRenderer {
         F.cullDistanceM
       )
         continue;
-      this.anchors.setXYZ(n, x, this.height(x, z) + F.anchorHeightM, z);
+      if (this.roof?.(b.id, this.roofPoint)) {
+        this.anchors.setXYZ(
+          n,
+          this.roofPoint.x,
+          this.roofPoint.y - F.anchorHeightM,
+          this.roofPoint.z,
+        );
+      } else {
+        this.anchors.setXYZ(n, x, this.height(x, z) + F.anchorHeightM, z);
+      }
       this.phases.setX(n, b.seed % F.phaseCycle);
       n++;
     }

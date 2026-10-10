@@ -1,3 +1,4 @@
+import { CITY_EFFECTS as FX } from '../../data/effects';
 import { catalogGeometry } from './catalogGeometry';
 import {
   buildingLod,
@@ -137,6 +138,21 @@ export class BuildingRenderer {
   private processed = 0;
   private maxWorkMs = 0;
   private readonly hour = { value: 12 };
+  private effectsEnabled = true;
+  setEffects(enabled: boolean): void {
+    if (this.effectsEnabled === enabled) return;
+    this.effectsEnabled = enabled;
+    if (!enabled) {
+      for (const d of this.dust) this.dustPool.remove(d.key);
+      this.dust.length = 0;
+    }
+    for (const e of this.entries.values()) {
+      e.construction?.setEffects(enabled);
+      if (!enabled && e.removed) e.removal = R.demolitionSeconds;
+      this.draw(e);
+    }
+    this.scaffold.mesh.visible = enabled;
+  }
   private focusedId: number | undefined;
   /** Keep the building selected by the inspection control inside the existing detail budget. */
   focus(id: number): void {
@@ -208,7 +224,7 @@ export class BuildingRenderer {
     if (!b) {
       if (old && !old.removed) {
         old.removed = true;
-        old.removal = 0;
+        old.removal = this.effectsEnabled ? 0 : R.demolitionSeconds;
         this.emitDust(old);
       }
       return;
@@ -327,6 +343,7 @@ export class BuildingRenderer {
       this.chooseDetail(camera);
     }
     this.flushLod();
+    this.scaffold.mesh.visible = this.effectsEnabled;
   }
   private chooseDetail(view: PerspectiveCamera): void {
     if (this.options.assets) {
@@ -519,6 +536,7 @@ export class BuildingRenderer {
       });
       this.group.add(e.construction.group);
       e.construction.setNight(true);
+      e.construction.setEffects(this.effectsEnabled);
       if (!this.options.registerMaterial)
         installNightWindows(e.construction.completed.material, this.hour);
       return;
@@ -568,12 +586,14 @@ export class BuildingRenderer {
     // An existing full-detail active model must also support returning to construction.
     if (e.pool && b.state === 'construction') this.dropDetail(e);
     const t = Math.min(1, e.age / R.placementSeconds);
-    const bounce = e.removed
-      ? 1
-      : Math.max(0.001, 1 + 2.70158 * (t - 1) ** 3 + 1.70158 * (t - 1) ** 2);
-    const sink = e.removed
-      ? (e.shape.height * e.removal) / R.demolitionSeconds
-      : 0;
+    const bounce =
+      !this.effectsEnabled || e.removed
+        ? 1
+        : Math.max(0.001, 1 + 2.70158 * (t - 1) ** 3 + 1.70158 * (t - 1) ** 2);
+    const sink =
+      this.effectsEnabled && e.removed
+        ? (e.shape.height * e.removal) / R.demolitionSeconds
+        : 0;
     this.matrix
       .makeRotationY(b.rotation + Math.PI)
       .scale(this.scale.set(bounce, bounce, bounce));
@@ -674,6 +694,7 @@ export class BuildingRenderer {
     this.removeFar(e);
   }
   private emitDust(e: Entry): void {
+    if (!this.effectsEnabled) return;
     if (this.dust.length + R.dustParticles > R.dustLimit) return;
     for (let i = 0; i < R.dustParticles; i++)
       this.dust.push({
@@ -743,6 +764,7 @@ export class BuildingRenderer {
       triangles,
       lodPending: this.lodQueue.size,
       transitioning,
+      effects: this.effectsEnabled,
       pending: this.pending.size,
       detail,
       assets,
@@ -767,6 +789,22 @@ export class BuildingRenderer {
       b.pos.x + Math.sin(b.rotation) * depth,
       e.base + e.shape.height,
       b.pos.z + Math.cos(b.rotation) * depth,
+    );
+    return true;
+  }
+  smokeAnchor(id: number, out: Vector3): boolean {
+    const e = this.entries.get(id);
+    if (!e || e.removed) return false;
+    const b = e.data;
+    if (b.defId !== 'I' || b.level < 2) return this.roof(id, out);
+    const x =
+        (b.lotW * CELL_SIZE - FX.industrialInsetM) * FX.industrialStackFraction,
+      z = -b.lotD * CELL_SIZE + FX.industrialBackInsetM,
+      angle = b.rotation + Math.PI;
+    out.set(
+      b.pos.x + x * Math.cos(angle) + z * Math.sin(angle),
+      e.base + (e.pool?.mesh.geometry.boundingBox?.max.y ?? e.shape.height),
+      b.pos.z - x * Math.sin(angle) + z * Math.cos(angle),
     );
     return true;
   }

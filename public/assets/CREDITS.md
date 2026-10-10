@@ -30,3 +30,7 @@ Original six tree and two shrub geometries, plus a procedurally authored silhoue
 ## M3-13 車輛
 
 16 款 `veh_*` 模型由 WebCity 原創離線幾何腳本製作，Meshopt 壓縮；無外部模型、圖樣或貼圖。來源 `src/render/vehicleModels/geometry.ts`，配方 `assets-source/catalog/vehicles-recipes.json`。車體與玻璃、輪胎、燈具使用專案色板及頂點烤漆遮罩。
+
+## M3-15 特效
+
+工業煙霧、升級光環、火焰、黑煙與塵土皆為 WebCity 原創程序幾何／shader，無外部影像素材。來源 `src/render/effects.ts`、`src/render/fire.ts` 與 `src/render/buildings/`。

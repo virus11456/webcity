@@ -307,9 +307,10 @@ export class ProblemIcons {
         map: { value: this.texture },
         pixels: { value: new Vector2() },
         time: { value: 0 },
+        motion: { value: 1 },
       },
-      vertexShader: `attribute vec3 anchor; attribute float tile; uniform vec2 pixels; uniform float time; varying vec2 vUv;
-      void main(){vUv=vec2((uv.x+tile)/${kinds.length.toFixed(1)},uv.y); vec4 clip=projectionMatrix*modelViewMatrix*vec4(anchor,1.0); vec2 offset=position.xy*${R.sizePx.toFixed(1)}; offset.y+=sin(time*${R.bobSpeed}+anchor.x)*${R.bobPx.toFixed(1)};clip.xy+=offset*pixels*clip.w;gl_Position=clip;}`,
+      vertexShader: `attribute vec3 anchor; attribute float tile; uniform vec2 pixels; uniform float time; uniform float motion; varying vec2 vUv;
+      void main(){vUv=vec2((uv.x+tile)/${kinds.length.toFixed(1)},uv.y); vec4 clip=projectionMatrix*modelViewMatrix*vec4(anchor,1.0); vec2 offset=position.xy*${R.sizePx.toFixed(1)}; offset.y+=sin(time*${R.bobSpeed}+anchor.x)*${R.bobPx.toFixed(1)}*motion;clip.xy+=offset*pixels*clip.w;gl_Position=clip;}`,
       fragmentShader: `uniform sampler2D map; varying vec2 vUv; void main(){gl_FragColor=texture2D(map,vUv);if(gl_FragColor.a<0.01)discard;}`,
     });
     const mesh = new Mesh(this.geometry, this.material);
@@ -317,6 +318,9 @@ export class ProblemIcons {
     mesh.renderOrder = 50;
     this.group.add(mesh);
     parent.add(this.group);
+  }
+  setMotion(enabled: boolean): void {
+    this.material.uniforms.motion!.value = enabled ? 1 : 0;
   }
   private put(b: Building): void {
     const problems = buildingProblemIcons(b);
