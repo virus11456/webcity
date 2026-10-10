@@ -1,4 +1,11 @@
 export const ZH_TW = {
+  'finance.ledger': '每週收支明細',
+  'finance.ledgerHint':
+    '以下為最近一週已結算金額；尚未到週結算時為零。調整稅率與預算不會改写已結算紀錄。',
+  'finance.item': '項目',
+  'finance.amount': '金額',
+  'finance.debtPayment': '貸款本金與利息',
+
   'inspect.title': '城市物件資訊',
   'inspect.hint': '探索城市時點選道路或建築，點空地取消選取。',
   'inspect.address': '地址',

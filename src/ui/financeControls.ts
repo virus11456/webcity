@@ -4,7 +4,7 @@ import type { SimClient } from '../bridge/simClient';
 import type { CommandInput } from '../bridge/protocol';
 import { t } from './i18n/t';
 
-/** Prototype controls for the economy system; the shared budget panel follows in M1-23. */
+/** Worker-backed tax, department budget, settlement ledger and loan panel. */
 export function createFinanceControls(parent: HTMLElement, client: SimClient) {
   const trigger = document.createElement('button');
   trigger.className = 'finance-trigger';
@@ -59,6 +59,48 @@ export function createFinanceControls(parent: HTMLElement, client: SimClient) {
       ECONOMY.budget.max,
       (value) => ({ t: 'setBudget', dept, value }),
     );
+  const ledger = section('finance.ledger', 'finance.ledgerHint');
+  const table = document.createElement('table');
+  table.className = 'finance-ledger';
+  const caption = document.createElement('caption');
+  caption.textContent = t('finance.ledger');
+  const head = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  for (const key of ['finance.item', 'finance.amount'] as const) {
+    const th = document.createElement('th');
+    th.scope = 'col';
+    th.textContent = t(key);
+    headerRow.append(th);
+  }
+  head.append(headerRow);
+  const body = document.createElement('tbody');
+  const ledgerRows: {
+    key: string;
+    kind: 'taxIncome' | 'upkeep' | 'debtPayment';
+    value: HTMLTableCellElement;
+  }[] = [];
+  const addRow = (
+    key: string,
+    kind: 'taxIncome' | 'upkeep' | 'debtPayment',
+    label: string,
+  ) => {
+    const row = document.createElement('tr'),
+      title = document.createElement('th'),
+      value = document.createElement('td');
+    title.scope = 'row';
+    title.textContent = label;
+    value.dataset.field = `${kind}.${key}`;
+    row.append(title, value);
+    body.append(row);
+    ledgerRows.push({ key, kind, value });
+  };
+  for (const z of Object.keys(ZONES) as ZoneType[])
+    addRow(z, 'taxIncome', `${t('finance.income')} · ${t(`zone.${z}`)}`);
+  for (const dept of BUDGET_DEPARTMENTS)
+    addRow(dept, 'upkeep', `${t('toolbar.upkeep')} · ${t(`finance.${dept}`)}`);
+  addRow('loans', 'debtPayment', t('finance.debtPayment'));
+  table.append(caption, head, body);
+  ledger.append(table);
   const loanSection = section('finance.loans');
   const borrow = LOANS.map((loan, bank) => {
     const b = document.createElement('button');
@@ -109,8 +151,8 @@ export function createFinanceControls(parent: HTMLElement, client: SimClient) {
     row.className = 'finance-slider';
     text.textContent = label;
     input.type = 'range';
-    input.min = String(min * 100);
-    input.max = String(max * 100);
+    input.min = String(Math.round(min * 100));
+    input.max = String(Math.round(max * 100));
     input.step = '1';
     input.setAttribute('aria-label', label);
     input.oninput = () => {
@@ -150,6 +192,15 @@ export function createFinanceControls(parent: HTMLElement, client: SimClient) {
     balance.dataset.negative = String(s.money < 0);
     balance.textContent = `${t('finance.balance')} ${format(s.money)}`;
     summary.textContent = `${t('finance.week')} ${format(stats.income - stats.expenses)} · ${t('finance.income')} ${format(stats.income)} · ${t('finance.expenses')} ${format(stats.expenses)}`;
+    for (const row of ledgerRows) {
+      const amount =
+        row.kind === 'debtPayment'
+          ? s.economy.debtPayment
+          : row.kind === 'taxIncome'
+            ? s.economy.taxIncome[row.key as ZoneType]
+            : s.economy.upkeep[row.key as (typeof BUDGET_DEPARTMENTS)[number]];
+      row.value.textContent = format(amount);
+    }
     warning.hidden = s.economy.status === 'normal';
     warning.textContent = ended
       ? `${t('finance.gameOver')}。${t('finance.gameOverHint')}`
