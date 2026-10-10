@@ -18,3 +18,12 @@ export const BUILDING_RENDER = {
 } as const;
 
 export const GROWTH_VIEW_DISTANCE = 220;
+
+export const BUILDING_LOD = {
+  nearM: 250,
+  farM: 900,
+  hysteresisM: 20,
+  transitionSeconds: 0.3,
+  operationsPerFrame: 8,
+  workBudgetMs: 2,
+} as const;

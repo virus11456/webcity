@@ -33,6 +33,13 @@ export class InstancePool {
         DynamicDrawUsage,
       ),
     );
+    geometry.setAttribute(
+      'buildingFade',
+      new InstancedBufferAttribute(
+        new Float32Array(capacity).fill(1),
+        1,
+      ).setUsage(DynamicDrawUsage),
+    );
     const mesh = new InstancedMesh(geometry, this.material, capacity);
     mesh.count = 0;
     mesh.instanceMatrix.setUsage(DynamicDrawUsage);
@@ -43,7 +50,7 @@ export class InstancePool {
     mesh.frustumCulled = false;
     return mesh;
   }
-  set(key: string, matrix: Matrix4, color: Color, state = 0): void {
+  set(key: string, matrix: Matrix4, color: Color, state = 0, fade = 1): void {
     let slot = this.slots.get(key);
     if (slot === undefined) {
       slot = this.keys.length;
@@ -59,6 +66,9 @@ export class InstancePool {
     this.mesh.instanceMatrix.needsUpdate = true;
     this.mesh.instanceColor!.needsUpdate = true;
     attribute.needsUpdate = true;
+    const alpha = this.mesh.geometry.getAttribute('buildingFade');
+    alpha.setX(slot, fade);
+    alpha.needsUpdate = true;
   }
   private grow(): void {
     const previous = this.mesh;
@@ -76,6 +86,10 @@ export class InstancePool {
     );
     next.instanceMatrix.needsUpdate = next.instanceColor!.needsUpdate = true;
     next.geometry.getAttribute('buildingState').needsUpdate = true;
+    (next.geometry.getAttribute('buildingFade').array as Float32Array).set(
+      previous.geometry.getAttribute('buildingFade').array,
+    );
+    next.geometry.getAttribute('buildingFade').needsUpdate = true;
     previous.removeFromParent();
     previous.geometry.dispose();
     previous.dispose();
@@ -95,6 +109,7 @@ export class InstancePool {
         this.matrix,
         this.color,
         this.mesh.geometry.getAttribute('buildingState').getX(last),
+        this.mesh.geometry.getAttribute('buildingFade').getX(last),
       );
       this.keys[slot] = lastKey;
       this.slots.set(lastKey, slot);

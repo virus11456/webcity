@@ -648,3 +648,6 @@ world/facilityModels 對照 BUILDINGS 與純美術地標清單；FacilityAssets 
 
 ### M3-13 正式車輛
 VehicleRenderer 的 16 款車輛與行人按型號／LOD 分批實例化；world/vehicleModels 以居民 ID 決定穩定款式。AssetLibrary 載入 Meshopt GLB，還原量化與 `_PAINT` 遮罩；材質安裝回呼在畫質切換後重掛 CSM 與烤漆 shader。失敗保留同款原創幾何。車輛權威及序列化未改變，見 VEHICLE_MODELS.md。
+
+### M3-14 全城建築 LOD
+正式城市以 world/buildingLod 的 250／900 m 與 20 m 遲滯決定各棟細節；render 按模型／LOD 實例化近中景，遠景合併共用盒子批次。InstancePool 保存帶正負號的漸變屬性，buildingMaterial 採互補抖色切換，舊批次在 0.3 秒後回收；相機跳轉與素材完成排入每幀 2 ms／8 棟佇列。施工仍有獨立近景預算。詳見 BUILDING_LOD.md。

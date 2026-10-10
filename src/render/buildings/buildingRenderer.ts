@@ -1,4 +1,15 @@
-import { visualSeed } from '../../world/modelCatalog';
+import { catalogGeometry } from './catalogGeometry';
+import {
+  buildingLod,
+  distantMassing,
+  type BuildingLod,
+} from '../../world/buildingLod';
+import { BUILDING_LOD as L } from '../../data/buildingRendering';
+import {
+  catalogModel,
+  type CatalogModel,
+  visualSeed,
+} from '../../world/modelCatalog';
 import type { CatalogAssets } from './catalogAssets';
 import {
   BoxGeometry,
@@ -57,6 +68,12 @@ interface Entry {
   removal: number;
   detail: boolean;
   asset?: boolean;
+  model?: CatalogModel;
+  lod: BuildingLod;
+  refresh?: boolean;
+  fadeAge: number;
+  previousPool?: InstancePool;
+  previousFar?: boolean;
   pool?: InstancePool;
   construction?: ConstructionBuilding;
   materials?: Material[];
@@ -72,7 +89,7 @@ interface Dust {
 export interface BuildingRendererOptions {
   heightAt(x: number, z: number): number;
   atlas?: WindowAtlas;
-  assets?: CatalogAssets;
+  assets?: Pick<CatalogAssets, 'request'>;
   registerMaterial?(
     material: Material,
     install?: (previous?: ShaderHook) => void,
@@ -105,6 +122,7 @@ export class BuildingRenderer {
   private infoColors: ReadonlyMap<number, string> | null = null;
   private readonly pending = new Map<number, Building | null>();
   private readonly pools = new Map<string, InstancePool>();
+  private readonly lodQueue = new Map<Entry, BuildingLod>();
   private readonly candidates: Entry[] = [];
   private readonly distances: number[] = [];
   private readonly dust: Dust[] = [];
@@ -230,7 +248,9 @@ export class BuildingRenderer {
     );
     const massing = geometry.userData.massing as BuildingVolume[];
     const shape: Shape = {
-      massing,
+      massing: this.options.assets
+        ? distantMassing(massing, ['RH', 'CH', 'O'].includes(b.defId))
+        : massing,
       wall: geometry.userData.wall as string,
       height: Math.max(...massing.map((v) => v.y + v.h)),
     };
@@ -248,6 +268,9 @@ export class BuildingRenderer {
       removed: false,
       removal: 0,
       detail: false,
+      lod: 2,
+      fadeAge: L.transitionSeconds,
+      model: this.options.assets ? catalogModel(b) : undefined,
     };
     this.entries.set(id, entry);
     this.draw(entry);
@@ -281,7 +304,14 @@ export class BuildingRenderer {
         }
       }
       const animate =
-        e.removed || e.age < R.placementSeconds || e.progress !== e.target;
+        e.removed ||
+        e.age < R.placementSeconds ||
+        e.progress !== e.target ||
+        e.fadeAge < L.transitionSeconds;
+      if (e.fadeAge < L.transitionSeconds) {
+        e.fadeAge = Math.min(L.transitionSeconds, e.fadeAge + dt);
+        if (e.fadeAge === L.transitionSeconds) this.finishFade(e);
+      }
       e.age += dt;
       if (e.progress !== e.target) {
         e.blend = Math.min(1, e.blend + dt / R.progressBlendSeconds);
@@ -296,8 +326,13 @@ export class BuildingRenderer {
       this.lodAge = 0;
       this.chooseDetail(camera);
     }
+    this.flushLod();
   }
   private chooseDetail(view: PerspectiveCamera): void {
+    if (this.options.assets) {
+      this.chooseCatalogLod(view);
+      return;
+    }
     const camera = view.position;
     // A narrow portrait frustum needs a farther camera for the same projected building size.
     const detailDistance = R.detailDistance / Math.min(1, view.aspect);
@@ -344,24 +379,109 @@ export class BuildingRenderer {
         break;
       }
   }
-  private addDetail(e: Entry): void {
-    this.removeFar(e);
-    const b = e.data;
-    const asset = this.options.assets?.request(b, () => {
-      if (this.disposed || this.entries.get(b.id) !== e) return;
-      this.dropDetail(e);
+  private chooseCatalogLod(view: PerspectiveCamera): void {
+    let construction = 0;
+    for (const e of this.entries.values()) {
+      if (e.removed) continue;
+      const p = e.data.pos,
+        distance = Math.hypot(
+          p.x - view.position.x,
+          e.base + e.shape.height / 2 - view.position.y,
+          p.z - view.position.z,
+        );
+      let lod = buildingLod(distance, e.lod);
+      if (e.data.state === 'construction') {
+        if (distance < L.nearM && construction++ < R.constructionDetailLimit)
+          lod = 0;
+        else lod = 2;
+      }
+      if (!e.model && lod === 1) lod = 2;
+      if (e.lod !== lod || (e.refresh && lod < 2) || (lod < 2 && !e.detail))
+        this.lodQueue.set(e, lod);
+      else this.lodQueue.delete(e);
+    }
+  }
+  private flushLod(): void {
+    const start = performance.now();
+    let operations = 0;
+    for (const [e, lod] of this.lodQueue) {
+      this.lodQueue.delete(e);
+      if (this.entries.get(e.data.id) !== e || e.removed) continue;
+      this.finishFade(e);
+      const old = e.pool,
+        wasFar = !e.detail;
+      if (e.construction || e.data.state === 'construction') this.dropDetail(e);
+      else {
+        e.pool = undefined;
+        e.detail = false;
+      }
+      e.lod = lod;
+      e.refresh = false;
+      if (lod !== 2) this.addDetail(e, lod);
+      if (e.data.state !== 'construction') {
+        e.previousPool = old === e.pool ? undefined : old;
+        e.previousFar = wasFar && lod < 2;
+        e.fadeAge = old === e.pool && !e.previousFar ? L.transitionSeconds : 0;
+      }
       this.draw(e);
-      this.lodAge = R.lodInterval;
-    });
+      if (
+        ++operations >= L.operationsPerFrame ||
+        performance.now() - start >= L.workBudgetMs
+      )
+        break;
+    }
+    this.maxWorkMs = Math.max(this.maxWorkMs, performance.now() - start);
+  }
+  private finishFade(e: Entry): void {
+    if (e.previousPool) {
+      this.removePoolEntry(e.previousPool, String(e.data.id));
+      e.previousPool = undefined;
+    }
+    if (e.previousFar) {
+      this.removeFar(e);
+      e.previousFar = false;
+    }
+    e.fadeAge = L.transitionSeconds;
+  }
+  private removePoolEntry(pool: InstancePool, id: string): void {
+    pool.remove(id);
+    if (!pool.count) {
+      for (const [key, p] of this.pools)
+        if (p === pool) {
+          this.pools.delete(key);
+          break;
+        }
+      pool.dispose();
+    }
+  }
+  private addDetail(e: Entry, lod: 0 | 1 = 0): void {
+    if (!this.options.assets || e.data.state === 'construction')
+      this.removeFar(e);
+    const b = e.data;
+    const asset = this.options.assets?.request(
+      b,
+      () => {
+        if (this.disposed || this.entries.get(b.id) !== e) return;
+        if (this.options.assets) e.refresh = true;
+        else {
+          this.dropDetail(e);
+          this.draw(e);
+        }
+        this.lodAge = R.lodInterval;
+      },
+      lod,
+    );
     const geometry =
       asset?.geometry ??
-      generateBuilding(
-        b.defId as ZoneType,
-        b.level,
-        b.lotW,
-        b.lotD,
-        this.options.assets ? visualSeed(b) : b.seed,
-      );
+      (e.model
+        ? catalogGeometry(e.model, lod)
+        : generateBuilding(
+            b.defId as ZoneType,
+            b.level,
+            b.lotW,
+            b.lotD,
+            this.options.assets ? visualSeed(b) : b.seed,
+          ));
     e.asset = Boolean(asset);
     if (asset && !this.catalogMaterials.has(asset.material)) {
       const material = asset.material;
@@ -423,17 +543,9 @@ export class BuildingRenderer {
     e.pool = pool;
   }
   private dropDetail(e: Entry): void {
+    this.finishFade(e);
     if (e.pool) {
-      const pool = e.pool;
-      pool.remove(String(e.data.id));
-      if (!pool.count) {
-        for (const [hash, p] of this.pools)
-          if (p === pool) {
-            this.pools.delete(hash);
-            break;
-          }
-        pool.dispose();
-      }
+      this.removePoolEntry(e.pool, String(e.data.id));
       e.pool = undefined;
     }
     if (e.construction) {
@@ -477,7 +589,19 @@ export class BuildingRenderer {
       e.construction.group.matrix.copy(this.matrix);
       e.construction.group.matrixWorldNeedsUpdate = true;
       e.construction.setProgress(e.progress, e.base - sink);
-    } else if (e.pool)
+    }
+    const fade = Math.min(1, e.fadeAge / L.transitionSeconds);
+    if (e.previousPool)
+      e.previousPool.set(
+        String(b.id),
+        this.matrix,
+        this.infoColors
+          ? this.color.set(this.infoColors.get(b.id) ?? P.concrete)
+          : this.color.setRGB(1, 1, 1),
+        condition,
+        fade - 1,
+      );
+    if (e.pool)
       e.pool.set(
         String(b.id),
         this.matrix,
@@ -485,8 +609,9 @@ export class BuildingRenderer {
           ? this.color.set(this.infoColors.get(b.id) ?? P.concrete)
           : this.color.setRGB(1, 1, 1),
         condition,
+        fade,
       );
-    else {
+    if (!e.construction && (!e.pool || e.previousFar)) {
       const visual = constructionVisual(e.progress, this.visual);
       for (let i = 0; i < e.shape.massing.length; i++) {
         const v = e.shape.massing[i]!;
@@ -505,6 +630,7 @@ export class BuildingRenderer {
             this.local,
             this.color.set(this.infoColors?.get(b.id) ?? e.shape.wall),
             condition,
+            e.previousFar ? fade - 1 : fade,
           );
         } else this.far.remove(key);
       }
@@ -543,6 +669,7 @@ export class BuildingRenderer {
     this.foundation.remove(String(e.data.id));
   }
   private release(e: Entry): void {
+    this.lodQueue.delete(e);
     this.dropDetail(e);
     this.removeFar(e);
   }
@@ -591,8 +718,19 @@ export class BuildingRenderer {
       construction = 0,
       abandoned = 0,
       removing = 0,
-      assets = 0;
+      assets = 0,
+      transitioning = 0;
+    const lods = [0, 0, 0];
+    let triangles = this.far.count * 12;
+    for (const pool of this.pools.values())
+      triangles +=
+        (pool.count *
+          (pool.mesh.geometry.index?.count ??
+            pool.mesh.geometry.getAttribute('position').count)) /
+        3;
     for (const e of this.entries.values()) {
+      lods[e.lod]!++;
+      if (e.fadeAge < L.transitionSeconds) transitioning++;
       if (e.detail) detail++;
       if (e.detail && e.asset) assets++;
       if (e.data.state === 'construction') construction++;
@@ -601,6 +739,10 @@ export class BuildingRenderer {
     }
     return {
       buildings: this.entries.size,
+      lods,
+      triangles,
+      lodPending: this.lodQueue.size,
+      transitioning,
       pending: this.pending.size,
       detail,
       assets,
@@ -636,6 +778,7 @@ export class BuildingRenderer {
           progress: e.progress,
           target: e.target,
           detail: e.detail,
+          lod: e.lod,
           base: e.base,
           removed: e.removed,
           visual: e.construction?.readState() ?? constructionVisual(e.progress),
@@ -644,6 +787,7 @@ export class BuildingRenderer {
   }
   private clear(): void {
     this.focusedId = undefined;
+    this.lodQueue.clear();
     for (const e of this.entries.values()) this.release(e);
     this.entries.clear();
     this.authoritative.clear();
