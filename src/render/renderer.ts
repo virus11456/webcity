@@ -22,7 +22,7 @@ import { RtsCamera } from './camera';
 import { ENVIRONMENT_PALETTE } from '../data/palette';
 import { CAMERA, LIGHTING, RENDER_PREVIEW } from '../data/rendering';
 import { Lighting } from './lighting';
-import { createSky } from './sky';
+import { createSky, fogDensityAtHeight } from './sky';
 import {
   detectQuality,
   qualityOverride,
@@ -38,6 +38,7 @@ export interface RenderStats {
   dpr: number;
   aspect: number;
   shadows: number;
+  fogDensity: number;
 }
 export interface RendererOptions {
   seed?: number;
@@ -100,7 +101,7 @@ export class CityRenderer {
     });
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1;
+    this.renderer.toneMappingExposure = LIGHTING.exposure;
     this.renderer.shadowMap.type = PCFShadowMap;
     this.renderer.localClippingEnabled = true;
     // Include shadow passes in draw-call/triangle counters.
@@ -127,6 +128,7 @@ export class CityRenderer {
       dpr: 1,
       aspect: 1,
       shadows: 0,
+      fogDensity: LIGHTING.fogDensity,
     };
     this.cameraController = new RtsCamera(this.camera, {
       bounds: {
@@ -296,6 +298,8 @@ export class CityRenderer {
     this.lastFrame = now;
     this.cameraController.copyFocus(this.focus);
     this.sky.position.copy(this.camera.position);
+    this.stats.fogDensity = fogDensityAtHeight(this.camera.position.y);
+    (this.scene.fog as FogExp2).density = this.stats.fogDensity;
     this.camera.updateMatrixWorld();
     this.lighting.update(this.focus);
     this.renderer.info.reset();

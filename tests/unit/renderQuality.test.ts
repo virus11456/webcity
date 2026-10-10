@@ -7,7 +7,7 @@ import {
   type DeviceProfile,
 } from '../../src/render/quality';
 import { Lighting } from '../../src/render/lighting';
-import { createSky } from '../../src/render/sky';
+import { createSky, fogDensityAtHeight } from '../../src/render/sky';
 import { MeshStandardMaterial, PerspectiveCamera, Scene, Vector3 } from 'three';
 
 const device: DeviceProfile = {
@@ -112,4 +112,22 @@ describe('lighting ownership', () => {
     sky.geometry.dispose();
     sky.material.dispose();
   });
+});
+
+it('thins fog smoothly at altitude without removing the horizon or varying below the ground', () => {
+  expect(fogDensityAtHeight(40)).toBe(0.00012);
+  expect(fogDensityAtHeight(-100)).toBe(0.00012);
+  expect(fogDensityAtHeight(NaN)).toBe(0.00012);
+  expect(fogDensityAtHeight(2040)).toBeCloseTo(0.000036, 9);
+  expect(fogDensityAtHeight(9000)).toBe(fogDensityAtHeight(2040));
+  let previous = Infinity;
+  for (let y = 0; y <= 4000; y += 20) {
+    const density = fogDensityAtHeight(y);
+    expect(density).toBeLessThanOrEqual(previous);
+    expect(density).toBeGreaterThan(0);
+    previous = density;
+  }
+  expect(
+    Math.abs(fogDensityAtHeight(120.01) - fogDensityAtHeight(119.99)),
+  ).toBeLessThan(1e-10);
 });

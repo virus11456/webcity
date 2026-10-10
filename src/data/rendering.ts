@@ -7,6 +7,13 @@ export const LIGHTING = {
   cascades: 3,
   shadowRangeM: 600,
   fogDensity: 0.00012,
+  fogFadeStartM: 80,
+  fogFadeEndM: 2000,
+  highAltitudeFogRatio: 0.3,
+  exposure: 1,
+  skyGradientPower: 0.65,
+  sunGlowPower: 128,
+  sunGlowStrength: 0.3,
   sunDirection: [-1, 1.5, 1],
 } as const;
 export const RENDER_PREVIEW = {
