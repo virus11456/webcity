@@ -67,6 +67,8 @@ export function previewRoadUpgrade(
       end: b.pos,
       c1: segment.c1,
       c2: segment.c2,
+      startHeight: old.elevated ? a.height : undefined,
+      endHeight: old.elevated ? b.height : undefined,
       snap: { angle: false, length: false, connections: 'exact' },
     },
     {
@@ -85,8 +87,8 @@ export function previewRoadUpgrade(
     ? 0
     : Math.max(
         0,
-        roadConstructionCost(type, old.length) -
-          roadConstructionCost(old.type, old.length),
+        roadConstructionCost(type, old.length, old.elevated) -
+          roadConstructionCost(old.type, old.length, old.elevated),
       );
   result.preview.cost = cost;
   if (cost > w.money)

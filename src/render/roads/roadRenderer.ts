@@ -1,3 +1,4 @@
+import { bridgeMesh } from './structures';
 import { roadTrees } from './trees';
 import {
   BufferGeometry,
@@ -76,6 +77,7 @@ export class RoadRenderer {
   private *rebuild(world: RoadConstructionWorld): Generator<void> {
     const arms = roadArms(world.nodes, world.segments),
       nodes = new Map(world.nodes.map((n) => [n.id, n]));
+    const structureKey = JSON.stringify(world.segments);
     const groups = new Map<number, { parts: RoadMeshData[]; keys: string[] }>(),
       alive = new Set<string>();
     const add = (
@@ -117,6 +119,7 @@ export class RoadRenderer {
         end = nodes.get(segment.end)!;
       const key = JSON.stringify([
         segment,
+        segment.elevated ? structureKey : undefined,
         start.pos,
         start.height,
         end.pos,
@@ -131,13 +134,18 @@ export class RoadRenderer {
         key,
         (start.pos.x + end.pos.x) / 2,
         (start.pos.z + end.pos.z) / 2,
-        () =>
-          segmentMesh(
+        () => {
+          const data = segmentMesh(
             a,
             b,
             arms.get(start.id)!.length >= 3,
             arms.get(end.id)!.length >= 3,
-          ),
+          );
+          const structure = bridgeMesh(a, b, world);
+          data.positions = data.positions.concat(structure.positions);
+          data.colors = data.colors.concat(structure.colors);
+          return data;
+        },
       );
       yield;
     }
@@ -190,6 +198,7 @@ export class RoadRenderer {
       geometry.computeBoundingSphere();
       const mesh = new Mesh(geometry, this.material);
       mesh.receiveShadow = true;
+      mesh.castShadow = world.segments.some((s) => s.elevated);
       replacement.set(id, { key, mesh });
       yield;
     }

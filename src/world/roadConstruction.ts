@@ -55,6 +55,8 @@ export function validateRoadDraft(
         end: points.end,
         c1: points.c1,
         c2: points.c2,
+        startHeight: points.startHeight,
+        endHeight: points.endHeight,
         snap: { angle: false, length: false, connections: 'exact' },
       },
       world,
@@ -100,7 +102,7 @@ export function isStraightRoadDraft(value: unknown): value is RoadDraft {
   );
 }
 
-/** All finite ground-road cubic payloads; detailed geometry is revalidated by Worker. */
+/** Finite cubic payloads; explicit decks need two heights and Worker revalidates every grade. */
 export function isRoadDraft(value: unknown): value is RoadDraft {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
@@ -109,6 +111,12 @@ export function isRoadDraft(value: unknown): value is RoadDraft {
     point(v.end) &&
     point(v.c1) &&
     point(v.c2) &&
-    v.elevated === false
+    typeof v.elevated === 'boolean' &&
+    (v.startHeight === undefined ||
+      (typeof v.startHeight === 'number' && Number.isFinite(v.startHeight))) &&
+    (v.endHeight === undefined ||
+      (typeof v.endHeight === 'number' && Number.isFinite(v.endHeight))) &&
+    (!v.elevated ||
+      (typeof v.startHeight === 'number' && typeof v.endHeight === 'number'))
   );
 }

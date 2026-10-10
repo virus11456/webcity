@@ -440,6 +440,7 @@ h1 {
   margin: 8px 0;
 }
 .road-options {
+  flex-wrap: wrap;
   justify-content: space-between;
 }
 .road-options label {

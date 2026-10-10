@@ -29,6 +29,7 @@ function ribbon(
   width: number,
   heights: Float32Array,
   lift: number,
+  deck?: [number, number],
 ): BufferGeometry {
   const length = curveLength(curve),
     steps = Math.max(1, Math.ceil(length / CONFIG.sampleM)),
@@ -45,7 +46,13 @@ function ribbon(
         side = width * (j / across - 0.5);
       const x = center.x - uz * side,
         z = center.z + ux * side;
-      positions.push(x, meshHeightAt(heights, x, z) + lift, z);
+      positions.push(
+        x,
+        (deck
+          ? deck[0] + ((deck[1] - deck[0]) * i) / steps
+          : meshHeightAt(heights, x, z)) + lift,
+        z,
+      );
       if (i < steps && j < across) {
         const a = i * (across + 1) + j,
           b = a + across + 1;
@@ -112,6 +119,7 @@ export class RoadPreviewRenderer {
       p.width,
       heights,
       CONFIG.previewLiftM,
+      p.draft.elevated ? [p.start.height, p.end.height] : undefined,
     );
     this.ghostMaterial.color.set(
       result.canBuild ? UI_PALETTE.accent : UI_PALETTE.negative,

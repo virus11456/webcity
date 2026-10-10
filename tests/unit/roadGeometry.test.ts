@@ -268,7 +268,8 @@ describe('full-footprint construction checks', () => {
     const input = request(p(-2000, -2000), p(2000, 2000));
     expect(previewStraightRoad(input, w).canBuild).toBe(true);
     w.heights[150 * WORLD.heightmapVertices + 150] = 30;
-    failure(w, input, 'err.roadInWater');
+    expect(previewStraightRoad(input, w).preview?.draft.elevated).toBe(true);
+    expect(previewStraightRoad(input, w).canBuild).toBe(true);
   });
   it('checks road width at the map boundary rather than clamping terrain reads', () => {
     const w = world();
@@ -295,10 +296,13 @@ describe('full-footprint construction checks', () => {
     w.ownedTiles = [11, 13];
     failure(w, request(p(-960, 0), p(960, 0)), 'err.landNotOwned');
   });
-  it('rejects water in the middle while both endpoints are dry', () => {
+  it('automatically bridges water in the middle while both endpoints are dry', () => {
     const w = world();
     terrain(w, (x) => (x === 32 ? 39 : 60));
-    failure(w, request(), 'err.roadInWater');
+    expect(previewStraightRoad(request(), w).canBuild).toBe(true);
+    expect(previewStraightRoad(request(), w).preview?.draft.elevated).toBe(
+      true,
+    );
   });
   it('detects a tiny wet triangle at the road edge with a dry centerline', () => {
     const w = world();
@@ -307,7 +311,10 @@ describe('full-footprint construction checks', () => {
     const column = (32 + MAP_SIZE / 2) / WORLD.heightmapSpacingM;
     w.heights[row * WORLD.heightmapVertices + column] = 19.999;
     expect(meshHeightAt(w.heights, 32, 0)).toBe(60);
-    failure(w, request(), 'err.roadInWater');
+    expect(previewStraightRoad(request(), w).canBuild).toBe(true);
+    expect(previewStraightRoad(request(), w).preview?.draft.elevated).toBe(
+      true,
+    );
   });
   it('allows terrain exactly at sea level', () => {
     const w = world();

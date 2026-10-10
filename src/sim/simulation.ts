@@ -358,6 +358,7 @@ export class Simulation {
         end: p.end.pos,
         c1: p.draft.c1,
         c2: p.draft.c2,
+        elevated: p.draft.elevated,
         startHeight: p.start.height,
         endHeight: p.end.height,
         builtDay: s.clock.day,

@@ -1,4 +1,4 @@
-import { ROADS, type RoadTypeId } from '../data/roads';
+import { ROAD_RULES, ROADS, type RoadTypeId } from '../data/roads';
 import type { RoadMode, RoadToolState } from '../tools/roadTool';
 import { t } from './i18n/t';
 import { catalogIcon, createBuildCatalog } from './buildCatalog';
@@ -17,6 +17,7 @@ interface RoadActions {
   type(type: RoadTypeId): void;
   mode(mode: RoadMode): void;
   angle(enabled: boolean): void;
+  elevation(value: number): void;
 }
 /** Accessible construction controls; geometry and worker authority stay outside the UI layer. */
 export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
@@ -125,6 +126,17 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     actions.mode(roadMode.value as RoadMode),
   );
   options.append(roadMode);
+  const heightRow = document.createElement('div');
+  heightRow.className = 'road-row';
+  const lower = button('road.lower', () =>
+    actions.elevation((latest?.elevation ?? 0) - ROAD_RULES.elevationStepM),
+  );
+  const raise = button('road.raise', () =>
+    actions.elevation((latest?.elevation ?? 0) + ROAD_RULES.elevationStepM),
+  );
+  const heightLabel = document.createElement('output');
+  heightLabel.setAttribute('aria-live', 'polite');
+  heightRow.append(lower, heightLabel, raise);
   const metrics = document.createElement('output');
   metrics.className = 'road-metrics';
   const status = document.createElement('p');
@@ -138,7 +150,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   const note = document.createElement('small');
   note.textContent = t('road.temporary');
   const details = document.createElement('div');
-  details.append(catalog.host, options, metrics, status, confirmRow);
+  details.append(catalog.host, options, heightRow, metrics, status, confirmRow);
   const zoneHost = document.createElement('div');
   zoneHost.hidden = true;
   const bulldozeHost = document.createElement('div');
@@ -185,6 +197,17 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       )
     )
       return;
+    if (
+      latest?.active &&
+      !latest.pending &&
+      ['PageUp', 'PageDown'].includes(event.code)
+    ) {
+      event.preventDefault();
+      actions.elevation(
+        latest.elevation +
+          (event.code === 'PageUp' ? 1 : -1) * ROAD_RULES.elevationStepM,
+      );
+    }
     const choice = (
       {
         Digit4: draw,
@@ -298,6 +321,12 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       panel.dataset.ready = String(state.ready);
       panel.dataset.phase = state.phase;
       panel.dataset.mode = state.mode;
+      panel.dataset.elevation = String(state.elevation);
+      heightRow.hidden = !state.active || state.mode === 'upgrade';
+      lower.disabled = state.pending || state.elevation <= 0;
+      raise.disabled =
+        state.pending || state.elevation >= ROAD_RULES.maxElevationM;
+      heightLabel.textContent = `${t('road.elevation')} ${state.elevation} m`;
       panel.dataset.demolitions = String(state.demolitions);
       roadMode.value = state.mode;
       roadMode.disabled = state.pending;
