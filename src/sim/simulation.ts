@@ -1,3 +1,4 @@
+import { LaneGraph } from '../world/laneGraph';
 import { INTERSECTIONS } from '../data/intersections';
 import { previewRoadUpgrade, upgradedPayment } from '../world/roadUpgrade';
 import {
@@ -64,13 +65,19 @@ const tickMs = (TIME.secondsPerDay[1] * 1000) / TIME.ticksPerDay;
 /** Deterministic simulation; no browser, wall clock or worker required. */
 export class Simulation {
   private readonly state: SimState;
+  readonly laneGraph = new LaneGraph();
+  private emit(event: SimEvent): void {
+    if (event.t === 'roadsChanged')
+      this.laneGraph.sync(this.state.nodes, this.state.segments);
+    this.sink(event);
+  }
   private accumulatedMs = 0;
   private readonly time = new TimeSystem();
   private readonly growth = new GrowthSystem();
 
   constructor(
     settings: CitySettings,
-    private readonly emit: (event: SimEvent) => void = () => {},
+    private readonly sink: (event: SimEvent) => void = () => {},
     restored?: WorldSnapshot,
   ) {
     this.state = createState(settings);
@@ -80,6 +87,7 @@ export class Simulation {
       Object.assign(terrain, copy.terrain);
       Object.assign(this.state, copy, { terrain });
     }
+    this.laneGraph.sync(this.state.nodes, this.state.segments);
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
       const power = [...updatePower(this.state), ...updateWater(this.state)];

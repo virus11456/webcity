@@ -527,3 +527,7 @@ M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/st
 ### M2-05 路口控制
 
 `setIntersection` 指令以 node/control/banLeft 更新 Worker；RoadNode 的可選 manualControl/banLeft 欄位向後相容舊存檔。RoadGraph 與升級重算時尊重手動控制。`world/intersections.ts` 提供命中、進入方向分組與相位選取，讓渲染與後续車流共用規則。`IntersectionProps` 將燈桿、停止標誌批次合併，燈色依 Worker ticks × 0.24 秒更新；相位改變之外不重建。見 `INTERSECTIONS.md`。
+
+### M2-06 有向車道圖
+
+`Simulation.laneGraph` 為 Worker 本機衍生快取，不進入 WorldSnapshot 或傳給主執行緒。發送 roadsChanged 前先同步，確保建造、升級、拆除、路口禁轉均同步生效。`world/roadJunctions` 共用路口裁切距離，畫面道路與車道端點使用相同規則；車道連接包含可插值的轉彎路徑。全圖 O(n) 簽章掃描後，只重建改變的車道幾何與鄰接路口，revision 供後續尋路快取失效。見 `LANE_GRAPH.md`。

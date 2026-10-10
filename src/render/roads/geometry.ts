@@ -1,3 +1,4 @@
+import { junctionTrims } from '../../world/roadJunctions';
 import { INTERSECTIONS as J } from '../../data/intersections';
 import { laneOffsets, roadCrossSection } from '../../world/roadLanes';
 import { Color } from 'three';
@@ -123,30 +124,15 @@ export function roadArms(
   }
   for (const arms of result.values()) {
     arms.sort((a, b) => a.angle - b.angle);
-    if (arms.length < 2) continue;
-    if (
-      arms.length === 2 &&
-      Math.abs(Math.abs(arms[0]!.angle - arms[1]!.angle) - Math.PI) < 1e-5 &&
-      arms[0]!.width === arms[1]!.width
-    )
-      continue;
-    let reach = 0;
-    for (let i = 0; i < arms.length; i++) {
-      const a = arms[i]!,
-        b = arms[(i + 1) % arms.length]!;
-      const angle = (b.angle - a.angle + Math.PI * 2) % (Math.PI * 2);
-      reach = Math.max(
-        reach,
-        Math.max(a.width, b.width) /
-          Math.max(0.1, Math.abs(Math.tan(angle / 2))) +
-          C.cornerRadiusM,
-      );
-    }
-    for (const a of arms)
-      a.trim = Math.min(
-        reach,
-        a.samples[a.samples.length - 1]!.distance * C.maxTrimFraction,
-      );
+    const trims = junctionTrims(
+      arms.map((a) => ({
+        id: a.segment.id,
+        angle: a.angle,
+        width: a.width,
+        length: a.samples.at(-1)!.distance,
+      })),
+    );
+    for (const a of arms) a.trim = trims.get(a.segment.id)!;
   }
   return result;
 }
