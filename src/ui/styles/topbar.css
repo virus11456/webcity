@@ -1,0 +1,229 @@
+.topbar {
+  position: absolute;
+  z-index: 5;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-panel-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-panel);
+  backdrop-filter: blur(8px);
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.topbar-summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
+}
+.hud-brand {
+  flex: 0 1 110px;
+  min-width: 0;
+}
+.hud-brand h1 {
+  font-size: 18px;
+  line-height: 1.4;
+}
+.hud-city-name {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: var(--color-secondary);
+}
+.hud-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex: 1;
+  min-width: 0;
+}
+.hud-metrics {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin: 0;
+}
+.hud-metrics dt,
+.hud-compact-stat > span {
+  font-size: 12px;
+  color: var(--color-secondary);
+}
+.hud-metrics dd {
+  margin: 3px 0;
+  font-size: 16px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.hud-metrics small {
+  display: block;
+  font-size: 12px;
+  color: var(--color-secondary);
+  white-space: nowrap;
+}
+.topbar [data-negative='true'] {
+  color: var(--color-negative);
+}
+.hud-demand {
+  display: grid;
+  gap: 3px;
+  min-width: 116px;
+}
+.hud-demand-item {
+  display: grid;
+  grid-template-columns: 12px minmax(40px, 1fr) 24px;
+  gap: 5px;
+  align-items: center;
+  font-size: 12px;
+}
+.hud-demand-item > span:last-child {
+  text-align: right;
+}
+.hud-demand-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-control-hover);
+  overflow: hidden;
+}
+.hud-demand-track i {
+  display: block;
+  height: 100%;
+}
+/* Supersede the former floating clock while retaining its public selectors. */
+#app .topbar .sim-controls {
+  position: static;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+.topbar .sim-controls .ui-button {
+  min-width: var(--touch-target);
+  min-height: var(--touch-target);
+  padding: 8px;
+}
+.topbar .sim-speeds {
+  gap: 4px;
+}
+.hud-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.hud-compact-stat {
+  min-width: 0;
+  white-space: nowrap;
+}
+.hud-compact-stat strong {
+  display: block;
+  font-size: 14px;
+}
+.topbar .hud-expand {
+  padding: 8px;
+}
+.topbar[data-layout='tablet'] {
+  --touch-target: 48px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.topbar[data-layout='tablet'] .topbar-summary {
+  flex-basis: 100%;
+}
+.topbar[data-layout='tablet'] .sim-controls {
+  margin-left: auto;
+}
+.topbar[data-layout^='phone'] {
+  gap: 8px;
+  padding: 8px 10px;
+}
+.topbar[data-layout^='phone'] .topbar-summary {
+  gap: 12px;
+  justify-content: space-between;
+}
+.topbar[data-layout^='phone'] .hud-brand {
+  flex: 0 1 72px;
+}
+.topbar[data-layout^='phone'] .hud-brand h1 {
+  font-size: 14px;
+}
+.topbar[data-layout='phone-portrait'] {
+  flex-direction: column;
+  align-items: stretch;
+}
+.topbar[data-layout='phone-portrait'] .topbar-summary {
+  flex: 0 0 auto;
+}
+#app .topbar[data-layout='phone-portrait'] .sim-controls {
+  justify-content: space-between;
+}
+.topbar[data-layout='phone-landscape'] .topbar-summary {
+  max-width: 380px;
+}
+.topbar .ui-sheet .hud-details {
+  display: block;
+}
+.topbar .ui-sheet .hud-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 10px;
+}
+.topbar .ui-sheet .hud-metrics dd {
+  font-size: 16px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.topbar .ui-sheet .hud-metrics small {
+  white-space: normal;
+}
+.topbar .ui-sheet .hud-demand {
+  margin-top: 18px;
+  gap: 12px;
+}
+.topbar .ui-sheet .hud-detail-note {
+  margin: 18px 0 0;
+  font-size: 12px;
+}
+
+.hud-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 8px 0 0;
+  padding: 12px;
+  border-radius: var(--radius-panel);
+  background: var(--color-background);
+  color: var(--color-negative);
+}
+
+/* Keep existing construction readouts below the measured HUD after rotation. */
+#app .population-summary {
+  top: max(100px, var(--topbar-bottom, 100px));
+}
+#app .debug-panel {
+  top: max(88px, var(--topbar-bottom, 88px));
+}
+#app .picking-debug {
+  top: max(212px, calc(var(--topbar-bottom, 88px) + 124px));
+}
+@media (max-width: 720px) {
+  #app .population-summary {
+    top: max(166px, var(--topbar-bottom, 166px));
+  }
+}

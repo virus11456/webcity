@@ -1,0 +1,258 @@
+import type { BudgetDepartment } from '../data/economy';
+import { finitePoint } from '../world/power';
+import { isBulldozeTargets } from '../world/bulldoze';
+import { isZonePayload } from '../world/zoning';
+import type { ZoneType } from '../world/types';
+import { ROADS, type RoadTypeId } from '../data/roads';
+import { isStraightRoadDraft } from '../world/roadConstruction';
+import type { Response, SimEvent } from '../bridge/protocol';
+import type { CitySettings } from '../world/snapshot';
+import { Simulation } from './simulation';
+
+const futureCommands = new Set([
+  'load',
+  'save',
+  'upgradeRoad',
+  'place',
+  'buildNetwork',
+  'buildRoadPipes',
+  'undo',
+  'setTax',
+  'setBudget',
+  'takeLoan',
+  'repayLoan',
+  'buyTile',
+  'setPolicy',
+  'inspect',
+]);
+
+/** Runtime validation at the worker boundary; future commands fail explicitly. */
+export class CommandDispatcher {
+  private simulation: Simulation | undefined;
+  constructor(private readonly emit: (event: SimEvent) => void) {}
+
+  /** Dispatch an untrusted structured-clone payload without exposing authority. */
+  handle(value: unknown): void {
+    if (
+      !value ||
+      typeof value !== 'object' ||
+      !('reqId' in value) ||
+      !Number.isSafeInteger(value.reqId) ||
+      (value.reqId as number) <= 0
+    ) {
+      this.emit({ t: 'error', message: 'err.invalidCommand' });
+      return;
+    }
+    const reqId = value.reqId as number;
+    const fail = (reason: Extract<Response, { t: 'result' }>['reason']) =>
+      this.emit({ t: 'result', reqId, ok: false, reason });
+    if (!('t' in value) || typeof value.t !== 'string') {
+      fail('err.invalidCommand');
+      return;
+    }
+    if (value.t === 'init') {
+      if (
+        !('seed' in value) ||
+        !('mapId' in value) ||
+        !('mode' in value) ||
+        !('cityName' in value)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      try {
+        // createState validates every init field before generating a map.
+        const next = new Simulation(
+          {
+            seed: value.seed,
+            mapId: value.mapId,
+            mode: value.mode,
+            cityName: value.cityName,
+          } as CitySettings,
+          this.emit,
+        );
+        const snapshot = next.snapshot();
+        this.simulation = next;
+        this.emit({ t: 'ready', reqId, snapshot });
+      } catch {
+        fail('err.invalidCommand');
+      }
+      return;
+    }
+    if (
+      value.t !== 'setSpeed' &&
+      value.t !== 'buildRoad' &&
+      value.t !== 'zone' &&
+      value.t !== 'bulldoze' &&
+      !futureCommands.has(value.t)
+    ) {
+      fail('err.invalidCommand');
+      return;
+    }
+    if (!this.simulation) {
+      fail('err.notReady');
+      return;
+    }
+    if (this.simulation.gameOver) {
+      fail('err.gameOver');
+      return;
+    }
+    if (
+      value.t === 'setTax' ||
+      value.t === 'setBudget' ||
+      value.t === 'takeLoan' ||
+      value.t === 'repayLoan'
+    ) {
+      let command;
+      if (
+        value.t === 'setTax' &&
+        'zone' in value &&
+        typeof value.zone === 'string' &&
+        'rate' in value &&
+        typeof value.rate === 'number'
+      )
+        command = {
+          t: value.t,
+          zone: value.zone as ZoneType,
+          rate: value.rate,
+        } as const;
+      else if (
+        value.t === 'setBudget' &&
+        'dept' in value &&
+        typeof value.dept === 'string' &&
+        'value' in value &&
+        typeof value.value === 'number'
+      )
+        command = {
+          t: value.t,
+          dept: value.dept as BudgetDepartment,
+          value: value.value,
+        } as const;
+      else if (
+        value.t === 'takeLoan' &&
+        'bank' in value &&
+        typeof value.bank === 'number'
+      )
+        command = { t: value.t, bank: value.bank } as const;
+      else if (
+        value.t === 'repayLoan' &&
+        'index' in value &&
+        typeof value.index === 'number'
+      )
+        command = { t: value.t, index: value.index } as const;
+      if (!command) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({ t: 'result', reqId, ...this.simulation.finance(command) });
+    } else if (value.t === 'place') {
+      if (
+        !('defId' in value) ||
+        typeof value.defId !== 'string' ||
+        !('pos' in value) ||
+        !finitePoint(value.pos) ||
+        !('rotation' in value) ||
+        typeof value.rotation !== 'number' ||
+        !Number.isFinite(value.rotation)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.place(value.defId, value.pos, value.rotation),
+      });
+    } else if (value.t === 'buildRoadPipes') {
+      this.emit({ t: 'result', reqId, ...this.simulation.buildWaterPipes() });
+    } else if (value.t === 'buildNetwork') {
+      if (
+        !('net' in value) ||
+        (value.net !== 'power' && value.net !== 'water')
+      ) {
+        fail('err.notImplemented');
+        return;
+      }
+      if (
+        !('points' in value) ||
+        !Array.isArray(value.points) ||
+        !value.points.every(finitePoint)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...(value.net === 'water'
+          ? this.simulation.buildWaterPipes(value.points)
+          : this.simulation.buildPowerLine(value.points)),
+      });
+    } else if (value.t === 'bulldoze') {
+      const targets =
+        'targets' in value
+          ? value.targets
+          : 'target' in value
+            ? [value.target]
+            : undefined;
+      if (
+        !isBulldozeTargets(targets) ||
+        ('targets' in value && 'target' in value)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({ t: 'result', reqId, ...this.simulation.bulldoze(targets) });
+    } else if (value.t === 'zone') {
+      if (
+        !('cells' in value) ||
+        !('zone' in value) ||
+        !isZonePayload(value.cells, value.zone)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.zone(value.cells, value.zone as ZoneType | null),
+      });
+    } else if (value.t === 'buildRoad') {
+      if (
+        !('type' in value) ||
+        typeof value.type !== 'string' ||
+        !Object.hasOwn(ROADS, value.type) ||
+        !('points' in value) ||
+        !isStraightRoadDraft(value.points)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.buildRoad(value.type as RoadTypeId, value.points),
+      });
+    } else if (value.t === 'setSpeed') {
+      if (
+        !('speed' in value) ||
+        (value.speed !== 0 &&
+          value.speed !== 1 &&
+          value.speed !== 2 &&
+          value.speed !== 4)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.simulation.setSpeed(value.speed);
+      this.emit({ t: 'clock', clock: this.simulation.readClock() });
+      this.emit({ t: 'result', reqId, ok: true });
+    } else fail('err.notImplemented');
+  }
+
+  /** Send one compact clock event after each batch of fixed steps. */
+  advance(elapsedMs: number): void {
+    if (this.simulation?.advance(elapsedMs))
+      this.emit({ t: 'clock', clock: this.simulation.readClock() });
+  }
+}
