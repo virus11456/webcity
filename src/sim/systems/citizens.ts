@@ -124,6 +124,7 @@ export class CitizenSystem {
             ),
           );
     c.health[i] = CITIZEN_RULES.initialHealth;
+    c.healthFraction[i] = 0;
     c.happiness[i] = CITIZEN_RULES.initialHappiness;
     c.wealth[i] = Math.min(2, Math.floor(c.education[i]! / 2));
     this.indices.set(id, i);

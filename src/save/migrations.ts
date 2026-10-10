@@ -1,3 +1,4 @@
+import { HEALTH } from '../data/health';
 import { emptyFire } from '../world/fire';
 import { FIRE } from '../data/fire';
 import { emptyCargo } from '../world/cargo';
@@ -218,6 +219,22 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
             b.crimeUpdatedDay >= 0 &&
             b.crimeUpdatedDay <= s.clock.day)),
     );
+    if (b.health)
+      requireValue(
+        Number.isFinite(b.health.average) &&
+          b.health.average >= 0 &&
+          b.health.average <= 100 &&
+          Number.isSafeInteger(b.health.sick) &&
+          b.health.sick >= 0 &&
+          Number.isSafeInteger(b.health.residents) &&
+          b.health.residents >= b.health.sick,
+      );
+    if (b.drinkingWaterPollution !== undefined)
+      requireValue(
+        Number.isFinite(b.drinkingWaterPollution) &&
+          b.drinkingWaterPollution >= 0 &&
+          b.drinkingWaterPollution <= 100,
+      );
     if (b.fire)
       requireValue(
         typeof b.fire.burning === 'boolean' &&
@@ -280,6 +297,12 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
       c.nextHouseholdId > 0 &&
       Number.isSafeInteger(c.lastDay),
   );
+  if (!Object.hasOwn(c, 'lastHealthDay')) c.lastHealthDay = -1;
+  requireValue(
+    Number.isSafeInteger(c.lastHealthDay) &&
+      c.lastHealthDay >= -1 &&
+      c.lastHealthDay <= s.clock.day,
+  );
   // M2-07 tables predate journey columns. Add only wholly absent journey schema.
   if (!Object.hasOwn(c, 'locationId')) {
     for (const k of [
@@ -302,6 +325,8 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     ] as const)
       c[k] = new Uint8Array(c.id.length);
   }
+  if (!Object.hasOwn(c, 'healthFraction'))
+    c.healthFraction = new Uint8Array(c.id.length);
   for (const k of CITIZEN_INT_FIELDS)
     requireValue(
       c[k] instanceof Int32Array &&
@@ -330,6 +355,8 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
         c.age[i]! <= 100 &&
         c.education[i]! <= 3 &&
         c.health[i]! <= 100 &&
+        c.healthFraction[i]! < HEALTH.precision &&
+        (c.health[i]! < 100 || c.healthFraction[i] === 0) &&
         c.happiness[i]! <= 100 &&
         c.wealth[i]! <= 2 &&
         c.state[i]! <= 7 &&

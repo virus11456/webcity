@@ -175,6 +175,11 @@ function Content({
           `${t(`finance.${service as keyof NonNullable<typeof b.coverage>}`)} ${t('service.coverage')}`,
           `${Math.round(value * 100)}%`,
         ]);
+    if (b.health?.residents)
+      rows.push(
+        [t('health.average'), `${b.health.average.toFixed(1)}%`],
+        [t('health.sick'), `${b.health.sick} / ${b.health.residents}`],
+      );
     if (b.fire)
       rows.push(
         [
@@ -197,7 +202,8 @@ function Content({
     const problems = Object.keys(PROBLEMS).filter(
       (key) =>
         (b.problemTimers[key as keyof typeof PROBLEMS] ?? 0) > 0 ||
-        ((key === 'crime' || key === 'fire') && hasBuildingProblem(b, key)),
+        ((key === 'crime' || key === 'fire' || key === 'sickness') &&
+          hasBuildingProblem(b, key)),
     );
     rows.push([
       t('inspect.problems'),

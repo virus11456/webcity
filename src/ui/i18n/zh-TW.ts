@@ -1,5 +1,7 @@
 export const ZH_TW = {
   'err.serviceRoad': '需要緊鄰可進出的地面道路',
+  'health.average': '居民平均健康',
+  'health.sick': '生病居民 / 居民數',
   'fire.station': '派遣消防局',
   'fire.truck': '消防車',
   'fire.responding': '前往火場救援',
