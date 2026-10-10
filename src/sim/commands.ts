@@ -299,6 +299,25 @@ export class CommandDispatcher {
         reqId,
         ...this.simulation.zone(value.cells, value.zone as ZoneType | null),
       });
+    } else if (value.t === 'upgradeRoad') {
+      if (
+        !('segment' in value) ||
+        !Number.isSafeInteger(value.segment) ||
+        !('type' in value) ||
+        typeof value.type !== 'string' ||
+        !Object.hasOwn(ROADS, value.type)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.upgradeRoad(
+          value.segment as number,
+          value.type as RoadTypeId,
+        ),
+      });
     } else if (value.t === 'buildRoad') {
       if (
         !('type' in value) ||

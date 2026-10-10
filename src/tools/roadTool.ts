@@ -1,3 +1,4 @@
+import { pickUpgradeRoad, previewRoadUpgrade } from '../world/roadUpgrade';
 import { distance, lerp, normalize } from '../core/math';
 import { ROAD_CURVES } from '../data/roadCurves';
 import { buildingsChangeFootprints } from '../bridge/buildingChanges';
@@ -17,13 +18,15 @@ import {
 import type { Vec2 } from '../world/types';
 import type { Tool, ToolContext, ToolPointer } from './tool';
 
-export type RoadMode = 'straight' | 'curve' | 'free';
+export type RoadMode = 'straight' | 'curve' | 'free' | 'upgrade';
 export interface RoadToolState {
   active: boolean;
   ready: boolean;
   pending: boolean;
   phase: 'start' | 'control' | 'end' | 'confirm';
   mode: RoadMode;
+  upgradeCount: number;
+  demolitions: number;
   type: RoadTypeId;
   angleSnap: boolean;
   preview: ConstructionPreview | null;
@@ -40,6 +43,7 @@ export class RoadTool implements Tool {
   private end: Vec2 | null = null;
   private control: Vec2 | null = null;
   private stroke: Vec2[] = [];
+  private upgradeIds = new Set<number>();
   private down: ToolPointer | null = null;
   private epoch = 0;
   private shift = false;
@@ -51,6 +55,8 @@ export class RoadTool implements Tool {
     pending: false,
     phase: 'start',
     mode: 'straight',
+    upgradeCount: 0,
+    demolitions: 0,
     type: 'road_small',
     angleSnap: true,
     preview: null,
@@ -116,6 +122,32 @@ export class RoadTool implements Tool {
     this.changed({ ...this.state });
   }
   private recalculate(): void {
+    if (this.state.mode === 'upgrade' && this.world) {
+      const quotes = [...this.upgradeIds].map((id) =>
+        previewRoadUpgrade(this.world!, id, this.state.type),
+      );
+      const last = quotes.at(-1),
+        bad = quotes.find((q) => !q.result.canBuild),
+        cost = quotes.reduce((n, q) => n + (q.result.preview?.cost ?? 0), 0);
+      this.state.preview = last ? structuredClone(last.result) : null;
+      this.state.upgradeCount = quotes.length;
+      this.state.demolitions = new Set(
+        quotes.flatMap((q) => q.removedBuildingIndices),
+      ).size;
+      if (this.state.preview?.preview) {
+        this.state.preview.preview.cost = cost;
+        if (bad) {
+          this.state.preview.canBuild = false;
+          this.state.preview.reason = bad.result.reason;
+        } else if (this.world.mode !== 'sandbox' && cost > this.world.money) {
+          this.state.preview.canBuild = false;
+          this.state.preview.reason = 'err.notEnoughMoney';
+        }
+      }
+      this.publish();
+      return;
+    }
+
     this.state.preview =
       this.anchor &&
       this.end &&
@@ -164,7 +196,10 @@ export class RoadTool implements Tool {
     return {};
   }
   setMode(mode: RoadMode): void {
-    if (this.state.pending || !['straight', 'curve', 'free'].includes(mode))
+    if (
+      this.state.pending ||
+      !['straight', 'curve', 'free', 'upgrade'].includes(mode)
+    )
       return;
     this.onCancel();
     this.state.mode = mode;
@@ -209,6 +244,10 @@ export class RoadTool implements Tool {
       event.button === 0
     ) {
       this.down = { ...event };
+      if (this.state.mode === 'upgrade') {
+        this.upgradeIds.clear();
+        this.selectUpgrade(event);
+      }
       if (this.state.mode === 'free' && this.world) {
         const p = this.ctx.pick(event.x, event.y);
         if (p) {
@@ -221,8 +260,26 @@ export class RoadTool implements Tool {
       }
     }
   }
+  private selectUpgrade(event: ToolPointer): void {
+    if (!this.world) return;
+    const p = this.ctx.pick(event.x, event.y);
+    if (!p) return;
+    const id = pickUpgradeRoad(this.world, p);
+    if (id !== undefined) this.upgradeIds.add(id);
+    this.state.phase = 'confirm';
+    this.recalculate();
+  }
   /** Mouse hover previews the endpoint; touch placement waits for a tap. */
   onPointerMove(event: ToolPointer): void {
+    if (
+      this.state.mode === 'upgrade' &&
+      this.state.active &&
+      !this.state.pending
+    ) {
+      if (!this.down) this.upgradeIds.clear();
+      this.selectUpgrade(event);
+      return;
+    }
     if (
       this.state.mode === 'free' &&
       this.down &&
@@ -260,6 +317,11 @@ export class RoadTool implements Tool {
     this.down = null;
     if (!down || !this.world || !this.state.active || this.state.pending)
       return;
+    if (this.state.mode === 'upgrade') {
+      this.selectUpgrade(event);
+      if (event.kind === 'mouse') this.onConfirm();
+      return;
+    }
     const point = this.ctx.pick(event.x, event.y);
     if (!point) return;
     this.state.reason = null;
@@ -296,6 +358,8 @@ export class RoadTool implements Tool {
     this.down = null;
     this.anchor = this.end = this.control = null;
     this.stroke = [];
+    this.upgradeIds.clear();
+    this.state.upgradeCount = this.state.demolitions = 0;
     this.state.phase = 'start';
     this.state.preview = null;
     this.state.reason = null;
@@ -321,6 +385,26 @@ export class RoadTool implements Tool {
     this.state.pending = true;
     this.publish();
     try {
+      if (this.state.mode === 'upgrade') {
+        for (const segment of this.upgradeIds) {
+          if (epoch !== this.epoch || !this.state.active) break;
+          const response = await this.ctx.sim.send({
+            t: 'upgradeRoad',
+            segment,
+            type,
+          });
+          if (response.t !== 'result' || !response.ok) {
+            this.state.reason =
+              response.t === 'result'
+                ? (response.reason ?? 'err.invalidCommand')
+                : 'err.invalidCommand';
+            break;
+          }
+        }
+        this.upgradeIds.clear();
+        this.state.phase = 'start';
+        return;
+      }
       const response = await this.ctx.sim.send({
         t: 'buildRoad',
         type,

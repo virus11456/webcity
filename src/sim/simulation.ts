@@ -1,3 +1,4 @@
+import { previewRoadUpgrade, upgradedPayment } from '../world/roadUpgrade';
 import {
   chargeConstruction,
   financeView,
@@ -37,7 +38,9 @@ import { rebuildZoneGrid } from '../world/zoneGrid';
 import { roadBedPatch } from '../world/roadBed';
 import { roadHeightAt } from '../world/roadProfile';
 import { GAME_MODES } from '../data/config';
-import type { RoadTypeId } from '../data/roads';
+import { ROADS, ROAD_RULES, type RoadTypeId } from '../data/roads';
+import { projectCurve } from '../world/roadCurves';
+import { BULLDOZE } from '../data/bulldoze';
 import { RoadGraph } from '../world/roadGraph';
 import { validateRoadDraft } from '../world/roadConstruction';
 import type { RoadDraft } from '../world/snapshot';
@@ -432,6 +435,147 @@ export class Simulation {
         updated: structuredClone(restored),
       });
     if (s.buildings.length) this.refreshPopulation();
+    return { ok: true, cost };
+  }
+
+  /** Replace one road after a fresh authoritative quote; unaffected buildings retain their IDs. */
+  upgradeRoad(id: number, type: RoadTypeId): Omit<Result, 't' | 'reqId'> {
+    if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
+    const s = this.state,
+      old = s.segments.find((r) => r.id === id),
+      quote = previewRoadUpgrade(
+        { ...s, heights: s.terrain.heights, mode: s.settings.mode },
+        id,
+        type,
+      );
+    if (
+      !quote.result.canBuild ||
+      !quote.result.preview ||
+      !quote.segment ||
+      !old
+    )
+      return { ok: false, reason: quote.result.reason ?? 'err.invalidCommand' };
+    const cost = quote.result.preview.cost,
+      charge = chargeConstruction(s, cost);
+    if (!charge.ok) return charge;
+    const access = roadAccess(s.nodes, s.segments),
+      connected = new Set(s.buildings.filter(access).map((b) => b.id));
+    const removed = new Set(
+        quote.removedBuildingIndices.map((i) => s.buildings[i]!.id),
+      ),
+      segment = {
+        ...quote.segment,
+        ...upgradedPayment(old, cost, s.clock.day),
+      };
+    s.segments = s.segments.map((r) => (r.id === id ? segment : r));
+    const oldStart = s.nodes.find((n) => n.id === old.start)!.pos,
+      oldEnd = s.nodes.find((n) => n.id === old.end)!.pos;
+    const setbacks: Building[] = [];
+    for (const b of s.buildings) {
+      const gap = projectCurve(b.pos, [
+        oldStart,
+        old.c1,
+        old.c2,
+        oldEnd,
+      ]).distance;
+      if (
+        !removed.has(b.id) &&
+        gap <=
+          ROADS[old.type].widthM / 2 +
+            (b.frontageSetbackM ?? 0) +
+            BULLDOZE.frontageToleranceM
+      ) {
+        b.frontageSetbackM = Math.min(
+          Math.max(...Object.values(ROADS).map((r) => r.widthM)) / 2,
+          Math.max(
+            0,
+            (b.frontageSetbackM ?? 0) +
+              (ROADS[old.type].widthM - ROADS[type].widthM) / 2,
+          ),
+        );
+        setbacks.push(b);
+      }
+    }
+    s.buildings = s.buildings.filter((b) => !removed.has(b.id));
+    for (const n of s.nodes) {
+      const wide = n.segments.filter((id) => {
+        const r = s.segments.find((s) => s.id === id)!;
+        return (
+          ROADS[r.type].lanesForward + ROADS[r.type].lanesBackward >=
+          ROAD_RULES.signalMinLanes
+        );
+      }).length;
+      n.control = wide >= ROAD_RULES.signalMinWideArms ? 'lights' : 'none';
+    }
+    // A pure direction reversal has identical physical frontage and zoning.
+    const reversal = old.type === type && old.start === segment.end;
+    const zones = reversal
+      ? {
+          blocks: s.zoneBlocks,
+          segments: s.segments,
+          removed: [],
+          nextId: s.nextId,
+        }
+      : rebuildZoneGrid({
+          ...s,
+          heights: s.terrain.heights,
+          zoneBlocks: s.zoneBlocks.map((b) => ({
+            ...b,
+            buildingAt: Int32Array.from(b.buildingAt, (id) =>
+              removed.has(id) ? -1 : id,
+            ),
+          })),
+        });
+    s.segments = zones.segments;
+    s.zoneBlocks = zones.blocks;
+    s.nextId = zones.nextId;
+    const anchors = new Map<number, { zoneBlock: number; blockCell: number }>();
+    for (const block of s.zoneBlocks)
+      block.buildingAt.forEach((id, i) => {
+        if (id !== -1 && !anchors.has(id))
+          anchors.set(id, { zoneBlock: block.id, blockCell: i });
+      });
+    const updated: Building[] = [...setbacks];
+    for (const b of s.buildings)
+      if (b.kind === 'zoned') {
+        const a = anchors.get(b.id);
+        if (b.zoneBlock !== a?.zoneBlock || b.blockCell !== a?.blockCell) {
+          b.zoneBlock = a?.zoneBlock;
+          b.blockCell = a?.blockCell;
+          updated.push(b);
+        }
+      }
+    const terrain = roadBedPatch(s.terrain.heights, s.nodes, s.segments);
+    terrain.indices.forEach((i, j) => {
+      s.terrain.heights[i] = terrain.heights[j]!;
+    });
+    if (terrain.indices.length) s.terrain.revision++;
+    this.emit({
+      t: 'roadsChanged',
+      added: structuredClone(s.segments),
+      removed: [],
+      nodes: structuredClone(s.nodes),
+      removedNodes: [],
+      terrain: { ...terrain, revision: s.terrain.revision },
+    });
+    this.emit({
+      t: 'zonesChanged',
+      blocks: structuredClone(s.zoneBlocks),
+      removed: zones.removed,
+    });
+    const changed = [
+      ...new Map(
+        [...updated, ...refreshRoadAccess(s, connected)].map((b) => [b.id, b]),
+      ).values(),
+    ];
+    this.emit({
+      t: 'buildingsChanged',
+      added: [],
+      removed: [...removed],
+      updated: structuredClone(changed),
+    });
+    this.emit({ t: 'fundsChanged', money: s.money });
+    this.refreshPopulation();
     return { ok: true, cost };
   }
 

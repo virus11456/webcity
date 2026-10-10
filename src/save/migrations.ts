@@ -154,6 +154,8 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
   for (const r of s.segments)
     requireValue(
       r.type in ROADS &&
+        (r.zoningReversed === undefined ||
+          typeof r.zoningReversed === 'boolean') &&
         nodes.has(r.start) &&
         nodes.has(r.end) &&
         point(r.c1) &&
@@ -176,7 +178,11 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     );
   for (const b of s.buildings) {
     requireValue(
-      point(b.pos) &&
+      (b.frontageSetbackM === undefined ||
+        (b.frontageSetbackM >= 0 &&
+          b.frontageSetbackM <=
+            Math.max(...Object.values(ROADS).map((r) => r.widthM)) / 2)) &&
+        point(b.pos) &&
         typeof b.defId === 'string' &&
         ['construction', 'active', 'abandoned', 'burned'].includes(b.state) &&
         b.lotW > 0 &&

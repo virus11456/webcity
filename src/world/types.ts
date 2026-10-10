@@ -31,6 +31,7 @@ export interface RoadSegment {
   elevated: boolean;
   builtDay: number; // 用於 7 天內全額退款
   paidCost?: number; // Actual paid cost, apportioned exactly when roads split.
+  zoningReversed?: boolean; // Keep physical lot orientation when traffic direction flips.
   zoneBlockIds: Id[];
 }
 
@@ -79,6 +80,7 @@ export interface PopulationDetails {
   movedOut: number;
 }
 export interface Building {
+  frontageSetbackM?: number; // Retained driveway after road narrowing.
   id: Id;
   kind: 'zoned' | 'service' | 'park' | 'utility' | 'unique';
   builtDay?: number;

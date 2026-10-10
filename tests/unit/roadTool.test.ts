@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SimClient, type SimTransport } from '../../src/bridge/simClient';
 import type { Command, SimEvent } from '../../src/bridge/protocol';
+import { lerp } from '../../src/core/math';
 import { Simulation } from '../../src/sim/simulation';
 import { RoadTool } from '../../src/tools/roadTool';
 import { ToolManager } from '../../src/tools/toolManager';
@@ -30,7 +31,7 @@ afterEach(() => {
   disposers.splice(0).forEach((fn) => fn());
   vi.useRealTimers();
 });
-function setup(money = 70000) {
+function setup(money = 70000, roads = false) {
   const transport = new Transport(),
     sim = new SimClient(transport as SimTransport);
   const snapshot = new Simulation({
@@ -41,6 +42,21 @@ function setup(money = 70000) {
   }).snapshot();
   snapshot.terrain.heights.fill(60);
   snapshot.money = snapshot.stats.money = money;
+  if (roads) {
+    const real = new Simulation(snapshot.settings, undefined, snapshot);
+    for (const z of [-80, 80]) {
+      const start = { x: -160, z },
+        end = { x: 160, z };
+      real.buildRoad('gravel', {
+        start,
+        end,
+        c1: lerp(start, end, 1 / 3),
+        c2: lerp(start, end, 2 / 3),
+        elevated: false,
+      });
+    }
+    Object.assign(snapshot, real.snapshot());
+  }
   transport.emit({ t: 'ready', reqId: 1, snapshot });
   const show = vi.fn(),
     changed = vi.fn();
@@ -249,5 +265,40 @@ describe('curved and free tool input', () => {
     tool.onConfirm();
     expect(transport.sent).toHaveLength(0);
     expect(tool.readState().phase).toBe('start');
+  });
+});
+
+describe('road upgrade gestures', () => {
+  it('touch waits for confirmation and cancellation sends nothing', async () => {
+    const { tool, tap, transport, respond } = setup(70000, true);
+    tool.setMode('upgrade');
+    tap(0, -80);
+    expect(tool.readState().upgradeCount).toBe(1);
+    expect(tool.readState().preview?.preview?.cost).toBe(480);
+    expect(transport.sent).toHaveLength(0);
+    tool.onCancel();
+    tool.onConfirm();
+    expect(transport.sent).toHaveLength(0);
+    tap(0, -80);
+    tool.onConfirm();
+    expect(transport.sent[0]!.t).toBe('upgradeRoad');
+    await respond();
+    expect(tool.readState().pending).toBe(false);
+  });
+  it('clears hover selection on down and submits each dragged road only once', async () => {
+    const { tool, transport, respond } = setup(70000, true);
+    tool.setMode('upgrade');
+    tool.onPointerMove({ x: 0, y: -80, kind: 'mouse', button: 0 });
+    tool.onPointerDown({ x: 0, y: 80, kind: 'mouse', button: 0 });
+    expect(tool.readState().upgradeCount).toBe(1);
+    for (const y of [80, -80, -80, 80])
+      tool.onPointerMove({ x: 0, y, kind: 'mouse', button: 0 });
+    expect(tool.readState().upgradeCount).toBe(2);
+    tool.onPointerUp({ x: 0, y: 80, kind: 'mouse', button: 0 });
+    expect(transport.sent).toHaveLength(1);
+    await respond();
+    expect(transport.sent).toHaveLength(2);
+    await respond();
+    expect(tool.readState().pending).toBe(false);
   });
 });

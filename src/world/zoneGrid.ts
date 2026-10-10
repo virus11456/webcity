@@ -198,7 +198,13 @@ export function rebuildZoneGrid(w: ZoneGridWorld): ZoneGridChange {
     (a, b) => a.builtDay - b.builtDay || a.id - b.id,
   )) {
     if (s.elevated || ROADS[s.type].zoning === 'none') continue;
-    const points = samples.get(s.id)!,
+    const sampled = samples.get(s.id)!,
+      total = sampled.at(-1)!.distance,
+      points = s.zoningReversed
+        ? [...sampled]
+            .reverse()
+            .map((p) => ({ ...p, distance: total - p.distance }))
+        : sampled,
       start = points[0]!,
       end = points[points.length - 1]!,
       length = end.distance;
