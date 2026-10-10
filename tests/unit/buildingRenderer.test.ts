@@ -2,6 +2,7 @@ import { WorldMirror } from '../../src/bridge/mirror';
 import { Simulation } from '../../src/sim/simulation';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  Vector3,
   BoxGeometry,
   CanvasTexture,
   Color,
@@ -109,6 +110,31 @@ describe('building event rendering', () => {
       near.dispose();
       far.dispose();
     }
+  });
+  it('rebuilds the model and emits a bounded change effect when an occupied home upgrades', () => {
+    const s = setup(),
+      b = structuredClone(districtFixture(2)[1]!);
+    b.level = 1;
+    b.state = 'active';
+    s.renderer.reset([b]);
+    s.settle(180);
+    const before = new Vector3(),
+      after = new Vector3();
+    s.renderer.roof(b.id, before);
+    expect(s.renderer.readStats().dust).toBe(0);
+    s.renderer.accept({
+      t: 'buildingsChanged',
+      added: [],
+      removed: [],
+      updated: [{ id: b.id, level: 5 }],
+    });
+    s.settle(1);
+    s.renderer.roof(b.id, after);
+    expect(after.y).toBeGreaterThan(before.y);
+    expect(s.renderer.readStats().dust).toBeGreaterThan(0);
+    s.settle(180);
+    expect(s.renderer.readStats().dust).toBe(0);
+    s.dispose();
   });
   it('coalesces pending adds, partial patches and removal, never mutating event data', () => {
     const s = setup(),

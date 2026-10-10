@@ -198,6 +198,7 @@ describe('GDD RCIO demand', () => {
     mirror.apply({ t: 'ready', reqId: 1, snapshot: sim.snapshot() });
     const remove = sim.onDay((s) => {
       s.buildings = [building(1, 'RL'), building(2, 'CL')];
+      for (const b of s.buildings) b.flags = 7;
     });
     for (let n = 0; n < TIME.ticksPerDay; n++) sim.tick();
     remove();

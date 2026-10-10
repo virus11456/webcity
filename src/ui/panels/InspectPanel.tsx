@@ -181,6 +181,28 @@ function Content({
           `${t(`finance.${service as keyof NonNullable<typeof b.coverage>}`)} ${t('service.coverage')}`,
           `${Math.round(value * 100)}%`,
         ]);
+    if (b.happiness !== undefined)
+      rows.push([t('hud.happiness'), `${b.happiness.toFixed(1)}%`]);
+    if (b.upgrade) {
+      const q = b.upgrade;
+      rows.push([
+        t('level.target'),
+        q.target === b.level ? t('level.max') : `Lv${q.target}`,
+      ]);
+      if (q.target > b.level)
+        rows.push(
+          [t('level.progress'), `${Math.round(q.progress * 100)}%`],
+          [
+            t('level.land'),
+            `${(b.landValue ?? 0).toFixed(1)} / ${q.landRequired}`,
+          ],
+          [
+            t('level.education'),
+            `${q.education.toFixed(2)} / ${q.educationRequired}`,
+          ],
+          [t('level.utilities'), t(q.utilities ? 'inspect.yes' : 'inspect.no')],
+        );
+    }
     if (b.environment) {
       rows.push(
         [t('environment.pollution'), b.environment.pollution.toFixed(1)],
@@ -284,6 +306,15 @@ function Content({
           </div>
         ))}
       </dl>
+      {info.kind === 'building' &&
+        info.value.upgrade &&
+        info.value.upgrade.target > info.value.level && (
+          <progress
+            aria-label={t('level.progress')}
+            value={info.value.upgrade.progress}
+            max={1}
+          />
+        )}
       {failure && <p role="alert">{failure}</p>}
       {info.kind === 'building' &&
         info.value.defId !== 'tree' &&

@@ -87,6 +87,21 @@ export interface HealthSummary {
   residents: number;
 }
 export interface Building {
+  happiness?: number;
+  development?: {
+    lastDay: number;
+    lastCheckDay: number;
+    lowValueSinceDay?: number;
+    changedDay?: number;
+  };
+  upgrade?: {
+    target: number;
+    landRequired: number;
+    education: number;
+    educationRequired: number;
+    utilities: boolean;
+    progress: number;
+  };
   sewageDischarge?: number;
   environment?: { pollution: number; noise: number; waterPollution: number };
   landValue?: number;

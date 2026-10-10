@@ -70,7 +70,9 @@ export function updatePopulation(
             Math.imul(b.id, 0x85ebca6b) ^
             Math.imul(s.clock.day, 0x9e3779b1),
         );
-        if (s.stats.happiness < CITIZENS.moveOutHappinessBelow) {
+        if (
+          (b.happiness ?? s.stats.happiness) < CITIZENS.moveOutHappinessBelow
+        ) {
           if (occupied && rng.next() < CITIZENS.moveOutChancePerDay) {
             const size = pick(h.sizes, rng);
             h.sizes[size]!--;

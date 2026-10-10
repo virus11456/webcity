@@ -1,3 +1,4 @@
+import { HAPPINESS } from '../../data/simulation';
 import { useLayoutEffect, useState } from 'preact/hooks';
 import { layout, observeLayout } from '../store';
 import { Button } from '../components/Button';
@@ -63,6 +64,21 @@ function CityDetails({ stats }: { stats: CityStats | undefined }) {
         <div>
           <dt>{t('hud.happiness')}</dt>
           <dd data-field="happiness">
+            <span
+              aria-label={t(
+                stats && stats.happiness > HAPPINESS.happyAbove
+                  ? 'hud.happy'
+                  : stats && stats.happiness < HAPPINESS.unhappyBelow
+                    ? 'hud.unhappy'
+                    : 'hud.neutral',
+              )}
+            >
+              {stats && stats.happiness > HAPPINESS.happyAbove
+                ? '☺'
+                : stats && stats.happiness < HAPPINESS.unhappyBelow
+                  ? '☹'
+                  : '◉'}
+            </span>{' '}
             {stats ? `${Math.round(stats.happiness)}%` : '—'}
           </dd>
         </div>

@@ -223,6 +223,40 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
             b.crimeUpdatedDay >= 0 &&
             b.crimeUpdatedDay <= s.clock.day)),
     );
+    if (b.happiness !== undefined)
+      requireValue(
+        Number.isFinite(b.happiness) && b.happiness >= 0 && b.happiness <= 100,
+      );
+    if (b.development) {
+      requireValue(
+        Number.isSafeInteger(b.development.lastDay) &&
+          b.development.lastDay >= -1 &&
+          b.development.lastDay <= s.clock.day,
+      );
+      for (const value of [
+        b.development.lastCheckDay,
+        b.development.lowValueSinceDay,
+        b.development.changedDay,
+      ])
+        if (value !== undefined)
+          requireValue(
+            Number.isSafeInteger(value) && value >= 0 && value <= s.clock.day,
+          );
+    }
+    if (b.upgrade)
+      requireValue(
+        Number.isSafeInteger(b.upgrade.target) &&
+          b.upgrade.target >= 1 &&
+          b.upgrade.target <= 5 &&
+          [
+            b.upgrade.landRequired,
+            b.upgrade.education,
+            b.upgrade.educationRequired,
+            b.upgrade.progress,
+          ].every((v) => Number.isFinite(v) && v >= 0) &&
+          b.upgrade.progress <= 1 &&
+          typeof b.upgrade.utilities === 'boolean',
+      );
     for (const value of [b.landValue, b.parkBonus])
       if (value !== undefined)
         requireValue(Number.isFinite(value) && value >= 0);
