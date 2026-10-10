@@ -582,3 +582,6 @@ FireSystem 保存 WorldSnapshot.fire／Building.fire，日結依確定性 RNG �
 
 
 M2-20：FieldsSystem 以 clock.ticks 的 1／3／5／7 相位分散四個 300×300 場，差異才發送 fields 事件。environmentVersion 保留期中狀態，WaterSystem 產生實際排污與容量加權飲用水污染，TrafficSystem 提供可從存檔重建的即時道路車數。Building.environment／sewageDischarge 為向下相容摘要。見 ENVIRONMENT.md。
+
+
+M2-21：happiness／levels 在 Worker 更新 Building.happiness、upgrade 與 development；每日守衛及低地價計時保存在存檔，更新容量後重跑人口／供應，HUD 與個人幸福度由權威聚合。BuildingRenderer 既有 level recipe 使模型與有界改建特效同步更新。詳見 LEVELS.md。

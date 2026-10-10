@@ -136,6 +136,8 @@ export function createGrowthControls(
         p.education !== undefined ||
         p.landValue !== undefined ||
         p.parkBonus !== undefined ||
+        p.happiness !== undefined ||
+        p.upgrade !== undefined ||
         p.environment !== undefined ||
         p.drinkingWaterPollution !== undefined ||
         p.problemTimers !== undefined ||

@@ -1,3 +1,5 @@
+import { updateHappiness } from './systems/happiness';
+import { updateLevels } from './systems/levels';
 import {
   FieldsSystem,
   updateLandValue,
@@ -147,8 +149,11 @@ export class Simulation {
     if (restored?.environmentVersion === 1) environmentSummary(this.state);
     else updateLandValue(this.state);
     this.state.environmentVersion = 1;
+    updateHappiness(this.state);
+    updateLevels(this.state);
     this.fire = new FireSystem(this.state, this.routePlanner, this.traffic);
     this.time.onDay(() => {
+      const priorHappiness = updateHappiness(this.state);
       const population = updatePopulation(this.state, true);
       const power = [...updatePower(this.state), ...updateWater(this.state)];
       this.cargo.daily();
@@ -176,9 +181,21 @@ export class Simulation {
               ...updateLandValue(this.state),
             ]
           : [];
+      const levels = updateLevels(this.state, true);
+      if (
+        levels.some((p) => p.development?.changedDay === this.state.clock.day)
+      )
+        levels.push(
+          ...updatePopulation(this.state),
+          ...updatePower(this.state),
+          ...updateWater(this.state),
+          ...updateLevels(this.state),
+        );
+      const happiness = updateHappiness(this.state);
       updateDemand(this.state);
       const updates = new Map<number, BuildingPatch>();
       for (const p of [
+        ...priorHappiness,
         ...population,
         ...servicePatches,
         ...crimePatches,
@@ -188,6 +205,8 @@ export class Simulation {
         ...this.cargo.patches(),
         ...problems,
         ...reconciliation,
+        ...levels,
+        ...happiness,
       ])
         updates.set(p.id, { ...updates.get(p.id), ...p });
       const updated = [...updates.values()];
@@ -281,6 +300,7 @@ export class Simulation {
             ? takeLoan(s, command.bank)
             : repayLoan(s, command.index);
     if (result.ok) {
+      if (command.t === 'setTax') this.refreshPower();
       if (command.t === 'setBudget') {
         if (command.dept === 'education') this.refreshPopulation();
         else this.refreshPower();
@@ -324,6 +344,7 @@ export class Simulation {
         ...updateEducationSummary(this.state),
         ...updateLandValue(this.state),
       );
+    patches.push(...updateHappiness(this.state), ...updateLevels(this.state));
     const merged = new Map<number, BuildingPatch>();
     for (const p of patches) merged.set(p.id, { ...merged.get(p.id), ...p });
     const updated = [...merged.values()];

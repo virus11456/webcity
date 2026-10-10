@@ -306,6 +306,8 @@ describe('moving out and replay', () => {
     const off = sim.onDay((s) => {
       authority = s;
       s.buildings = [building(1), building(2, 'I')];
+      // Residents enter only when this previously supply-agnostic fixture has working utilities.
+      for (const b of s.buildings) b.flags = 7;
     });
     for (let i = 0; i < 10; i++) sim.tick();
     off();
