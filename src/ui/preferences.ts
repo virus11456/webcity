@@ -13,6 +13,7 @@ const defaults: Preferences = {
   volume: AUDIO.volume,
   sfxVolume: AUDIO.sfxVolume,
   ambientVolume: AUDIO.ambientVolume,
+  musicVolume: AUDIO.musicVolume,
 };
 /** Validate persisted preferences and safely fall back when browser storage is unavailable. */
 export function readPreferences(): Preferences {
@@ -28,6 +29,7 @@ export function readPreferences(): Preferences {
       volume: volume(value.volume, AUDIO.volume),
       sfxVolume: volume(value.sfxVolume, AUDIO.sfxVolume),
       ambientVolume: volume(value.ambientVolume, AUDIO.ambientVolume),
+      musicVolume: volume(value.musicVolume, AUDIO.musicVolume),
       quality: ['auto', 'low', 'medium', 'high'].includes(value.quality ?? '')
         ? value.quality!
         : 'auto',

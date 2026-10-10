@@ -189,6 +189,8 @@ export const ZH_TW = {
   'menu.volume': '音量',
   'menu.audioHint': '首次點擊畫面後啟用音訊；切到背景會自動靜音。',
   'menu.sfxVolume': '操作音效',
+  'menu.musicVolume': '背景音樂',
+  'menu.musicHint': '六首原創器樂隨機輪播；音樂以網路串流播放。',
   'menu.ambientVolume': '城市環境音',
   'menu.settingsFailed': '無法儲存設定，請確認瀏覽器允許本機儲存。',
   'menu.install':

@@ -15,6 +15,8 @@ export class AudioManager {
   private master?: GainNode;
   private effects?: GainNode;
   private environment?: GainNode;
+  private music?: GainNode;
+  private musicSource?: MediaElementAudioSourceNode;
   private analyser?: AnalyserNode;
   private samples = new Float32Array(256);
   private buffers = new Map<string, AudioBuffer>();
@@ -30,6 +32,7 @@ export class AudioManager {
     volume: AUDIO.volume,
     sfxVolume: AUDIO.sfxVolume,
     ambientVolume: AUDIO.ambientVolume,
+    musicVolume: AUDIO.musicVolume,
   };
   private buildings = new Map<
     number,
@@ -54,6 +57,8 @@ export class AudioManager {
         this.master = ctx.createGain();
         this.effects = ctx.createGain();
         this.environment = ctx.createGain();
+        this.music = ctx.createGain();
+        this.music.connect(this.master);
         this.analyser = ctx.createAnalyser();
         this.analyser.fftSize = 512;
         this.effects.connect(this.master);
@@ -91,6 +96,14 @@ export class AudioManager {
       /* Remain silent and retry on the next gesture. */
     }
   }
+  connectMusic(element: HTMLAudioElement): boolean {
+    if (!this.context || !this.music || this.closed) return false;
+    if (!this.musicSource) {
+      this.musicSource = this.context.createMediaElementSource(element);
+      this.musicSource.connect(this.music);
+    }
+    return true;
+  }
   private startLoop(id: AmbienceId) {
     if (!this.context || !this.environment || this.loops.has(id)) return;
     const source = this.context.createBufferSource(),
@@ -108,6 +121,7 @@ export class AudioManager {
       volume: Math.max(0, Math.min(100, levels.volume)),
       sfxVolume: Math.max(0, Math.min(100, levels.sfxVolume)),
       ambientVolume: Math.max(0, Math.min(100, levels.ambientVolume)),
+      musicVolume: Math.max(0, Math.min(100, levels.musicVolume)),
     };
     this.applyLevels();
   }
@@ -118,6 +132,7 @@ export class AudioManager {
       now,
       0.025,
     );
+    this.music?.gain.setTargetAtTime(this.levels.musicVolume / 100, now, 0.025);
     this.effects?.gain.setTargetAtTime(this.levels.sfxVolume / 100, now, 0.025);
     this.environment?.gain.setTargetAtTime(
       this.levels.ambientVolume / 100,
@@ -255,6 +270,7 @@ export class AudioManager {
   }
   dispose() {
     this.closed = true;
+    this.musicSource?.disconnect();
     this.abort.abort();
     for (const voice of this.voices) {
       try {

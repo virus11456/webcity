@@ -2,6 +2,7 @@ export const AUDIO = {
   volume: 60,
   sfxVolume: 70,
   ambientVolume: 45,
+  musicVolume: 35,
   maxVoices: 16,
   sampleSeconds: 0.5,
   nearHeight: 80,
@@ -33,4 +34,14 @@ export interface AudioLevels {
   volume: number;
   sfxVolume: number;
   ambientVolume: number;
+  musicVolume: number;
 }
+
+export const MUSIC_TRACKS = [
+  'river-morning',
+  'little-avenue',
+  'sunlit-roofs',
+  'garden-walk',
+  'blue-hour',
+  'city-lights',
+] as const;

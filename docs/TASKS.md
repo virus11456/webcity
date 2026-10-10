@@ -803,7 +803,7 @@
 - **分支**：`feature/m3-18-music`｜**相依**：M3-17｜**估時**：1
 - **參考**：ART §11
 - **驗收標準**：
-  - [ ] 串流播放、隨機輪播、音量設定；授權資訊列在 `public/assets/CREDITS.md`
+  - [x] 串流播放、隨機輪播、音量設定；授權資訊列在 `public/assets/CREDITS.md`（六首原創 AAC，驗證見 MUSIC.md）
 
 ### M3-19　畫質設定面板
 - **分支**：`feature/m3-19-quality-settings`｜**相依**：M3-07｜**估時**：1.5
