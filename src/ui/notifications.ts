@@ -41,7 +41,7 @@ export function createNotifications(
         };
       }
       close.className = 'notice-dismiss';
-      close.textContent = '×';
+      close.textContent = '';
       close.setAttribute('aria-label', t('notice.dismiss'));
       close.onclick = () => {
         queue.dismiss(n.key);

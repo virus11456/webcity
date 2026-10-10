@@ -73,7 +73,7 @@ test('M1 complete city: menu roads zones utilities population and save restore',
     await fly(page, bx, bz);
     await tap(page, bx, bz, touch);
     if (touch)
-      await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+      await page.getByRole('button', { name: '確認建造', exact: true }).tap();
     await expect
       .poll(async () =>
         Number(

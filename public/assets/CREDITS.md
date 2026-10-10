@@ -34,3 +34,7 @@ Original six tree and two shrub geometries, plus a procedurally authored silhoue
 ## M3-15 特效
 
 工業煙霧、升級光環、火焰、黑煙與塵土皆為 WebCity 原創程序幾何／shader，無外部影像素材。來源 `src/render/effects.ts`、`src/render/fire.ts` 與 `src/render/buildings/`。
+
+## M3-16 UI 圖示
+
+`src/data/icons.ts` 為本專案原創 SVG 路徑，工具、設施、圖層及問題圖示皆由此繪製。沒有使用或描摹商業遊戲圖示；建築縮圖由本專案原創模型來源離屏渲染。

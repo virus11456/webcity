@@ -1,3 +1,4 @@
+import { BuildingThumbnails } from './render/buildingThumbnails';
 import { CityEffects } from './render/effects';
 import { FacilityAssets } from './render/facilities/assets';
 import { CatalogAssets } from './render/buildings/catalogAssets';
@@ -145,6 +146,7 @@ let tools: ToolManager | undefined;
 let input: CameraController | undefined;
 let city: CityRenderer | undefined;
 let buildings: BuildingRenderer | undefined;
+let buildingThumbnails: BuildingThumbnails | undefined;
 let catalogAssets: CatalogAssets | undefined;
 let fireRenderer: FireRenderer | undefined;
 let cityEffects: CityEffects | undefined;
@@ -530,6 +532,7 @@ if (canvas && status) {
           input?.setEdgeScrolling(id === null && preferences.edgeScrolling);
         },
       );
+      buildingThumbnails = new BuildingThumbnails(city.renderer);
       inspectPanel = createInspectPanel(
         root,
         () => inspectTool?.clear(),
@@ -548,6 +551,7 @@ if (canvas && status) {
           mode(true);
           followCamera?.start(id);
         },
+        (building) => buildingThumbnails?.render(building),
       );
       inspectTool = new InspectTool(
         sim,
@@ -815,6 +819,7 @@ if (import.meta.hot)
     vehicles?.dispose();
     inspectTool?.dispose();
     inspectPanel?.dispose();
+    buildingThumbnails?.dispose();
     inspectPreview?.dispose();
     unsubscribeServices?.();
     serviceTool?.dispose();

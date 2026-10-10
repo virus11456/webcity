@@ -33,7 +33,7 @@ test('inspect actual assets, show read-only details and dismiss selection', asyn
   await tap(page, -240, -80, touch);
   await tap(page, -80, -80, touch);
   if (touch)
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   await expect(page.locator('.road-controls')).toHaveAttribute(
     'data-segments',
     '1',
@@ -72,6 +72,20 @@ test('inspect actual assets, show read-only details and dismiss selection', asyn
       page.getByRole('dialog', { name: '城市物件資訊' }),
     ).toBeVisible();
     await page.getByRole('button', { name: '關閉面板', exact: true }).tap();
-  } else await tap(page, 0, -80, touch);
+  } else {
+    // The taller thumbnail card now occupies the old right-side test point.
+    const empty = {
+      x: page.viewportSize()!.width * 0.28,
+      y: page.viewportSize()!.height * 0.58,
+    };
+    expect(
+      await page.evaluate(
+        (p) => document.elementFromPoint(p.x, p.y)?.tagName,
+        empty,
+      ),
+    ).toBe('CANVAS');
+    if (touch) await page.touchscreen.tap(empty.x, empty.y);
+    else await page.mouse.click(empty.x, empty.y);
+  }
   await expect(page.locator('.inspect-data')).toHaveCount(0);
 });

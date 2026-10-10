@@ -65,7 +65,7 @@ test('builds, charges, continues and crosses roads through native pointer contro
     scale: 'css',
   });
   if (touch)
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   else await tap(page, -80, -80, false);
   await expect(controls).toHaveAttribute('data-segments', '1');
   await page.waitForFunction(() => window.__webcityZoneStats?.().blocks === 2);
@@ -76,13 +76,13 @@ test('builds, charges, continues and crosses roads through native pointer contro
   await expect(controls).toHaveAttribute('data-phase', 'end');
   await tap(page, -80, -240, touch);
   if (touch)
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   await expect(controls).toHaveAttribute('data-segments', '2');
   await page.getByRole('button', { name: '✕ 取消路段', exact: true }).click();
   await tap(page, -160, -160, touch);
   await tap(page, -160, 0, touch);
   if (touch)
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   await expect(controls).toHaveAttribute('data-segments', '5');
   await page.waitForFunction(() => window.__webcityZoneStats?.().blocks === 10);
   expect(
@@ -197,7 +197,7 @@ test('rejects unowned land, cancels drafts and keeps touch camera gestures separ
     '道路經過尚未購買的土地',
   );
   await expect(
-    page.getByRole('button', { name: '✔ 確認建造', exact: true }),
+    page.getByRole('button', { name: '確認建造', exact: true }),
   ).toBeDisabled();
   await expect(controls).toHaveAttribute('data-money', '70000');
   await page.screenshot({
@@ -213,7 +213,7 @@ test('rejects unowned land, cancels drafts and keeps touch camera gestures separ
       scale: 'css',
     });
     const confirmBox = (await page
-      .getByRole('button', { name: '✔ 確認建造', exact: true })
+      .getByRole('button', { name: '確認建造', exact: true })
       .boundingBox())!;
     expect(confirmBox.y + confirmBox.height).toBeLessThanOrEqual(393);
     expect(
@@ -239,7 +239,7 @@ test('keeps detailed roads after restoring the WebGL context with shadows enable
   await tap(page, -240, -80, touch);
   await tap(page, -80, -80, touch);
   if (touch)
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   await expect(page.locator('.road-controls')).toHaveAttribute(
     'data-segments',
     '1',

@@ -58,7 +58,7 @@ test('curved roads create visible rotated zoning and free strokes work on mouse 
   await tap(page, -80, 0, touch);
   if (touch) {
     await expect(controls).toHaveAttribute('data-valid', 'true');
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   }
   await expect(controls).toHaveAttribute('data-segments', '1');
   await page.waitForFunction(() => window.__webcityZoneStats!().blocks > 2);
@@ -107,7 +107,7 @@ test('curved roads create visible rotated zoning and free strokes work on mouse 
       touchPoints: [],
     });
     await expect(controls).toHaveAttribute('data-valid', 'true');
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   } else {
     await page.mouse.move(points[0]!.x, points[0]!.y);
     await page.mouse.down();

@@ -1,3 +1,4 @@
+import { ICON_PATHS, PROBLEM_ICONS } from '../data/icons';
 import {
   CanvasTexture,
   Group,
@@ -45,12 +46,6 @@ function createAtlas(): Texture {
   canvas.width = R.atlasCellPx * kinds.length;
   canvas.height = R.atlasCellPx;
   const c = canvas.getContext('2d')!;
-  const line = (points: number[][], close = false) => {
-    c.beginPath();
-    points.forEach(([x, y], i) => (i ? c.lineTo(x!, y!) : c.moveTo(x!, y!)));
-    if (close) c.closePath();
-    c.stroke();
-  };
   for (let i = 0; i < kinds.length; i++) {
     c.save();
     c.translate(i * R.atlasCellPx, 0);
@@ -65,200 +60,10 @@ function createAtlas(): Texture {
     c.strokeStyle = P.text;
     c.fillStyle = P.text;
     c.lineWidth = 5;
-    switch (kinds[i]) {
-      case 'sickness':
-        line(
-          [
-            [38, 24],
-            [58, 24],
-            [58, 38],
-            [73, 38],
-            [73, 58],
-            [58, 58],
-            [58, 73],
-            [38, 73],
-            [38, 58],
-            [23, 58],
-            [23, 38],
-            [38, 38],
-          ],
-          true,
-        );
-        break;
-      case 'fire':
-        line(
-          [
-            [48, 19],
-            [53, 40],
-            [65, 32],
-            [74, 55],
-            [68, 71],
-            [48, 79],
-            [29, 70],
-            [23, 54],
-            [37, 35],
-            [35, 54],
-            [48, 43],
-          ],
-          true,
-        );
-        break;
-      case 'crime':
-        line(
-          [
-            [48, 22],
-            [70, 31],
-            [67, 55],
-            [60, 66],
-            [48, 75],
-            [36, 66],
-            [29, 55],
-            [26, 31],
-          ],
-          true,
-        );
-        line([
-          [48, 36],
-          [48, 53],
-        ]);
-        c.beginPath();
-        c.arc(48, 63, 3, 0, Math.PI * 2);
-        c.fill();
-        break;
-      case 'noGoods':
-        line(
-          [
-            [24, 34],
-            [48, 22],
-            [72, 34],
-            [72, 62],
-            [48, 75],
-            [24, 62],
-          ],
-          true,
-        );
-        line([
-          [24, 34],
-          [48, 47],
-          [72, 34],
-        ]);
-        line([
-          [48, 47],
-          [48, 75],
-        ]);
-        break;
-      case 'noPower':
-        line(
-          [
-            [52, 21],
-            [30, 51],
-            [47, 51],
-            [41, 75],
-            [67, 42],
-            [50, 42],
-          ],
-          true,
-        );
-        break;
-      case 'noWater':
-        c.beginPath();
-        c.moveTo(48, 22);
-        c.bezierCurveTo(8, 65, 43, 83, 61, 67);
-        c.bezierCurveTo(77, 54, 58, 35, 48, 22);
-        c.stroke();
-        line([
-          [36, 59],
-          [39, 65],
-          [46, 67],
-        ]);
-        break;
-      case 'noSewage':
-        line([
-          [28, 25],
-          [28, 53],
-          [56, 53],
-          [56, 70],
-        ]);
-        line([
-          [40, 25],
-          [40, 41],
-          [69, 41],
-          [69, 69],
-        ]);
-        line([
-          [49, 67],
-          [62, 77],
-          [76, 67],
-        ]);
-        break;
-      case 'noRoad':
-        line(
-          [
-            [24, 36],
-            [72, 36],
-            [72, 58],
-            [24, 58],
-          ],
-          true,
-        );
-        line([
-          [32, 60],
-          [32, 73],
-        ]);
-        line([
-          [64, 60],
-          [64, 73],
-        ]);
-        line([
-          [28, 53],
-          [42, 39],
-        ]);
-        line([
-          [48, 53],
-          [62, 39],
-        ]);
-        break;
-      case 'noWorkers':
-        c.beginPath();
-        c.arc(48, 45, 20, Math.PI, 0);
-        c.stroke();
-        line([
-          [24, 47],
-          [72, 47],
-        ]);
-        line([
-          [48, 24],
-          [48, 39],
-        ]);
-        line([
-          [30, 69],
-          [30, 59],
-          [66, 59],
-          [66, 69],
-        ]);
-        break;
-      case 'abandoned':
-        line([
-          [23, 45],
-          [48, 24],
-          [73, 45],
-        ]);
-        line([
-          [29, 44],
-          [29, 73],
-          [67, 73],
-          [67, 44],
-        ]);
-        line([
-          [40, 49],
-          [56, 66],
-        ]);
-        line([
-          [56, 49],
-          [40, 66],
-        ]);
-        break;
-    }
+    c.translate(18, 18);
+    c.scale(2.5, 2.5);
+    c.lineWidth = 2;
+    c.stroke(new Path2D(ICON_PATHS[PROBLEM_ICONS[kinds[i]!]!]));
     c.restore();
   }
   return new CanvasTexture(canvas);

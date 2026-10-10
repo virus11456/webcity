@@ -50,7 +50,7 @@ test('actual residents move in, find work, pause, and leave demolished housing',
   await tap(page, -240, -80, touch);
   await tap(page, -80, -80, touch);
   if (touch)
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   await expect(page.locator('.road-controls')).toHaveAttribute(
     'data-segments',
     '1',

@@ -1,0 +1,154 @@
+/* Shared 24px original line artwork across legacy controls and Preact. */
+.ui-icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  display: inline-block;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+button > .ui-icon {
+  margin-inline-end: 6px;
+}
+.ui-icon-button > .ui-icon,
+.build-card > .ui-icon {
+  margin: 0;
+}
+.build-lock .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+.road-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.inspect-thumbnail {
+  width: 100%;
+  height: 160px;
+  object-fit: contain;
+  display: block;
+  background: radial-gradient(
+    ellipse at 50% 70%,
+    var(--color-control-hover),
+    var(--color-control)
+  );
+  border-radius: var(--radius-card);
+  margin: 0 0 12px;
+}
+.inspect-problem-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--color-warning);
+}
+.inspect-problem-icons span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.info-view-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin: 10px 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.info-view-buttons button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 58px;
+  font-size: 12px;
+}
+.info-view-buttons button[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.ui-panel,
+.ui-sheet[open],
+.info-panel:not([hidden]),
+.toolbar-content:not([hidden]),
+.pause-dialog[open] {
+  animation: panel-arrive 0.18s ease-out both;
+}
+@keyframes panel-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-panel,
+  .ui-sheet[open],
+  .info-panel,
+  .toolbar-content,
+  .pause-dialog[open] {
+    animation: none;
+  }
+}
+@media (max-width: 600px) {
+  .road-tabs button {
+    flex-direction: column;
+    gap: 2px;
+    padding: 5px 8px;
+  }
+  .road-tabs button > .ui-icon {
+    margin: 0;
+  }
+  .inspect-thumbnail {
+    height: 128px;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .info-view-buttons {
+    max-height: 112px;
+  }
+  .inspect-thumbnail {
+    height: 100px;
+  }
+}
+
+.topbar[data-layout^='phone'] .sim-speeds .ui-button {
+  flex-direction: column;
+  gap: 0;
+  padding: 3px 5px;
+  width: 44px;
+  min-width: 44px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.topbar[data-layout^='phone'] .sim-speeds .ui-icon {
+  margin: 0;
+}
+.topbar[data-layout^='phone'] .sim-speeds {
+  flex: 0 0 auto;
+}
+.topbar[data-layout^='phone'] .sim-calendar {
+  min-width: 0;
+}
+.topbar[data-layout^='phone'] .sim-speeds .ui-button:first-child .speed-label {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  #app:has(.info-panel:not([hidden])) .city-notifications,
+  #app:has(.inspect-data) .city-notifications {
+    visibility: hidden;
+  }
+}
+.notice-dismiss .ui-icon {
+  margin: 0;
+}

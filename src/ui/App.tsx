@@ -1,3 +1,4 @@
+import { Icon } from './components/Icon';
 import type { CityView } from '../data/terrain';
 import { t } from './i18n/t';
 
@@ -20,15 +21,15 @@ export function App({
       <p className="render-status" role="status" hidden />
       <nav className="view-nav" aria-label={t('city.views')}>
         <button onClick={() => onViewChange('center')}>
-          <span aria-hidden="true">▥</span>
+          <Icon name="tower" />
           {t('city.center')}
         </button>
         <button onClick={() => onViewChange('river')}>
-          <span aria-hidden="true">≈</span>
+          <Icon name="water" />
           {t('city.river')}
         </button>
         <button onClick={() => onViewChange('overview')}>
-          <span aria-hidden="true">⌗</span>
+          <Icon name="layers" />
           {t('city.overview')}
         </button>
         <a href="?gallery=1">{t('gallery.title')}</a>

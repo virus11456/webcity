@@ -56,7 +56,7 @@ test('renders 50k trees with LOD and clears a newly built road without blocking 
       'data-valid',
       'true',
     );
-    await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   } else {
     await page.mouse.click(start.x, start.y);
     await page.mouse.move(end.x, end.y);

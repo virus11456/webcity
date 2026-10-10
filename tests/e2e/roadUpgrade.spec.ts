@@ -51,7 +51,7 @@ test('upgrades roads for the price difference and reverses one-way roads with mo
   const confirm = async () => {
     if (touch) {
       await expect(controls).toHaveAttribute('data-valid', 'true');
-      await page.getByRole('button', { name: '✔ 確認建造', exact: true }).tap();
+      await page.getByRole('button', { name: '確認建造', exact: true }).tap();
     }
     await expect(controls).toHaveAttribute('data-pending', 'false');
   };
