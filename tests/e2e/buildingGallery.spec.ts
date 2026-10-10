@@ -134,12 +134,9 @@ test('shows six building families and plays foundation, structure, finishing and
   await page.getByRole('button', { name: '蓋到一半', exact: true }).click();
   await expect(canvas).toHaveAttribute('data-progress', '50');
   await context.setOffline(false);
-  await page.getByRole('link', { name: '返回城市', exact: true }).click();
-  await expect(page.locator('.city-canvas')).toHaveAttribute(
-    'data-ready',
-    'true',
-  );
-  await page.getByRole('link', { name: '建築工坊', exact: true }).click();
+  await page.getByRole('link', { name: '返回主選單', exact: true }).click();
+  await expect(page.locator('.main-menu')).toBeVisible();
+  await page.goBack();
   await expect(canvas).toHaveAttribute('data-ready', 'true');
   expect(errors).toEqual([]);
 });

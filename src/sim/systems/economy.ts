@@ -97,7 +97,7 @@ export function weeklyAccounts(s: SimState) {
       upkeep[dept] += d.upkeepPerWeek;
     }
   }
-  for (const r of s.segments)
+  for (const r of s.segments.filter((road) => !road.regional))
     upkeep.roads +=
       (r.length / CELL_SIZE) *
       ROADS[r.type].upkeepPer8MWeek *

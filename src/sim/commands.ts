@@ -126,6 +126,9 @@ export class CommandDispatcher {
             mapId: value.mapId,
             mode: value.mode,
             cityName: value.cityName,
+            ...('starterRoads' in value && value.starterRoads === true
+              ? { starterRoads: true }
+              : {}),
           } as CitySettings,
           this.emit,
         );

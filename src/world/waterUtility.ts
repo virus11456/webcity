@@ -107,6 +107,7 @@ export function previewRoadPipes(w: WaterWorld): WaterPreview {
   const paths: Vec2[][] = [],
     existing = w.networks.flatMap((n) => pathEdges(n.points, false));
   for (const road of w.segments) {
+    if (road.regional) continue;
     const a = w.nodes.find((n) => n.id === road.start),
       b = w.nodes.find((n) => n.id === road.end);
     if (!a || !b) continue;
@@ -117,6 +118,10 @@ export function previewRoadPipes(w: WaterWorld): WaterPreview {
       run = [];
     };
     for (const [p, q] of pathEdges(samples, false)) {
+      if (!ownedPoint(p, w.ownedTiles) || !ownedPoint(q, w.ownedTiles)) {
+        flush();
+        continue;
+      }
       const covered = existing.some(
         ([x, y]) =>
           closestPointOnSegment(p, x, y).distance <= W.pipeJoinM &&

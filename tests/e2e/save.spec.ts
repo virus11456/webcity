@@ -26,6 +26,10 @@ test('saves an actual city and restores it after reload with thumbnails and sepa
   await page.goto('./?play=1&quality=low&debug=1');
   await page.waitForSelector('.road-controls[data-ready="true"]');
   await page.getByRole('button', { name: '暫停', exact: true }).click();
+  await expect(page.locator('.sim-controls')).toHaveAttribute(
+    'data-speed',
+    '0',
+  );
   await page.getByRole('button', { name: '開始鋪路', exact: true }).click();
   await page.waitForFunction(
     () => Math.abs(window.__webcityCamera!.readState().distance - 850) < 0.1,
@@ -44,6 +48,10 @@ test('saves an actual city and restores it after reload with thumbnails and sepa
   await page.getByRole('button', { name: '×4', exact: true }).click();
   await page.waitForFunction(() => window.__webcityStats!()!.population > 20);
   await page.getByRole('button', { name: '暫停', exact: true }).click();
+  await expect(page.locator('.sim-controls')).toHaveAttribute(
+    'data-speed',
+    '0',
+  );
   const before = await page.evaluate(() => ({
     stats: window.__webcityStats!(),
     buildings: window.__webcityBuildings!(),

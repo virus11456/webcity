@@ -156,6 +156,7 @@ function MainMenu({
                 Number.isSafeInteger(Number(seed))
               )
                 start({
+                  starterRoads: true,
                   cityName: name.trim(),
                   mapId,
                   seed: Number(seed),
@@ -268,5 +269,9 @@ export function showMainMenu(
   start: (settings: CitySettings) => void,
   load: (id: string) => void,
 ): void {
+  document.documentElement.style.setProperty(
+    '--ui-scale',
+    String(readPreferences().uiScale / 100),
+  );
   render(<MainMenu saves={saves} start={start} load={load} />, root);
 }

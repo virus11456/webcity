@@ -13,3 +13,5 @@ IndexedDB 的 metadata / data 寫入使用同一交易，空間不足不會只�
 驗證：型別陣列與二進位往返、恢復後繼續同一個 tick、損壞／新版本／無效拓樸拒絕、載入中指令拒絕與失敗保留原城；三裝置實際建城→存檔→重新整理→讀檔，逐項比對人口、建築、分區與資金；背景事件驅動自動槽（可見性以明確 fixture 觸發，城市快照來自真實 Worker）。
 
 API 依據：[MessagePack 官方實作](https://github.com/msgpack/msgpack-javascript)、[idb 官方文件](https://github.com/jakearchibald/idb)。
+
+存檔採語意一致的正規格式：數字 `-0` 轉為 `0`，未設定的可選 `undefined` 欄位省略。實際城市數值、地形 typed arrays 與下一步模擬結果不變；整合 E2E 比較城市時正規化這兩類 JavaScript 表示差異。

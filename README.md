@@ -7,11 +7,24 @@
 
 一款玩法與美術風格參考《Cities: Skylines》的城市建造模擬遊戲，以 Web 技術開發，支援 PWA 安裝，可在 iPhone、iPad、PC 上遊玩。
 
-目前完成至 **M1-17 建築問題與廢棄**：進入「開始鋪路」，在道路兩側塗住宅、商業或工業分區，播放時間後會開工，三個遊戲天後完工。「查看建築」可移近觀看地基、結構與收尾；改分區後三天拆除重建。另有建築工坊與街區施工展示。缺電／缺水、污水、斷路與缺工會顯示屋頂圖示；展開「問題建築」可輪巡查看計時。持續缺電／缺水 20 天或其他核心問題 30 天後廢棄，60 天後倒塌。
+目前為 **M1 MVP**：可建立、經營並保存自己的 3D 城市。包含道路、住宅／商業／工業分區、自動施工、人口移入移出、就業統計、水電與污水、建築問題、稅收貸款、存檔和離線遊玩。
 
-「電力」可放置旋轉風力機／燃煤電廠，或鋪電線連接遠處區塊。預覽含接電範圍與預估發電量，資訊列顯示發電、需求、供應和缺電建築；缺電懲罰與進階發電廠尚未開放。見 [電力系統](docs/POWER.md)。
+## 開始建城
 
-住宅完工後每天最多搬入一戶，工作依教育與距離分配；建造模式會顯示人口、入住、就業、失業、職缺及搬入搬出。住宅、商業、工業與辦公需求每日依人口、職缺及教育重新計算，影響下一批新建築；需求條與稅率操作介面仍待後續 HUD／財政任務。尚未加入存檔，重新整理會清除試建城市。正式版本可安裝為 PWA 並離線試建。詳細規則見 [需求系統](docs/DEMAND.md)、[人口與就業](docs/POPULATION.md) 與 [分區成長](docs/GROWTH.md)。
+1. 主選單選「新遊戲」，命名城市、選河谷／海灣／山地與模式。一般模式 $70,000；簡單模式 $200,000；沙盒不扣建設費並解鎖現有建築。
+2. 從預鋪匝道接出小路，再鋪幾條街道。桌機點起點／終點；觸控選終點後按 ✔ 確認。手機橫式使用左側分類列。
+3. 選「分區」，在路旁填住宅、商業、工業。播放時間後會開工，依序呈現地基、結構、收尾與完工；住宅完工後每天移入家庭。
+4. 放風力機並延伸電線。放水塔或河岸抽水站，水管可沿市區道路自動鋪設；污水排放口要靠岸、通電並接上同一水管網。人口增加後留意供應是否足夠。
+5. 選「探索城市」點建築或道路看資訊。缺水、電、污水與工作等問題持續太久會造成廢棄；需求條、幸福度、就業與週收支顯示目前狀況。
+6. 使用「存檔與讀檔」保存到 10 個手動槽之一；每五分鐘及切到背景會另存自動槽。暫停選單可調畫質、邊緣捲動與字級，並儲存返回主選單。主選單「繼續最近的城市」載入最新存檔。
+
+鍵盤：1／2／3 速度，4 道路、5 分區、6 電力、7 水務、8 拆除；Esc 取消當前工具操作。雙指控制鏡頭，單指使用當前工具。
+
+存檔存在**目前瀏覽器的 IndexedDB**，不是雲端同步；清除網站資料會移除存檔。自動存檔是盡力而為，系統立即終止 App 時可能來不及完成，離開前可手動保存。
+
+M1 就業採家庭與職缺統計；**市民／車輛逐人通勤、交通路徑屬 M2，現階段尚未實作**。警消、醫療、垃圾及殯葬服務、完整里程碑解鎖與後續交通工具依 [任務清單](docs/TASKS.md) 繼續開發。一般模式保留 MS 解鎖限制；要試玩現有高階分區／電廠與財政滑桿，可選沙盒。音量控制尚為停用佔位。
+
+詳見 [主選單](docs/MENUS.md)、[存檔格式](docs/SAVES.md)、[M1 整合驗證](docs/MVP.md)、[電力](docs/POWER.md)、[人口與就業](docs/POPULATION.md) 與 [分區成長](docs/GROWTH.md)。`?gallery=1`／`?district=1` 為獨立建築展示；`?play=1` 是保留給開發測試的空白城市入口。
 
 ## 本機開發
 
@@ -54,11 +67,11 @@ npm run e2e
 npm run e2e -- --project='iPhone 15'
 ```
 
-若沒有預裝瀏覽器，先自行執行 `npx playwright install chromium`；測試不會自動下載。每次 E2E 都重新建置，管理 `127.0.0.1:4173` 的預覽伺服器生命週期，避免測到其他程序或過期版本；該連接埠必須可用。
+若沒有預裝瀏覽器，先自行執行 `npx playwright install chromium ffmpeg`；測試不會自動下載。每次 E2E 都重新建置，管理 `127.0.0.1:4173` 的預覽伺服器生命週期，避免測到其他程序或過期版本；該連接埠必須可用。
 
 每個專案都會產生 `test-results/<測試與專案目錄>/shell.png`，並附在 `playwright-report/` 的 HTML 報告；可用 `npx playwright show-report` 開啟。失敗時另保留截圖與 trace。`CI` 模式禁止 `test.only`，使用一個 worker，失敗重試兩次。GitHub Actions 將截圖、報告與失敗 trace 上傳為 `playwright-results` artifact，保留 14 天。
 
-目前 E2E 範例檢查標題、全螢幕版面、背景與瀏覽器錯誤；遊戲互動測試會隨功能加入。行動裝置是 Chromium 模擬，並非 iOS Safari 實機驗證。
+E2E 覆蓋鏡頭、道路、分區、水電、人口、經濟、面板、存讀檔、新遊戲與完整城市流程。整合案例錄影需 Playwright ffmpeg。行動裝置是 Chromium 模擬，並非 iOS Safari 實機驗證。
 
 ## PWA 安裝、離線與更新
 
@@ -74,13 +87,14 @@ PWA E2E 使用 Chrome DevTools Protocol 檢查 manifest 和可安裝性、實際
 
 跨模組引用可使用 `@/`（對應 `src/`）或相對路徑。ESLint 依 TECH §2.1 檢查相依方向，且限制模擬層使用 DOM、Three.js、`Math.random()` 或 `Date.now()`。
 
-## CI 與 GitHub Pages
+## CI 與部署
 
+- 正式站依使用者指定部署到 Vercel `virus11456s-projects/webcity`，每次發佈以已合併提交建置並驗證 `/webcity/` 資產與互動。
 - 每次 push 與 PR 都執行 `.github/workflows/ci.yml`：`npm ci`、lint、typecheck、unit tests、build、三裝置 E2E，並上傳報告。
 - `main` 有新提交時，`.github/workflows/deploy.yml` 先呼叫相同 CI 驗證，成功後才建置並發布 `dist/` 到 GitHub Pages。可手動重新部署 `main`；其他分支不會發布。
 - Vite 的 `base` 設為 `/webcity/`，本機預覽與 E2E 也使用此子路徑，確保部署後資源網址一致。開發網址為 `http://localhost:5173/webcity/`。
 
-首次部署前，在儲存庫 **Settings → Pages → Build and deployment → Source** 選擇 **GitHub Actions**。合併本任務與前置 PR 後，在 Actions 檢查部署結果；成功的部署會在 `github-pages` environment 顯示正式網址。若更改儲存庫名稱或使用自訂網域，需一併調整 Vite base 與 Playwright baseURL。
+若另外要啟用原規劃的 GitHub Pages，在儲存庫 **Settings → Pages → Build and deployment → Source** 選擇 **GitHub Actions**。合併本任務與前置 PR 後，在 Actions 檢查部署結果；成功的部署會在 `github-pages` environment 顯示正式網址。若更改儲存庫名稱或使用自訂網域，需一併調整 Vite base 與 Playwright baseURL。
 
 ## 開發流程
 

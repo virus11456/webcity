@@ -12,7 +12,7 @@ jobs:
   verify:
     name: Lint, types, unit tests, build and E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     concurrency:
       group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
       cancel-in-progress: true
@@ -37,7 +37,7 @@ jobs:
       - name: Build
         run: npm run build
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium ffmpeg
       - name: E2E on iPhone, iPad and desktop
         run: npm run e2e
       - name: Upload screenshots and Playwright report
