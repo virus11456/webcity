@@ -1,3 +1,4 @@
+import { updateCrime } from './systems/police';
 import { ServiceSystem } from './systems/services';
 import { serviceDefinition, previewService } from '../world/services';
 import { CargoSystem } from './systems/cargo';
@@ -130,6 +131,7 @@ export class Simulation {
       const power = [...updatePower(this.state), ...updateWater(this.state)];
       this.cargo.daily();
       const servicePatches = this.services.update();
+      const crimePatches = updateCrime(this.state);
       const problems = updateProblems(this.state);
       const reconciliation = problems.some(
         (p) => p.state === 'abandoned' && p.stateTimer === 0,
@@ -147,6 +149,7 @@ export class Simulation {
       for (const p of [
         ...population,
         ...servicePatches,
+        ...crimePatches,
         ...power,
         ...this.cargo.patches(),
         ...problems,

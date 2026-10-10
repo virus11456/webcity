@@ -29,6 +29,7 @@ const kinds: ProblemIcon[] = [
   'noWorkers',
   'abandoned',
   'noGoods',
+  'crime',
 ];
 interface Entry {
   b: Building;
@@ -63,6 +64,28 @@ function createAtlas(): Texture {
     c.fillStyle = P.text;
     c.lineWidth = 5;
     switch (kinds[i]) {
+      case 'crime':
+        line(
+          [
+            [48, 22],
+            [70, 31],
+            [67, 55],
+            [60, 66],
+            [48, 75],
+            [36, 66],
+            [29, 55],
+            [26, 31],
+          ],
+          true,
+        );
+        line([
+          [48, 36],
+          [48, 53],
+        ]);
+        c.beginPath();
+        c.arc(48, 63, 3, 0, Math.PI * 2);
+        c.fill();
+        break;
       case 'noGoods':
         line(
           [
@@ -226,6 +249,7 @@ export class ProblemIcons {
     parent: Scene | Group,
     private readonly roof: (id: number, out: Vector3) => boolean,
     texture?: Texture,
+    private readonly height: (x: number, z: number) => number = () => 0,
   ) {
     this.texture = texture ?? createAtlas();
     const plane = new PlaneGeometry(1, 1);
@@ -246,7 +270,7 @@ export class ProblemIcons {
         time: { value: 0 },
       },
       vertexShader: `attribute vec3 anchor; attribute float tile; uniform vec2 pixels; uniform float time; varying vec2 vUv;
-      void main(){vUv=vec2((uv.x+tile)/6.0,uv.y); vec4 clip=projectionMatrix*modelViewMatrix*vec4(anchor,1.0); vec2 offset=position.xy*${R.sizePx.toFixed(1)}; offset.y+=sin(time*${R.bobSpeed}+anchor.x)*${R.bobPx.toFixed(1)};clip.xy+=offset*pixels*clip.w;gl_Position=clip;}`,
+      void main(){vUv=vec2((uv.x+tile)/${kinds.length.toFixed(1)},uv.y); vec4 clip=projectionMatrix*modelViewMatrix*vec4(anchor,1.0); vec2 offset=position.xy*${R.sizePx.toFixed(1)}; offset.y+=sin(time*${R.bobSpeed}+anchor.x)*${R.bobPx.toFixed(1)};clip.xy+=offset*pixels*clip.w;gl_Position=clip;}`,
       fragmentShader: `uniform sampler2D map; varying vec2 vUv; void main(){gl_FragColor=texture2D(map,vUv);if(gl_FragColor.a<0.01)discard;}`,
     });
     const mesh = new Mesh(this.geometry, this.material);
@@ -323,7 +347,13 @@ export class ProblemIcons {
     this.visibleIds.length = 0;
     camera.updateMatrixWorld();
     for (const e of this.entries.values()) {
-      if (!this.roof(e.b.id, e.anchor)) continue;
+      if (!this.roof(e.b.id, e.anchor)) {
+        if (e.b.kind === 'zoned') continue;
+        const depth = e.b.lotD * 4,
+          x = e.b.pos.x + Math.sin(e.b.rotation) * depth,
+          z = e.b.pos.z + Math.cos(e.b.rotation) * depth;
+        e.anchor.set(x, this.height(x, z) + R.facilityHeightM, z);
+      }
       e.anchor.y += R.roofGapM;
       e.distance = e.anchor.distanceToSquared(camera.position);
       if (e.distance <= R.distanceM ** 2) this.candidates.push(e);

@@ -108,3 +108,51 @@ describe('batched problem billboards', () => {
     expect(group.children).toHaveLength(0);
   });
 });
+
+it('renders crime at the exact threshold and clears it from a partial crime patch', () => {
+  const { r, camera } = setup();
+  r.reset([{ ...b(), id: 210, flags: 7, crime: 80 }]);
+  r.update(0, camera, 900, 900);
+  expect(r.readStats().visible).toBe(1);
+  expect(r.geometry.getAttribute('tile').getX(0)).toBe(7);
+  expect(r.material.vertexShader).toContain('(uv.x+tile)/8.0');
+  r.accept({
+    t: 'buildingsChanged',
+    added: [],
+    removed: [],
+    updated: [{ id: 210, crime: 79.9 }],
+  });
+  r.update(0, camera, 900, 900);
+  expect(r.readStats().visible).toBe(0);
+  r.dispose();
+});
+
+it('positions a crime warning above a public facility without a zoned-building mesh', () => {
+  const group = new Group(),
+    camera = new PerspectiveCamera(60, 1, 1, 5000),
+    r = new ProblemIcons(
+      group,
+      () => false,
+      new Texture(),
+      () => 60,
+    );
+  camera.position.set(0, 300, 400);
+  camera.lookAt(0, 60, 0);
+  camera.updateMatrixWorld();
+  r.reset([
+    {
+      ...b(),
+      kind: 'service',
+      defId: 'clinic',
+      pos: { x: 0, z: 0 },
+      rotation: 0,
+      crime: 80,
+    },
+  ]);
+  r.update(0, camera, 900, 900);
+  expect(r.readStats().visible).toBe(1);
+  expect(r.geometry.getAttribute('anchor').getY(0)).toBe(
+    60 + PROBLEM_ICONS.facilityHeightM + PROBLEM_ICONS.roofGapM,
+  );
+  r.dispose();
+});

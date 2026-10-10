@@ -130,6 +130,7 @@ export function createGrowthControls(
       if (!b) continue;
       if (
         p.flags !== undefined ||
+        p.crime !== undefined ||
         p.problemTimers !== undefined ||
         Object.hasOwn(p, 'roadDisconnectedDay') ||
         p.jobs !== undefined ||

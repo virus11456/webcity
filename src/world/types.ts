@@ -82,6 +82,8 @@ export interface PopulationDetails {
   movedOut: number;
 }
 export interface Building {
+  crime?: number;
+  crimeUpdatedDay?: number;
   enabled?: boolean;
   coverage?: Partial<Record<ServiceType, number>>;
   serviceStatus?: import('./services').ServiceStatus;

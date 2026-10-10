@@ -1,3 +1,4 @@
+import { hasBuildingProblem } from '../../world/buildingProblems';
 import { serviceDefinition } from '../../world/services';
 import type { ServiceId } from '../../data/services';
 import { render } from 'preact';
@@ -120,7 +121,10 @@ function Content({
                 `water.${b.defId as 'water_tower' | 'water_pump' | 'water_drain' | 'water_treatment'}`,
               ).split(' · ')[0]!
             : b.defId;
-    rows.push([t('inspect.state'), t(`inspect.${b.state}`)]);
+    rows.push(
+      [t('inspect.state'), t(`inspect.${b.state}`)],
+      [t('inspect.crime'), `${(b.crime ?? 0).toFixed(1)}%`],
+    );
     if (!serviceDefinition(b.defId))
       rows.push(
         [t('inspect.level'), b.level],
@@ -167,7 +171,9 @@ function Content({
         `${b.cargo.stock.toFixed(0)} / ${b.cargo.capacity.toFixed(0)}`,
       ]);
     const problems = Object.keys(PROBLEMS).filter(
-      (key) => (b.problemTimers[key as keyof typeof PROBLEMS] ?? 0) > 0,
+      (key) =>
+        (b.problemTimers[key as keyof typeof PROBLEMS] ?? 0) > 0 ||
+        (key === 'crime' && hasBuildingProblem(b, 'crime')),
     );
     rows.push([
       t('inspect.problems'),
