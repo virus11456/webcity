@@ -1,3 +1,5 @@
+import { createNotifications } from './ui/notifications';
+import { NOTIFICATIONS } from './data/notifications';
 import { InfoOverlays } from './render/overlays';
 import { createInfoControls } from './ui/infoControls';
 import { FireRenderer } from './render/fire';
@@ -94,6 +96,7 @@ let pauseMenu: ReturnType<typeof createPauseMenu> | undefined;
 let saveController: ReturnType<typeof createSaveController> | undefined;
 let saveControls: ReturnType<typeof createSaveControls> | undefined;
 let infoOverlays: InfoOverlays | undefined;
+let notifications: ReturnType<typeof createNotifications> | undefined;
 let infoControls: ReturnType<typeof createInfoControls> | undefined;
 let unsubscribeInfo: (() => void) | undefined;
 let inspectTool: InspectTool | undefined;
@@ -590,6 +593,12 @@ if (canvas && status) {
         root.dataset.underground = String(underground);
         infoOverlays!.set(view);
       });
+      notifications = createNotifications(root, sim, (p) => {
+        tools!.select(null);
+        inspectTool?.clear();
+        infoControls?.set(null);
+        city!.cameraController.flyTo(p, NOTIFICATIONS.focusDistanceM);
+      });
       financeControls = createFinanceControls(root, sim!);
       saveController = createSaveController(
         sim,
@@ -679,6 +688,7 @@ if (import.meta.hot)
     pauseMenu?.dispose();
     saveController?.dispose();
     saveControls?.dispose();
+    notifications?.dispose();
     unsubscribeInfo?.();
     infoControls?.dispose();
     infoOverlays?.dispose();

@@ -591,3 +591,6 @@ M2-22：world/infoViews 純衍生、InfoOverlays 消費權威事件；300×300 �
 
 ### M2-12 交通統計與渲染
 Worker 發送精簡 `roadTraffic` 事件；路段檢視向 Worker 取得統計。存檔讀取從實際車輛重新計算。交通色帶沿道路高度合併為一個 draw call，路網事件重建幾何，週期事件只更新顏色，沒有逐幀世界重建或新依賴。
+
+### M2-23 通知事件投影
+`ui/cityNotices.ts` 只投影 Worker ready/buildingsChanged/economy/milestone/notify 事件，增量維護問題集合並按轉變提醒。純資料 queue 可測試實際時間到期／去重，不將時間或 DOM 引入 sim。世界卸載清理所有通知、計時器和訂閱。
