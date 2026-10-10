@@ -609,3 +609,7 @@ render/FollowCamera 只讀 VehicleRenderer 的重用座標輸出；RtsCamera 追
 
 ### M3-03 水面細節
 WaterRenderer 共用一個 MeshStandardMaterial，兩層沿河道流向的週期法線、菲涅耳天空色反射與淺岸泡沫。ready／fields 只讀權威水污染場並更新單通道貼圖；逐幀只改相位，GPU 資源集中釋放。見 WATER_SHADER.md。
+
+
+### M3-04 天空與高度霧
+CityRenderer 依鏡頭海拔每幀更新既有 FogExp2 密度；80–2000 m smoothstep 淡化到 30%，天空球維持 camera-relative。曝光、光暈與高度參數集中在 data/rendering，debug 只投影實際霧密度。見 SKY_LIGHTING.md。
