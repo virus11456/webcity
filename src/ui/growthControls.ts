@@ -62,7 +62,7 @@ export function createGrowthControls(
       .map((p) =>
         p === 'abandoned'
           ? t('problem.abandoned')
-          : `${t(`problem.${p}`)} ${Math.floor(b.problemTimers[p])}/${PROBLEMS[p].days} ${t('problem.days')}`,
+          : `${t(p === 'noGoods' && b.defId === 'I' ? 'problem.noExport' : `problem.${p}`)} ${Math.floor(b.problemTimers[p])}/${PROBLEMS[p].days} ${t('problem.days')}`,
       )
       .join(' · ');
   problemPanel.append(problems, problemButton, problemDetail);

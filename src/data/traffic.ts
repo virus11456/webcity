@@ -4,6 +4,8 @@ export const TRAFFIC_RUNTIME = {
   streamMs: 50,
   streamStride: 10,
   carLengthM: 4.4,
+  truckLengthM: 8,
+  busLengthM: 12,
   carWidthM: 1.8,
   pedestrianLengthM: 0.5,
   pedestrianGapM: 0.4,

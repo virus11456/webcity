@@ -551,3 +551,7 @@ TrafficSystem 於 ScheduleSystem／RoutePlanner 之後更新，車道排序占�
 ### M2-11 移動實體畫面
 
 VehicleRenderer 消費十欄 vehicles 封包，以 tick/speed 決定插值時間、最短弧轉向，重複封包不重啟插值。每車型／LOD 使用預配 InstancedMesh；畫面點選送 inspect vehicle，Worker 回傳真實居民的家／工作／目的地資訊。鏡頭縮放不改變個人身份，畫面只做 400/900 m 車輛 LOD／剔除及 120 m 行人剔除。見 `VEHICLE_RENDERING.md`。
+
+### M2-13 貨運任務
+
+CargoSystem 管理 WorldSnapshot.cargo 與 Building.cargo，每 tick 最多八次路徑查詢、輪流處理企業。TrafficSystem 的負數個人欄位代表獨立物流 mission ID，與正數居民分離；貨車沿相同車道占用系統移動，抵達通知由 CargoSystem 入庫，斷路則保留原地裝載貨單。traffic.nextMissionId 保留任務識別，遷移驗證貨單與車流關聯。詳見 `CARGO.md`。

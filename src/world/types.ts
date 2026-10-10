@@ -82,6 +82,7 @@ export interface PopulationDetails {
   movedOut: number;
 }
 export interface Building {
+  cargo?: import('./cargo').CargoInventory;
   frontageSetbackM?: number; // Retained driveway after road narrowing.
   id: Id;
   kind: 'zoned' | 'service' | 'park' | 'utility' | 'unique';
