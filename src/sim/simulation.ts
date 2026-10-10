@@ -1,3 +1,4 @@
+import { FireSystem } from './systems/fire';
 import { updateCrime } from './systems/police';
 import { ServiceSystem } from './systems/services';
 import { serviceDefinition, previewService } from '../world/services';
@@ -78,12 +79,14 @@ export class Simulation {
   readonly traffic: TrafficSystem;
   readonly services: ServiceSystem;
   readonly cargo: CargoSystem;
+  readonly fire: FireSystem;
   private emit(event: SimEvent): void {
     if (event.t === 'roadsChanged') {
       this.laneGraph.sync(this.state.nodes, this.state.segments);
       this.traffic?.networkChanged();
       this.cargo?.networkChanged();
       this.services?.networkChanged();
+      this.fire?.networkChanged();
     }
     this.sink(event);
   }
@@ -126,30 +129,34 @@ export class Simulation {
     );
     this.services = new ServiceSystem(this.state);
     this.services.update();
+    this.fire = new FireSystem(this.state, this.routePlanner, this.traffic);
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
       const power = [...updatePower(this.state), ...updateWater(this.state)];
       this.cargo.daily();
       const servicePatches = this.services.update();
+      this.fire.daily();
+      const firePatches = this.fire.patches();
       const crimePatches = updateCrime(this.state);
       const problems = updateProblems(this.state);
-      const reconciliation = problems.some(
-        (p) => p.state === 'abandoned' && p.stateTimer === 0,
-      )
-        ? [
-            ...updatePopulation(this.state),
-            ...updatePower(this.state),
-            ...updateWater(this.state),
-            ...updateProblems(this.state),
-            ...this.services.update(),
-          ]
-        : [];
+      const reconciliation =
+        firePatches.length > 0 ||
+        problems.some((p) => p.state === 'abandoned' && p.stateTimer === 0)
+          ? [
+              ...updatePopulation(this.state),
+              ...updatePower(this.state),
+              ...updateWater(this.state),
+              ...updateProblems(this.state),
+              ...this.services.update(),
+            ]
+          : [];
       updateDemand(this.state);
       const updates = new Map<number, BuildingPatch>();
       for (const p of [
         ...population,
         ...servicePatches,
         ...crimePatches,
+        ...firePatches,
         ...power,
         ...this.cargo.patches(),
         ...problems,
@@ -253,6 +260,7 @@ export class Simulation {
   }
   private refreshPower(): void {
     this.cargo.reconcile();
+    this.fire?.reconcile();
     const patches = [
       ...this.services.update(),
       ...this.cargo.patches(),
@@ -454,6 +462,7 @@ export class Simulation {
   /** Copy all arrays; callers cannot mutate the authoritative city. */
   snapshot(): WorldSnapshot {
     this.cargo.reconcile();
+    this.fire?.reconcile();
     return structuredClone({ ...this.state, traffic: this.traffic.snapshot() });
   }
 
@@ -866,8 +875,9 @@ export class Simulation {
     this.schedules.tick();
     this.routePlanner.tick();
     this.traffic.step(tickMs / 1000, (this.state.clock.ticks * tickMs) / 1000);
+    this.fire.tick();
     this.cargo.tick();
-    const cargoPatches = this.cargo.patches();
+    const cargoPatches = [...this.fire.patches(), ...this.cargo.patches()];
     if (cargoPatches.length)
       this.emit({
         t: 'buildingsChanged',
@@ -875,6 +885,7 @@ export class Simulation {
         removed: [],
         updated: cargoPatches,
       });
+    if (cargoPatches.some((p) => p.fire !== undefined)) this.refreshPower();
     if (!dayCompleted) return;
     this.state.stats.day = this.state.clock.day;
     this.state.stats.money = this.state.money;

@@ -37,7 +37,11 @@ export function updateProblems(s: SimState): BuildingPatch[] {
           (s.clock.ticks - b.problemSinceTick[problem]!) / TIME.ticksPerDay,
         );
         b.problemTimers[problem] = days;
-        if (b.kind === 'zoned' && days >= PROBLEMS[problem].days)
+        if (
+          b.kind === 'zoned' &&
+          !b.fire?.burning &&
+          days >= PROBLEMS[problem].days
+        )
           abandon = true;
       }
       if (abandon) {

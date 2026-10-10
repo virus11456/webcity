@@ -14,7 +14,12 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { SimEvent } from '../bridge/protocol';
-import { BUILDING_PALETTE, SERVICE_PALETTE, UI_PALETTE } from '../data/palette';
+import {
+  BUILDING_PALETTE,
+  SERVICE_PALETTE,
+  UI_PALETTE,
+  FIRE_PALETTE,
+} from '../data/palette';
 import { serviceDefinition, type ServicePreview } from '../world/services';
 import type { Building, Vec2 } from '../world/types';
 /** Original civic buildings, merged by material; rebuilt on structural changes only. */
@@ -82,6 +87,7 @@ export class ServiceRenderer {
         const g = new BoxGeometry(width, height, depth);
         g.translate(x, y, z);
         g.applyMatrix4(base);
+        if (b.fire?.burning || b.state === 'burned') paint = FIRE_PALETTE.char;
         const list = batches.get(paint) ?? [];
         list.push(g);
         batches.set(paint, list);
@@ -145,7 +151,12 @@ export class ServiceRenderer {
         const b = this.buildings.get(p.id);
         if (b) {
           Object.assign(b, p);
-          if (p.enabled !== undefined || p.state !== undefined) changed = true;
+          if (
+            p.enabled !== undefined ||
+            p.state !== undefined ||
+            p.fire !== undefined
+          )
+            changed = true;
         }
       }
       if (changed) this.rebuild();

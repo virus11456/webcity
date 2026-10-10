@@ -72,6 +72,7 @@ export type FinanceView = Pick<
 /** Structured-clone wire format, never a reference to the authoritative state. */
 export interface WorldSnapshot {
   cargo: import('./cargo').CargoState;
+  fire: import('./fire').FireState;
   seed: number;
   settings: CitySettings;
   clock: SimClock;

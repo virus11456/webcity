@@ -563,3 +563,7 @@ world/ServiceNetwork 共用道路接入、二元堆 Dijkstra、預覽路段裁�
 ### M2-15 警察與犯罪
 
 每日服務覆蓋更新後執行 updateCrime；可選 Building.crime/crimeUpdatedDay 保存犯罪率與最後結算日，避免讀檔及重複重算累加。crime 問題加入共用判定、40 天連續計時、圖集與檢視，實際條件不依賴 UI 計時值。公共設施圖示以保守高度定位，分區仍採原有精確屋頂位置。見 POLICE.md。
+
+### M2-16 消防任務與火勢
+
+FireSystem 保存 WorldSnapshot.fire／Building.fire，日結依確定性 RNG 起火和損毀；TrafficSystem 負數任務以 purpose 7 表示消防，與貨運共用 ID 分配、各自消費到站事件。救援抵達後才滅火，斷路保持實體位置，序列化驗證任務与車流關聯。FireRenderer 消費 Building patches，以單批程序 billboard 表示火焰黑煙。見 FIRE.md。

@@ -322,16 +322,22 @@ export class TrafficSystem {
   strandedMission(id: number): StrandedJourney | undefined {
     return this.stranded.get(-id);
   }
-  takeMissionArrivals(): number[] {
-    return this.missionArrivals.splice(0);
+  takeMissionArrivals(ids?: ReadonlySet<number>): number[] {
+    const selected = this.missionArrivals.filter((id) => !ids || ids.has(id));
+    const rest = this.missionArrivals.filter((id) => ids && !ids.has(id));
+    this.missionArrivals.splice(0, this.missionArrivals.length, ...rest);
+    return selected;
   }
   cancelMission(id: number): void {
     const v = this.vehicles.get(this.byCitizen.get(-id) ?? 0);
     if (v) this.delete(v);
     this.stranded.delete(-id);
+    const arrival = this.missionArrivals.indexOf(id);
+    if (arrival >= 0) this.missionArrivals.splice(arrival, 1);
   }
   spawnMission(job: PlannedJourney, kind: number = TrafficKind.truck): boolean {
-    if (job.journey.citizenId >= 0 || job.journey.purpose !== 6) return false;
+    if (job.journey.citizenId >= 0 || ![6, 7].includes(job.journey.purpose))
+      return false;
     return this.admit(job, kind);
   }
   private admit(job: PlannedJourney, kind?: number): boolean {

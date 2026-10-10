@@ -70,7 +70,10 @@ export class ServiceSystem {
           students++;
       const demand = serviceDemand(def, targets, students);
       const efficiency =
-        provider.state === 'active' && provider.enabled !== false && reach
+        provider.state === 'active' &&
+        provider.enabled !== false &&
+        !provider.fire?.burning &&
+        reach
           ? Math.min(1, capacity / Math.max(1, demand))
           : 0;
       const status = {

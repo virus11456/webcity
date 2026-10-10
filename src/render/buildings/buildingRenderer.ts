@@ -415,7 +415,11 @@ export class BuildingRenderer {
       .scale(this.scale.set(bounce, bounce, bounce));
     this.matrix.setPosition(b.pos.x, e.base - sink, b.pos.z);
     const condition =
-      b.state === 'burned' ? 2 : b.state === 'abandoned' ? 1 : 0;
+      b.state === 'burned' || b.fire?.burning
+        ? 2
+        : b.state === 'abandoned'
+          ? 1
+          : 0;
     if (e.construction) {
       e.construction.group.matrixAutoUpdate = false;
       e.construction.group.matrix.copy(this.matrix);

@@ -1,3 +1,5 @@
+import { emptyFire } from '../world/fire';
+import { FIRE } from '../data/fire';
 import { emptyCargo } from '../world/cargo';
 import { CARGO } from '../data/cargo';
 import { emptyTraffic } from '../world/traffic';
@@ -216,6 +218,17 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
             b.crimeUpdatedDay >= 0 &&
             b.crimeUpdatedDay <= s.clock.day)),
     );
+    if (b.fire)
+      requireValue(
+        typeof b.fire.burning === 'boolean' &&
+          Number.isFinite(b.fire.damage) &&
+          b.fire.damage >= 0 &&
+          b.fire.damage <= 1 &&
+          Number.isSafeInteger(b.fire.startedDay) &&
+          b.fire.startedDay >= 0 &&
+          b.fire.startedDay <= s.clock.day &&
+          (!b.fire.burning || (b.state === 'active' && b.fire.damage < 1)),
+      );
     if (b.coverage)
       for (const [key, value] of Object.entries(b.coverage))
         requireValue(
@@ -405,6 +418,41 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     );
     shipmentIds.set(job.id, job);
   }
+  if (!Object.hasOwn(s, 'fire')) s.fire = emptyFire();
+  requireValue(
+    s.fire?.version === 1 &&
+      Number.isSafeInteger(s.fire.lastDay) &&
+      s.fire.lastDay >= -1 &&
+      s.fire.lastDay <= s.clock.day &&
+      Array.isArray(s.fire.missions) &&
+      s.fire.missions.length <= FIRE.maxMissions,
+  );
+  const fireIds = new Map<number, (typeof s.fire.missions)[number]>(),
+    fireTargets = new Set<number>();
+  for (const m of s.fire.missions) {
+    const from = s.buildings.find((b) => b.id === m.from),
+      to = s.buildings.find((b) => b.id === m.to);
+    requireValue(
+      Number.isSafeInteger(m.id) &&
+        m.id > 0 &&
+        !shipmentIds.has(m.id) &&
+        !fireIds.has(m.id) &&
+        !fireTargets.has(m.to) &&
+        from?.state === 'active' &&
+        ['fire_station', 'fire_hq'].includes(from.defId) &&
+        from.enabled !== false &&
+        !from.fire?.burning &&
+        to?.state === 'active' &&
+        to.fire?.burning === true &&
+        Number.isSafeInteger(m.requestedTick) &&
+        m.requestedTick >= 0 &&
+        m.requestedTick <= s.clock.ticks &&
+        Number.isSafeInteger(m.retryTick) &&
+        m.retryTick >= 0,
+    );
+    fireIds.set(m.id, m);
+    fireTargets.add(m.to);
+  }
   // No traffic collection existed before M2-10.
   if (!Object.hasOwn(s, 'traffic')) s.traffic = emptyTraffic();
   const traffic = s.traffic;
@@ -413,7 +461,8 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
   requireValue(
     traffic?.version === 1 &&
       Number.isSafeInteger(traffic.nextMissionId) &&
-      traffic.nextMissionId > Math.max(0, ...shipmentIds.keys()) &&
+      traffic.nextMissionId >
+        Math.max(0, ...shipmentIds.keys(), ...fireIds.keys()) &&
       traffic.nextMissionId <= TRAFFIC_RUNTIME.maxVehicleId &&
       Number.isSafeInteger(traffic.nextId) &&
       traffic.nextId > 0 &&
@@ -479,15 +528,20 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     Number.isSafeInteger(j.citizenId) &&
     (citizenIds.has(j.citizenId) ||
       (j.citizenId < 0 &&
-        j.purpose === 6 &&
         j.mode === 1 &&
-        shipmentIds.get(-j.citizenId)?.from === j.originId &&
-        shipmentIds.get(-j.citizenId)?.to === j.destinationId)) &&
+        ((j.purpose === 6 &&
+          shipmentIds.get(-j.citizenId)?.from === j.originId &&
+          shipmentIds.get(-j.citizenId)?.to === j.destinationId) ||
+          (j.purpose === 7 &&
+            fireIds.get(-j.citizenId)?.from === j.originId &&
+            fireIds.get(-j.citizenId)?.to === j.destinationId)))) &&
     Number.isSafeInteger(j.originId) &&
     (j.originId > 0 || (j.citizenId < 0 && j.originId === 0)) &&
     Number.isSafeInteger(j.destinationId) &&
     (j.destinationId > 0 || (j.citizenId < 0 && j.destinationId === 0)) &&
-    (j.citizenId < 0 ? j.purpose === 6 : [1, 2, 3, 4, 5].includes(j.purpose)) &&
+    (j.citizenId < 0
+      ? [6, 7].includes(j.purpose)
+      : [1, 2, 3, 4, 5].includes(j.purpose)) &&
     [0, 1].includes(j.mode) &&
     Number.isSafeInteger(j.requestedTick) &&
     j.requestedTick >= 0 &&
