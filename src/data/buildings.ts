@@ -420,7 +420,7 @@ export const BUILDINGS = [
     cost: 5,
     upkeepPerWeek: 0,
     unlock: 0,
-    footprintCells: null,
+    footprintCells: [1, 1],
     landValueBonus: 0.2,
     radiusM: 24,
     landValueBonusCap: 10,

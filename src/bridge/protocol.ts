@@ -45,6 +45,7 @@ export type CommandInput =
       banLeft: boolean;
     }
   | { t: 'zone'; cells: [Id, number][]; zone: ZoneType | null }
+  | { t: 'plantTrees'; points: Vec2[] }
   | { t: 'place'; defId: BuildingDefId; pos: Vec2; rotation: number }
   | { t: 'setBuildingEnabled'; id: Id; enabled: boolean }
   | { t: 'buildRoadPipes' }

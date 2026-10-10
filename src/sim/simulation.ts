@@ -1,3 +1,6 @@
+import { updateParks } from './systems/parks';
+import { previewTrees } from '../world/parks';
+import { PARKS } from '../data/parks';
 import { updateEducationSummary } from './systems/education';
 import { updateHealth } from './systems/health';
 import { FireSystem } from './systems/fire';
@@ -133,6 +136,7 @@ export class Simulation {
     this.services.update();
     updateHealth(this.state);
     updateEducationSummary(this.state);
+    updateParks(this.state);
     this.fire = new FireSystem(this.state, this.routePlanner, this.traffic);
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
@@ -141,6 +145,7 @@ export class Simulation {
       const servicePatches = [
         ...this.services.update(),
         ...updateEducationSummary(this.state),
+        ...updateParks(this.state),
       ];
       this.fire.daily();
       const firePatches = this.fire.patches();
@@ -158,6 +163,7 @@ export class Simulation {
               ...this.services.update(),
               ...updateHealth(this.state),
               ...updateEducationSummary(this.state),
+              ...updateParks(this.state),
             ]
           : [];
       updateDemand(this.state);
@@ -282,6 +288,7 @@ export class Simulation {
       ...updateWater(this.state),
       ...updateHealth(this.state),
       ...updateEducationSummary(this.state),
+      ...updateParks(this.state),
       ...updateProblems(this.state),
     ];
     if (patches.some((p) => p.state === 'abandoned' && p.stateTimer === 0))
@@ -293,6 +300,7 @@ export class Simulation {
         ...this.services.update(),
         ...updateHealth(this.state),
         ...updateEducationSummary(this.state),
+        ...updateParks(this.state),
       );
     const merged = new Map<number, BuildingPatch>();
     for (const p of patches) merged.set(p.id, { ...merged.get(p.id), ...p });
@@ -310,11 +318,77 @@ export class Simulation {
       transient: true,
     });
   }
+  plantTrees(points: Vec2[]): Omit<Result, 't' | 'reqId'> {
+    if (this.gameOver || !points.length || points.length > PARKS.maxBrushTrees)
+      return { ok: false, reason: 'err.invalidCommand' };
+    const preview = previewTrees(this.powerWorld(), points);
+    if (!preview.valid)
+      return { ok: false, reason: preview.reason ?? 'err.invalidCommand' };
+    const charge = chargeConstruction(this.state, preview.cost);
+    if (!charge.ok) return charge;
+    const s = this.state;
+    const added: Building[] = preview.trees!.map((pos) => {
+      const id = s.nextId++;
+      return {
+        id,
+        kind: 'park',
+        defId: 'tree',
+        level: 1,
+        pos,
+        rotation: 0,
+        lotW: 1,
+        lotD: 1,
+        seed: (s.seed + id) >>> 0,
+        state: 'active',
+        stateTimer: 0,
+        flags: 0,
+        households: 0,
+        residents: 0,
+        jobs: 0,
+        workers: 0,
+        builtDay: s.clock.day,
+        paidCost: preview.cost / preview.trees!.length,
+        problemTimers: Object.fromEntries(
+          Object.keys(PROBLEMS).map((p) => [p, 0]),
+        ) as Building['problemTimers'],
+      };
+    });
+    s.buildings = [...s.buildings, ...added];
+    const zones = rebuildZoneGrid({ ...s, heights: s.terrain.heights });
+    s.zoneBlocks = zones.blocks;
+    s.segments = zones.segments;
+    s.nextId = zones.nextId;
+    this.emit({
+      t: 'zonesChanged',
+      blocks: structuredClone(zones.blocks),
+      removed: zones.removed,
+    });
+    this.emit({
+      t: 'roadsChanged',
+      added: structuredClone(s.segments),
+      removed: [],
+      nodes: [],
+      removedNodes: [],
+    });
+    this.emit({
+      t: 'buildingsChanged',
+      added: structuredClone(added),
+      updated: [],
+      removed: [],
+    });
+    this.emit({ t: 'fundsChanged', money: s.money });
+    this.refreshPopulation();
+    return { ok: true, cost: preview.cost };
+  }
   place(
     defId: string,
     pos: Vec2,
     rotation: number,
   ): Omit<Result, 't' | 'reqId'> {
+    if (defId === 'tree')
+      return Number.isFinite(rotation)
+        ? this.plantTrees([pos])
+        : { ok: false, reason: 'err.invalidCommand' };
     const d =
         serviceDefinition(defId) ??
         waterDefinition(defId) ??
@@ -327,7 +401,7 @@ export class Simulation {
               defId,
               pos,
               rotation,
-              this.state.budgets[serviceDefinition(defId)!.service!],
+              this.state.budgets[serviceDefinition(defId)!.service ?? 'parks'],
             )
           : previewPlant(this.powerWorld(), defId, pos, rotation);
     if (!preview.valid || !d || !d.footprintCells)

@@ -219,6 +219,10 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
             b.crimeUpdatedDay >= 0 &&
             b.crimeUpdatedDay <= s.clock.day)),
     );
+    for (const value of [b.landValue, b.parkBonus])
+      if (value !== undefined)
+        requireValue(Number.isFinite(value) && value >= 0);
+    if (b.landValue !== undefined) requireValue(b.landValue <= 100);
     if (b.education)
       requireValue(
         Number.isSafeInteger(b.education.enrolled) &&

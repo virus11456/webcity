@@ -21,7 +21,9 @@ export class ServiceSystem {
     const s = this.state,
       changed: BuildingPatch[] = [];
     for (const type of SERVICE_TYPES) s.fields.coverage[type].fill(0);
-    const providers = s.buildings.filter((b) => serviceDefinition(b.defId));
+    const providers = s.buildings.filter(
+      (b) => serviceDefinition(b.defId)?.service,
+    );
     if (!providers.length) {
       for (const b of s.buildings)
         if (Object.keys(b.coverage ?? {}).length) {
