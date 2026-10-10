@@ -1,3 +1,5 @@
+import { pickIntersection } from '../world/intersections';
+import { INTERSECTIONS } from '../data/intersections';
 import { pickUpgradeRoad, previewRoadUpgrade } from '../world/roadUpgrade';
 import { distance, lerp, normalize } from '../core/math';
 import { ROAD_CURVES } from '../data/roadCurves';
@@ -19,7 +21,7 @@ import {
 import type { Vec2 } from '../world/types';
 import type { Tool, ToolContext, ToolPointer } from './tool';
 
-export type RoadMode = 'straight' | 'curve' | 'free' | 'upgrade';
+export type RoadMode = 'straight' | 'curve' | 'free' | 'upgrade' | 'junction';
 export interface RoadToolState {
   active: boolean;
   ready: boolean;
@@ -27,6 +29,9 @@ export interface RoadToolState {
   phase: 'start' | 'control' | 'end' | 'confirm';
   mode: RoadMode;
   elevation: number;
+  junctionId: number | null;
+  junctionControl: 'none' | 'lights' | 'stop';
+  banLeft: boolean;
   upgradeCount: number;
   demolitions: number;
   type: RoadTypeId;
@@ -59,6 +64,9 @@ export class RoadTool implements Tool {
     phase: 'start',
     mode: 'straight',
     elevation: 0,
+    junctionId: null,
+    junctionControl: 'none',
+    banLeft: false,
     upgradeCount: 0,
     demolitions: 0,
     type: 'road_small',
@@ -126,6 +134,20 @@ export class RoadTool implements Tool {
     this.changed({ ...this.state });
   }
   private recalculate(): void {
+    if (this.state.mode === 'junction') {
+      this.state.preview = null;
+      if (
+        this.state.junctionId !== null &&
+        !this.world?.nodes.some(
+          (n) => n.id === this.state.junctionId && n.segments.length >= 3,
+        )
+      ) {
+        this.state.junctionId = null;
+        this.anchor = null;
+      }
+      this.publish();
+      return;
+    }
     if (this.state.mode === 'upgrade' && this.world) {
       const quotes = [...this.upgradeIds].map((id) =>
         previewRoadUpgrade(this.world!, id, this.state.type),
@@ -225,10 +247,18 @@ export class RoadTool implements Tool {
     this.anchor = snapped.pos;
     this.anchorHeight = this.state.elevation > 0 ? snapped.height : undefined;
   }
+  setJunction(control: 'none' | 'lights' | 'stop', banLeft: boolean): void {
+    if (this.state.pending) return;
+    this.state.junctionControl = control;
+    this.state.banLeft = banLeft;
+    this.publish();
+  }
   setMode(mode: RoadMode): void {
     if (
       this.state.pending ||
-      !['straight', 'curve', 'free', 'upgrade'].includes(mode)
+      !['straight', 'curve', 'free', 'upgrade', 'junction'].includes(mode) ||
+      (mode === 'junction' &&
+        !this.state.unlocked.includes(INTERSECTIONS.unlock))
     )
       return;
     this.onCancel();
@@ -301,6 +331,10 @@ export class RoadTool implements Tool {
   }
   /** Mouse hover previews the endpoint; touch placement waits for a tap. */
   onPointerMove(event: ToolPointer): void {
+    if (this.state.mode === 'junction') {
+      this.down = null;
+      return;
+    }
     if (
       this.state.mode === 'upgrade' &&
       this.state.active &&
@@ -354,6 +388,19 @@ export class RoadTool implements Tool {
     }
     const point = this.ctx.pick(event.x, event.y);
     if (!point) return;
+    if (this.state.mode === 'junction') {
+      const node = pickIntersection(this.world.nodes, point);
+      this.state.junctionId = node?.id ?? null;
+      this.anchor = node?.pos ?? null;
+      if (node) {
+        this.state.junctionControl = node.control;
+        this.state.banLeft = node.banLeft ?? false;
+        this.state.phase = 'confirm';
+      }
+      this.state.reason = null;
+      this.publish();
+      return;
+    }
     this.state.reason = null;
     if (!this.anchor) {
       this.setAnchor(point);
@@ -388,6 +435,7 @@ export class RoadTool implements Tool {
     this.down = null;
     this.anchor = this.end = this.control = null;
     this.anchorHeight = undefined;
+    this.state.junctionId = null;
     this.stroke = [];
     this.upgradeIds.clear();
     this.state.upgradeCount = this.state.demolitions = 0;
@@ -398,7 +446,37 @@ export class RoadTool implements Tool {
   }
   /** Submit at most once; the authoritative response decides success and the next start. */
   onConfirm(): void {
-    void this.commit();
+    if (this.state.mode === 'junction') void this.commitJunction();
+    else void this.commit();
+  }
+  private async commitJunction(): Promise<void> {
+    if (
+      !this.state.active ||
+      !this.state.ready ||
+      this.state.pending ||
+      this.state.junctionId === null
+    )
+      return;
+    this.state.pending = true;
+    this.state.reason = null;
+    this.publish();
+    const epoch = this.epoch;
+    try {
+      const r = await this.ctx.sim.send({
+        t: 'setIntersection',
+        node: this.state.junctionId,
+        control: this.state.junctionControl,
+        banLeft: this.state.banLeft,
+      });
+      if (epoch === this.epoch && r.t === 'result' && !r.ok)
+        this.state.reason = r.reason ?? 'err.invalidCommand';
+    } catch {
+      this.state.reason = 'sim.failed';
+      this.state.ready = false;
+    } finally {
+      this.state.pending = false;
+      this.publish();
+    }
   }
   private async commit(): Promise<void> {
     const preview = this.state.preview;

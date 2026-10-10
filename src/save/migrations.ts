@@ -149,7 +149,11 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
       point(n.pos) &&
         Array.isArray(n.segments) &&
         n.segments.every((id) => roads.has(id)) &&
-        typeof n.height === 'number',
+        typeof n.height === 'number' &&
+        ['none', 'lights', 'stop'].includes(n.control) &&
+        (n.manualControl === undefined ||
+          typeof n.manualControl === 'boolean') &&
+        (n.banLeft === undefined || typeof n.banLeft === 'boolean'),
     );
   for (const r of s.segments)
     requireValue(

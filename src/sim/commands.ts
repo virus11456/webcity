@@ -143,6 +143,7 @@ export class CommandDispatcher {
     if (
       value.t !== 'setSpeed' &&
       value.t !== 'buildRoad' &&
+      value.t !== 'setIntersection' &&
       value.t !== 'zone' &&
       value.t !== 'bulldoze' &&
       !futureCommands.has(value.t)
@@ -298,6 +299,27 @@ export class CommandDispatcher {
         t: 'result',
         reqId,
         ...this.simulation.zone(value.cells, value.zone as ZoneType | null),
+      });
+    } else if (value.t === 'setIntersection') {
+      if (
+        !('node' in value) ||
+        !Number.isSafeInteger(value.node) ||
+        !('control' in value) ||
+        !['none', 'lights', 'stop'].includes(String(value.control)) ||
+        !('banLeft' in value) ||
+        typeof value.banLeft !== 'boolean'
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.setIntersection(
+          value.node as number,
+          value.control as 'none' | 'lights' | 'stop',
+          value.banLeft,
+        ),
       });
     } else if (value.t === 'upgradeRoad') {
       if (

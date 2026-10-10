@@ -18,6 +18,8 @@ export interface RoadNode {
   height: number; // 節點高度（地形或高架）
   segments: Id[]; // 相連路段
   control: 'none' | 'lights' | 'stop';
+  manualControl?: boolean;
+  banLeft?: boolean;
 }
 export interface RoadSegment {
   regional?: boolean; // Prefabricated highway beyond the initial city; region pays upkeep.

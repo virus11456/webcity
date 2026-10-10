@@ -1,3 +1,4 @@
+import { IntersectionProps } from './signals';
 import { bridgeMesh } from './structures';
 import { roadTrees } from './trees';
 import {
@@ -32,6 +33,12 @@ export class RoadRenderer {
     roughness: 0.95,
     side: DoubleSide,
   });
+  private signals: IntersectionProps | undefined;
+  private seconds = 0;
+  setTime(seconds: number): void {
+    this.seconds = seconds;
+    this.signals?.update(seconds);
+  }
   private trees: ReturnType<typeof roadTrees> = null;
   private cache = new Map<string, Cached>();
   private job: Generator<void> | undefined;
@@ -66,10 +73,12 @@ export class RoadRenderer {
     pending: boolean;
     generation: number;
     trees: number;
+    signals: number;
   } {
     return {
       batches: this.batches.size,
       trees: this.trees?.count ?? 0,
+      signals: this.signals?.count ?? 0,
       pending: Boolean(this.job),
       generation: this.generation,
     };
@@ -216,6 +225,13 @@ export class RoadRenderer {
       if (Array.isArray(m)) m.forEach((v) => v.dispose());
       else m.dispose();
     }
+    if (this.signals) {
+      this.group.remove(this.signals.group);
+      this.signals.dispose();
+    }
+    this.signals = new IntersectionProps(world, arms);
+    this.signals.update(this.seconds);
+    if (this.signals.count) this.group.add(this.signals.group);
     this.trees = roadTrees(arms);
     if (this.trees) this.group.add(this.trees);
     this.batches = replacement;
@@ -237,6 +253,7 @@ export class RoadRenderer {
       else m.dispose();
       this.trees = null;
     }
+    this.signals?.dispose();
     this.material.dispose();
     this.group.clear();
   }

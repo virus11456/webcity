@@ -1,3 +1,4 @@
+import { TIME } from './data/config';
 import { readPreferences } from './ui/preferences';
 import { createPauseMenu } from './ui/screens/PauseMenu';
 import { startup } from './bootstrap';
@@ -68,6 +69,7 @@ declare global {
       pending: boolean;
       generation: number;
       trees: number;
+      signals: number;
     };
     __webcityPick?: (x: number, y: number) => TerrainPick | null;
   }
@@ -239,11 +241,19 @@ if (canvas && status) {
       problemIcons.reset(sim.mirror.readBuildings());
       problemIcons.group.visible = false;
       unsubscribeBuildings = sim.onEvent((event) => {
+        if (event.t === 'clock')
+          roadPreview?.roads.setTime(
+            (event.clock.ticks * TIME.secondsPerDay[1]) / TIME.ticksPerDay,
+          );
         buildings!.accept(event);
         problemIcons!.accept(event);
       });
       const picker = new TerrainPicker(city.terrain);
       roadPreview = new RoadPreviewRenderer(city.scene);
+      roadPreview.roads.setTime(
+        ((sim.mirror.clock?.ticks ?? 0) * TIME.secondsPerDay[1]) /
+          TIME.ticksPerDay,
+      );
       city.registerMaterial(roadPreview.roads.material);
       roadTool = new RoadTool(
         {
@@ -437,6 +447,7 @@ if (canvas && status) {
         mode: (mode) => roadTool!.setMode(mode),
         angle: (enabled) => roadTool!.setAngleSnap(enabled),
         elevation: (value) => roadTool!.setElevation(value),
+        junction: (control, banLeft) => roadTool!.setJunction(control, banLeft),
       });
       powerControls = createPowerControls(roadControls.powerHost, {
         plant(id) {
