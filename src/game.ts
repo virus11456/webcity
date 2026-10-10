@@ -1,3 +1,5 @@
+import { InfoOverlays } from './render/overlays';
+import { createInfoControls } from './ui/infoControls';
 import { FireRenderer } from './render/fire';
 import { ServiceRenderer } from './render/services';
 import { ServiceTool } from './tools/serviceTool';
@@ -91,6 +93,9 @@ if (!root) throw new Error('Missing #app element');
 let pauseMenu: ReturnType<typeof createPauseMenu> | undefined;
 let saveController: ReturnType<typeof createSaveController> | undefined;
 let saveControls: ReturnType<typeof createSaveControls> | undefined;
+let infoOverlays: InfoOverlays | undefined;
+let infoControls: ReturnType<typeof createInfoControls> | undefined;
+let unsubscribeInfo: (() => void) | undefined;
 let inspectTool: InspectTool | undefined;
 let inspectPanel: ReturnType<typeof createInspectPanel> | undefined;
 let inspectPreview: BulldozePreview | undefined;
@@ -201,6 +206,7 @@ if (canvas && status) {
             window.innerWidth,
             window.innerHeight,
           );
+        infoOverlays?.update(frameSeconds);
         powerRenderer?.update(frameSeconds);
         if (city) fireRenderer?.update(frameSeconds, city.camera);
         if (city) vehicles?.update(frameSeconds, city.camera);
@@ -452,10 +458,12 @@ if (canvas && status) {
           vehicles?.pick(x, y, innerWidth, innerHeight, city!.camera) ?? null,
       );
       tools = new ToolManager((tool) => {
+        if (tool) infoControls?.set(null);
         inspectTool?.clear();
         input?.setTool(tool);
       });
       const mode = (construction: boolean) => {
+        if (!construction) infoControls?.set(null);
         const first = construction && root.dataset.construction !== 'true';
         root.dataset.construction = String(construction);
         city!.setConstructionMode(construction);
@@ -562,6 +570,26 @@ if (canvas && status) {
         },
         root,
       );
+      infoOverlays = new InfoOverlays(
+        city.scene,
+        (colors) => buildings!.setInfoColors(colors),
+        [powerRenderer!.group, waterUtilities!.group, serviceRenderer!.group],
+      );
+      const infoSnapshot = sim.mirror.readSnapshot();
+      if (infoSnapshot)
+        infoOverlays.accept({ t: 'ready', reqId: 0, snapshot: infoSnapshot });
+      unsubscribeInfo = sim.onEvent((e) => infoOverlays!.accept(e));
+      infoControls = createInfoControls(root, (view) => {
+        if (view) {
+          mode(true);
+          tools!.select(null);
+        }
+        const underground = view === 'water' || view === 'sewage';
+        city!.setWaterOverlay(underground);
+        waterUtilities!.setUnderground(underground);
+        root.dataset.underground = String(underground);
+        infoOverlays!.set(view);
+      });
       financeControls = createFinanceControls(root, sim!);
       saveController = createSaveController(
         sim,
@@ -651,6 +679,9 @@ if (import.meta.hot)
     pauseMenu?.dispose();
     saveController?.dispose();
     saveControls?.dispose();
+    unsubscribeInfo?.();
+    infoControls?.dispose();
+    infoOverlays?.dispose();
     tools?.dispose();
     vehicles?.dispose();
     inspectTool?.dispose();

@@ -95,6 +95,7 @@ export class BuildingRenderer {
   private readonly dustPool: InstancePool;
   private readonly entries = new Map<number, Entry>();
   private readonly authoritative = new Map<number, Building>();
+  private infoColors: ReadonlyMap<number, string> | null = null;
   private readonly pending = new Map<number, Building | null>();
   private readonly pools = new Map<string, InstancePool>();
   private readonly candidates: Entry[] = [];
@@ -123,10 +124,12 @@ export class BuildingRenderer {
   ) {
     this.atlas = options.atlas ?? createWindowAtlas();
     this.fullMaterial = buildingMaterial(this.atlas);
-    for (const material of [this.fullMaterial, this.farMaterial])
+    for (const material of [this.fullMaterial, this.farMaterial]) {
+      material.userData.infoRole = 'instance';
       options.registerMaterial?.(material, (previous) =>
         installBuildingShader(material, previous),
       );
+    }
     const box = new BoxGeometry(1, 1, 1);
     box.translate(0, 0.5, 0);
     this.far = new InstancePool(this.group, box, this.farMaterial);
@@ -396,6 +399,10 @@ export class BuildingRenderer {
     }
     e.detail = false;
   }
+  setInfoColors(colors: ReadonlyMap<number, string> | null): void {
+    this.infoColors = colors;
+    for (const [id, b] of this.authoritative) this.pending.set(id, b);
+  }
   private draw(e: Entry): void {
     const b = e.data;
     if (e.construction && b.state !== 'construction') {
@@ -429,7 +436,9 @@ export class BuildingRenderer {
       e.pool.set(
         String(b.id),
         this.matrix,
-        this.color.setRGB(1, 1, 1),
+        this.infoColors
+          ? this.color.set(this.infoColors.get(b.id) ?? P.concrete)
+          : this.color.setRGB(1, 1, 1),
         condition,
       );
     else {
@@ -449,7 +458,7 @@ export class BuildingRenderer {
           this.far.set(
             key,
             this.local,
-            this.color.set(e.shape.wall),
+            this.color.set(this.infoColors?.get(b.id) ?? e.shape.wall),
             condition,
           );
         } else this.far.remove(key);
