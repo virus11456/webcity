@@ -594,3 +594,6 @@ Worker 發送精簡 `roadTraffic` 事件；路段檢視向 Worker 取得統計�
 
 ### M2-23 通知事件投影
 `ui/cityNotices.ts` 只投影 Worker ready/buildingsChanged/economy/milestone/notify 事件，增量維護問題集合並按轉變提醒。純資料 queue 可測試實際時間到期／去重，不將時間或 DOM 引入 sim。世界卸載清理所有通知、計時器和訂閱。
+
+### M2-24 跟隨鏡頭
+render/FollowCamera 只讀 VehicleRenderer 的重用座標輸出；RtsCamera 追蹤焦點並沿用幀率獨立阻尼。UI 僅透過 callback 開始／取消，game 組合事件與生命週期，不新增跨層依賴。每幀不分配追蹤物件，不向 Worker 輪詢。

@@ -30,6 +30,7 @@ export const CAMERA = {
   referenceFps: 60,
   terrainClearanceM: 5,
   flySeconds: 1,
+  followDistanceM: 100,
   initialDistanceM: 160,
   initialAzimuthDegrees: 45,
   initialElevationDegrees: 18,

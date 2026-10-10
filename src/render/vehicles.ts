@@ -300,6 +300,15 @@ export class VehicleRenderer {
       }
     return result;
   }
+  /** Copy the actual interpolated pose into reusable storage for camera tracking. */
+  copyPosition(id: number, out: { x: number; y: number; z: number }): boolean {
+    const a = this.agents.get(id);
+    if (!a) return false;
+    out.x = a.x;
+    out.y = a.y;
+    out.z = a.z;
+    return true;
+  }
   sample(
     id: number,
   ): Readonly<

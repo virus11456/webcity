@@ -18,12 +18,14 @@ import '../styles/inspect.css';
 function Content({
   info,
   locate,
+  follow,
   toggle,
   pending,
   failure,
 }: {
   info: InspectInfo;
   locate?: (p: Vec2) => void;
+  follow?: (id: number) => void;
   toggle?: (id: number, enabled: boolean) => void;
   pending: boolean;
   failure: string | null;
@@ -86,6 +88,9 @@ function Content({
           ))}
         </dl>
         <div class="inspect-locations">
+          {follow && (
+            <Button onClick={() => follow(v.id)}>{t('follow.start')}</Button>
+          )}
           {mission && v.originPos && (
             <Button onClick={() => locate?.(v.originPos!)}>
               {t(fire ? 'fire.locateStation' : 'cargo.locateOrigin')}
@@ -353,6 +358,7 @@ export function createInspectPanel(
   dismiss: () => void,
   locate?: (p: Vec2) => void,
   toggle?: (id: number, enabled: boolean) => Promise<boolean>,
+  follow?: (id: number) => void,
 ) {
   const host = document.createElement('div');
   host.className = 'inspect-host';
@@ -372,6 +378,7 @@ export function createInspectPanel(
       <Content
         info={current}
         locate={locate}
+        follow={follow}
         pending={pending}
         failure={failure}
         toggle={async (id, enabled) => {

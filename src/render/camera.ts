@@ -36,6 +36,8 @@ export class RtsCamera {
   private readonly flightStart: CameraState;
   private flightTime: number | null = null;
   private anchored = false;
+  private trackedHeight: number | null = null;
+  private focusLift = 0;
   private readonly anchor = new Vector3();
   private readonly screenAnchor = { x: 0, y: 0 };
   private readonly direction = new Vector3();
@@ -110,7 +112,7 @@ export class RtsCamera {
   private applyPose(): void {
     const s = this.current,
       horizontal = s.distance * Math.cos(s.elevation);
-    this.focus.set(s.x, this.height(s.x, s.z), s.z);
+    this.focus.set(s.x, this.height(s.x, s.z) + this.focusLift, s.z);
     this.camera.position.set(
       s.x + horizontal * Math.sin(s.azimuth),
       this.focus.y + s.distance * Math.sin(s.elevation),
@@ -168,10 +170,33 @@ export class RtsCamera {
   }
   private cancel(): void {
     this.anchored = false;
-    if (this.flightTime !== null) {
+    if (this.flightTime !== null || this.trackedHeight !== null) {
+      this.trackedHeight = null;
       Object.assign(this.target, this.current);
       this.flightTime = null;
     }
+  }
+  get isTracking(): boolean {
+    return this.trackedHeight !== null;
+  }
+  /** Set a moving rendered pose without restarting a flight or allocating per frame. */
+  track(pos: Readonly<Vec2 & { y: number }>): void {
+    if (
+      !Number.isFinite(pos.x) ||
+      !Number.isFinite(pos.y) ||
+      !Number.isFinite(pos.z)
+    )
+      throw new RangeError('Invalid tracking position');
+    this.anchored = false;
+    this.flightTime = null;
+    this.trackedHeight = pos.y;
+    this.target.x = pos.x;
+    this.target.z = pos.z;
+    this.target.distance = CAMERA.followDistanceM;
+    this.limit(this.target);
+  }
+  stopTracking(): void {
+    if (this.isTracking) this.cancel();
   }
   /** Pan in world metres; input speed scaling by distance belongs to the input adapter. */
   pan(dx: number, dz: number): void {
@@ -309,6 +334,16 @@ export class RtsCamera {
         (this.target.elevation - this.current.elevation) * alpha;
     }
     this.limit(this.current);
+    const lift =
+      this.trackedHeight === null
+        ? 0
+        : Math.max(
+            0,
+            this.trackedHeight - this.height(this.current.x, this.current.z),
+          );
+    this.focusLift +=
+      (lift - this.focusLift) *
+      (1 - Math.pow(1 - CAMERA.damping, deltaSeconds * CAMERA.referenceFps));
     this.applyPose();
     if (this.anchored) this.correctAnchor();
   }
