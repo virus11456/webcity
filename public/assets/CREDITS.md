@@ -26,3 +26,7 @@ Original six tree and two shrub geometries, plus a procedurally authored silhoue
 ## M3-12 公共設施與地標
 
 30 種設施及 12 種地標 GLB／civic atlas 為 WebCity 原創離線參數化素材，沿用專案授權，未採用外部商業遊戲素材。來源：`src/render/facilities/geometry.ts`、`scripts/generateFacilities.ts`、`scripts/modelAtlas.ts`；原始檔與重建紀錄位於 `assets-source/catalog/`。地標為一般建築形式的原創組合，非特定商業遊戲資產或現存地標之重製。
+
+## M3-13 車輛
+
+16 款 `veh_*` 模型由 WebCity 原創離線幾何腳本製作，Meshopt 壓縮；無外部模型、圖樣或貼圖。來源 `src/render/vehicleModels/geometry.ts`，配方 `assets-source/catalog/vehicles-recipes.json`。車體與玻璃、輪胎、燈具使用專案色板及頂點烤漆遮罩。

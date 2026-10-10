@@ -645,3 +645,6 @@ MODEL_CATALOG 擴充 CL／CH／I／O，沿用 world mapping 與 CatalogAssets �
 ### M3-12 公共設施與地標素材
 
 world/facilityModels 對照 BUILDINGS 與純美術地標清單；FacilityAssets 提供原始 GLTF 變換、獨立幾何副本與共用狀態材質，接入既有 power／water／services 渲染器，保留權威事件、風力動畫與水管高度。樹維持 instancing，量化 buffer 先還原 float 才烘焙矩陣。見 FACILITY_MODELS.md。
+
+### M3-13 正式車輛
+VehicleRenderer 的 16 款車輛與行人按型號／LOD 分批實例化；world/vehicleModels 以居民 ID 決定穩定款式。AssetLibrary 載入 Meshopt GLB，還原量化與 `_PAINT` 遮罩；材質安裝回呼在畫質切換後重掛 CSM 與烤漆 shader。失敗保留同款原創幾何。車輛權威及序列化未改變，見 VEHICLE_MODELS.md。

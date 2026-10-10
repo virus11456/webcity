@@ -137,6 +137,7 @@ export const BUILDING_DETAIL_PALETTE = {
 } as const;
 
 export const VEHICLE_PALETTE = {
+  base: '#FFFFFF',
   paint: [
     '#E8E7DF',
     '#34383F',

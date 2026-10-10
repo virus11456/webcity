@@ -72,7 +72,7 @@ describe('instanced personal vehicles', () => {
     expect(r.stats().batches).toBe(0);
     r.dispose();
   });
-  it('renders 1000 cars in one batch and pedestrians only at close range', () => {
+  it('renders 1000 cars in six variant batches and pedestrians only at close range', () => {
     const { r, camera } = fixture();
     camera.position.set(30, 150, 150);
     camera.lookAt(30, 0, 30);
@@ -82,7 +82,7 @@ describe('instanced personal vehicles', () => {
     expect(r.stats()).toMatchObject({
       agents: 1000,
       visible: 1000,
-      batches: 1,
+      batches: 6,
     });
     r.accept(frame(2, 0, 0, 1, 8));
     r.update(0.3, camera);
@@ -138,5 +138,38 @@ it('shows bounded light pairs on actual vehicles at night, hides them by day and
   expect(r.stats().lightPairs).toBe(0);
   r.clear();
   expect(r.stats().lightPairs).toBe(0);
+  r.dispose();
+});
+
+it('switches formal vehicle detail at 400 m and hides it at 900 m without losing the agent', () => {
+  const { r, camera } = fixture();
+  r.accept(frame(1, 0));
+  camera.position.set(0, 399, 0);
+  r.update(0.5, camera);
+  const close = r.group.children.filter(
+    (n) => 'count' in n && Number(n.count) > 0,
+  );
+  expect(close).toHaveLength(1);
+  const nearTriangles = r.group.children
+    .filter((n) => 'geometry' in n && 'count' in n && Number(n.count) > 0)
+    .map(
+      (n) =>
+        (n as import('three').InstancedMesh).geometry.getAttribute('position')
+          .count,
+    )[0]!;
+  camera.position.set(0, 401, 0);
+  r.update(0, camera);
+  const farTriangles = r.group.children
+    .filter((n) => 'geometry' in n && 'count' in n && Number(n.count) > 0)
+    .map(
+      (n) =>
+        (n as import('three').InstancedMesh).geometry.getAttribute('position')
+          .count,
+    )[0]!;
+  expect(farTriangles).toBeLessThan(nearTriangles * 0.4);
+  camera.position.set(0, 900, 0);
+  r.update(0, camera);
+  expect(r.stats().visible).toBe(0);
+  expect(r.stats().agents).toBe(1);
   r.dispose();
 });

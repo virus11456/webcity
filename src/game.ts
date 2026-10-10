@@ -290,8 +290,9 @@ if (canvas && status) {
       });
       vehicles = new VehicleRenderer(
         city.scene,
-        (m) => city!.registerMaterial(m),
+        (m, install) => city!.registerMaterial(m, install),
         (m) => city!.unregisterMaterial(m),
+        city.renderer,
       );
       vehicles.group.visible = false;
       buildings.group.visible = false;
