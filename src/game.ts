@@ -1,3 +1,4 @@
+import { FireRenderer } from './render/fire';
 import { ServiceRenderer } from './render/services';
 import { ServiceTool } from './tools/serviceTool';
 import { createServiceControls } from './ui/serviceControls';
@@ -120,6 +121,7 @@ let tools: ToolManager | undefined;
 let input: CameraController | undefined;
 let city: CityRenderer | undefined;
 let buildings: BuildingRenderer | undefined;
+let fireRenderer: FireRenderer | undefined;
 let problemIcons: ProblemIcons | undefined;
 let vehicles: VehicleRenderer | undefined;
 let frameSeconds = 0;
@@ -200,6 +202,7 @@ if (canvas && status) {
             window.innerHeight,
           );
         powerRenderer?.update(frameSeconds);
+        if (city) fireRenderer?.update(frameSeconds, city.camera);
         if (city) vehicles?.update(frameSeconds, city.camera);
       },
       onContextState(lost) {
@@ -262,6 +265,11 @@ if (canvas && status) {
         (x, z) => city!.terrain.heightAt(x, z),
       );
       problemIcons.reset(sim.mirror.readBuildings());
+      fireRenderer = new FireRenderer(city.scene, (x, z) =>
+        city!.terrain.heightAt(x, z),
+      );
+      fireRenderer.reset(sim.mirror.readBuildings());
+      fireRenderer.group.visible = false;
       problemIcons.group.visible = false;
       unsubscribeBuildings = sim.onEvent((event) => {
         if (event.t === 'clock')
@@ -271,6 +279,7 @@ if (canvas && status) {
         vehicles!.accept(event);
         buildings!.accept(event);
         problemIcons!.accept(event);
+        fireRenderer!.accept(event);
       });
       const picker = new TerrainPicker(city.terrain);
       roadPreview = new RoadPreviewRenderer(city.scene);
@@ -454,6 +463,7 @@ if (canvas && status) {
         zoneRenderer!.group.visible = construction;
         buildings!.group.visible = construction;
         problemIcons!.group.visible = construction;
+        fireRenderer!.group.visible = construction;
         vehicles!.group.visible = construction;
         powerRenderer!.group.visible = construction;
         waterUtilities!.group.visible = construction;
@@ -674,6 +684,7 @@ if (import.meta.hot)
     input?.dispose();
     unsubscribeBuildings?.();
     problemIcons?.dispose();
+    fireRenderer?.dispose();
     buildings?.dispose();
     city?.dispose();
     debug?.dispose();

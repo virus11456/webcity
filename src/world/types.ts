@@ -82,6 +82,7 @@ export interface PopulationDetails {
   movedOut: number;
 }
 export interface Building {
+  fire?: import('./fire').BuildingFire;
   crime?: number;
   crimeUpdatedDay?: number;
   enabled?: boolean;

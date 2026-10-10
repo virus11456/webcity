@@ -30,25 +30,33 @@ function Content({
   if (info.kind === 'vehicle') {
     const v = info.value;
     const mission = v.citizenId < 0;
-    const rows: [string, string | number][] = mission
+    const fire = v.purpose === 7;
+    const rows: [string, string | number][] = fire
       ? [
-          [t('cargo.origin'), v.originId || t('cargo.outside')],
-          [t('vehicle.destination'), v.destinationId || t('cargo.outside')],
-          [t('cargo.units'), v.cargo?.units.toFixed(0) ?? 0],
-          [t('vehicle.purpose'), t(`cargo.${v.cargo?.kind ?? 'local'}`)],
+          [t('fire.station'), v.originId ?? 0],
+          [t('vehicle.destination'), v.destinationId],
+          [t('vehicle.purpose'), t('fire.responding')],
           [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
         ]
-      : [
-          [t('vehicle.citizen'), v.citizenId],
-          [t('vehicle.home'), v.homeId],
-          [t('vehicle.work'), v.workId || t('inspect.none')],
-          [t('vehicle.destination'), v.destinationId],
-          [
-            t('vehicle.purpose'),
-            t(`vehicle.purpose${v.purpose as 1 | 2 | 3 | 4 | 5}`),
-          ],
-          [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
-        ];
+      : mission
+        ? [
+            [t('cargo.origin'), v.originId || t('cargo.outside')],
+            [t('vehicle.destination'), v.destinationId || t('cargo.outside')],
+            [t('cargo.units'), v.cargo?.units.toFixed(0) ?? 0],
+            [t('vehicle.purpose'), t(`cargo.${v.cargo?.kind ?? 'local'}`)],
+            [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
+          ]
+        : [
+            [t('vehicle.citizen'), v.citizenId],
+            [t('vehicle.home'), v.homeId],
+            [t('vehicle.work'), v.workId || t('inspect.none')],
+            [t('vehicle.destination'), v.destinationId],
+            [
+              t('vehicle.purpose'),
+              t(`vehicle.purpose${v.purpose as 1 | 2 | 3 | 4 | 5}`),
+            ],
+            [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
+          ];
     return (
       <div
         class="inspect-data"
@@ -58,11 +66,13 @@ function Content({
       >
         <strong>
           {t(
-            mission
-              ? 'cargo.truck'
-              : v.kind === 8
-                ? 'vehicle.pedestrian'
-                : 'vehicle.car',
+            fire
+              ? 'fire.truck'
+              : mission
+                ? 'cargo.truck'
+                : v.kind === 8
+                  ? 'vehicle.pedestrian'
+                  : 'vehicle.car',
           )}{' '}
           #{Math.abs(v.citizenId)}
         </strong>
@@ -77,7 +87,7 @@ function Content({
         <div class="inspect-locations">
           {mission && v.originPos && (
             <Button onClick={() => locate?.(v.originPos!)}>
-              {t('cargo.locateOrigin')}
+              {t(fire ? 'fire.locateStation' : 'cargo.locateOrigin')}
             </Button>
           )}
           {v.homePos && (
@@ -165,6 +175,20 @@ function Content({
           `${t(`finance.${service as keyof NonNullable<typeof b.coverage>}`)} ${t('service.coverage')}`,
           `${Math.round(value * 100)}%`,
         ]);
+    if (b.fire)
+      rows.push(
+        [
+          t('fire.status'),
+          t(
+            b.fire.burning
+              ? 'fire.burning'
+              : b.state === 'burned'
+                ? 'fire.burned'
+                : 'fire.extinguished',
+          ),
+        ],
+        [t('fire.damage'), `${Math.round(b.fire.damage * 100)}%`],
+      );
     if (b.cargo)
       rows.push([
         t('cargo.stock'),
@@ -173,7 +197,7 @@ function Content({
     const problems = Object.keys(PROBLEMS).filter(
       (key) =>
         (b.problemTimers[key as keyof typeof PROBLEMS] ?? 0) > 0 ||
-        (key === 'crime' && hasBuildingProblem(b, 'crime')),
+        ((key === 'crime' || key === 'fire') && hasBuildingProblem(b, key)),
     );
     rows.push([
       t('inspect.problems'),

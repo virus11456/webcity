@@ -156,3 +156,10 @@ export const VEHICLE_PALETTE = {
   skin: '#D8AB89',
   clothes: ['#3A6EA8', '#C8443A', '#E08A2E', '#5D8F72', '#ADA08F'],
 } as const;
+
+export const FIRE_PALETTE = {
+  flame: '#FF6A1B',
+  core: '#FFE49C',
+  smoke: '#35322F',
+  char: '#292623',
+} as const;

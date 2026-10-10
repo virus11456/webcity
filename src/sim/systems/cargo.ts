@@ -186,7 +186,9 @@ export class CargoSystem {
     job.retryTick = this.s.clock.ticks + C.retryTicks;
   }
   private deliver(): void {
-    for (const id of this.traffic.takeMissionArrivals()) {
+    for (const id of this.traffic.takeMissionArrivals(
+      new Set(this.s.cargo.shipments.map((j) => j.id)),
+    )) {
       const index = this.s.cargo.shipments.findIndex((j) => j.id === id);
       if (index < 0) continue;
       const job = this.s.cargo.shipments[index]!;

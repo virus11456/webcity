@@ -365,6 +365,8 @@ it('tutorial golden: real construction, migration and employment turn profitable
     expect(
       s.buildings.some((b) => b.defId === zone && b.state === 'active'),
     ).toBe(true);
+  // M2-16: this seed includes one unprotected house fire; keep the fiscal assertions.
+  expect(s.buildings.filter((b) => b.state === 'burned')).toHaveLength(1);
   expect({
     population: s.stats.population,
     income: s.stats.income,
@@ -372,8 +374,8 @@ it('tutorial golden: real construction, migration and employment turn profitable
   }).toMatchInlineSnapshot(`
     {
       "expenses": 389.28,
-      "income": 702.72,
-      "population": 820,
+      "income": 701.28,
+      "population": 817,
     }
   `);
   expect(
