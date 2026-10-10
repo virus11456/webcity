@@ -1,3 +1,4 @@
+import { ROADS } from '../../data/roads';
 import { hasBuildingProblem } from '../../world/buildingProblems';
 import { serviceDefinition } from '../../world/services';
 import type { ServiceId } from '../../data/services';
@@ -293,6 +294,17 @@ function Content({
   } else if (info.kind === 'segment') {
     name = t(`road.${info.value.type}`);
     rows.push([t('inspect.length'), `${info.value.length.toFixed(1)} m`]);
+    const q = info.value.traffic;
+    rows.push([t('traffic.limit'), `${ROADS[info.value.type].speedKph} km/h`]);
+    if (q)
+      rows.push(
+        [t('traffic.count'), q.count],
+        [
+          t('traffic.average'),
+          q.count ? `${q.speedKmh.toFixed(1)} km/h` : t('traffic.empty'),
+        ],
+        [t('traffic.flow'), `${(q.ratio * 100).toFixed(0)}%`],
+      );
   }
   rows.push([t('inspect.paid'), `$${v.paidCost ?? 0}`]);
   return (

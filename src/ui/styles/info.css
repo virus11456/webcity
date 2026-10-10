@@ -75,3 +75,8 @@
   .road-tabs {
   pointer-events: auto;
 }
+
+/* Inspection temporarily occupies the legend area; closing it reveals the legend. */
+#app:has(.inspect-data) .info-panel {
+  visibility: hidden;
+}

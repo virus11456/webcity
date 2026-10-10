@@ -1,3 +1,4 @@
+import { TrafficOverlay } from './trafficOverlay';
 import {
   Color,
   DataTexture,
@@ -71,6 +72,7 @@ export function infoShader(
   };
 }
 export class InfoOverlays {
+  private readonly traffic: TrafficOverlay;
   private view: InfoView | null = null;
   private world: InfoWorld | undefined;
   private byId = new Map<number, Building>();
@@ -108,6 +110,7 @@ export class InfoOverlays {
     private onColors: (colors: ReadonlyMap<number, string> | null) => void,
     private buildingGroups: readonly Object3D[] = [],
   ) {
+    this.traffic = new TrafficOverlay(scene);
     for (const t of [this.texture, this.buildingTexture]) {
       t.minFilter = t.magFilter = NearestFilter;
       t.generateMipmaps = false;
@@ -117,12 +120,14 @@ export class InfoOverlays {
   set(view: InfoView | null) {
     if (view === this.view) return;
     this.view = view;
+    this.traffic.set(view === 'traffic');
     this.active.value = Number(view !== null);
     this.dirty = true;
     this.age = INFO.refreshSeconds;
     if (!view) this.onColors(null);
   }
   accept(e: SimEvent) {
+    this.traffic.accept(e);
     if (e.t === 'ready') {
       this.world = {
         seed: e.snapshot.seed,
@@ -176,6 +181,7 @@ export class InfoOverlays {
         const role = String(
           material.userData.infoRole ?? (inBuilding(o) ? 'building' : 'gray'),
         );
+        if (role === 'preserve') continue;
         const old = this.installed.get(material);
         if (
           old &&
@@ -222,6 +228,7 @@ export class InfoOverlays {
     this.age += seconds;
     if (!this.view || !this.world || this.age < INFO.refreshSeconds) return;
     this.age = 0;
+    this.traffic.update();
     this.scan();
     if (!this.dirty) return;
     this.dirty = false;
@@ -289,6 +296,7 @@ export class InfoOverlays {
     this.onColors(colors);
   }
   dispose() {
+    this.traffic.dispose();
     this.active.value = 0;
     this.onColors(null);
     for (const [m, e] of this.installed) {

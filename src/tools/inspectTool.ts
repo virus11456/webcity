@@ -46,6 +46,8 @@ export class InspectTool {
         this.vehicleTick = e.tick ?? this.vehicleTick + 1;
         void this.request();
       }
+      if (e.t === 'roadTraffic' && this.target?.kind === 'segment')
+        void this.request();
       if (e.t === 'error') this.clear();
     });
     this.refresh();

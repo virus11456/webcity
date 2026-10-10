@@ -125,6 +125,7 @@ export type SimEvent =
     }
   | { t: 'stats'; stats: CityStats; transient?: boolean }
   | { t: 'fields'; which: FieldName; data: Float32Array }
+  | { t: 'roadTraffic'; roads: import('../world/roadTraffic').RoadTraffic[] }
   | {
       t: 'vehicles';
       data: Float32Array;

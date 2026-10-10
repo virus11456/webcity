@@ -588,3 +588,6 @@ M2-21：happiness／levels 在 Worker 更新 Building.happiness、upgrade 與 de
 
 
 M2-22：world/infoViews 純衍生、InfoOverlays 消費權威事件；300×300 地形 DataTexture，加 600×600 設施占地遮罩。分區模型使用 per-instance 顏色；既有合併批次設施使用第二貼圖，保留 draw calls。材質 hook 與 CSM 組合且避免重複注入；建築改色沿用分幀佇列，資料最多 250 ms 刷新。詳見 INFO_VIEWS.md。
+
+### M2-12 交通統計與渲染
+Worker 發送精簡 `roadTraffic` 事件；路段檢視向 Worker 取得統計。存檔讀取從實際車輛重新計算。交通色帶沿道路高度合併為一個 draw call，路網事件重建幾何，週期事件只更新顏色，沒有逐幀世界重建或新依賴。
