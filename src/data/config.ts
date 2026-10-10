@@ -61,7 +61,7 @@ export const QUALITY = {
     maxDpr: 2,
     shadowMapSize: 1024,
     cascadedShadows: false,
-    postprocessing: ['tiltShift', 'fxaa'],
+    postprocessing: ['tiltShift', 'bloom', 'fxaa'],
     maxVehicles: 1000,
     treeDensity: 1,
     lodMultiplier: 1,

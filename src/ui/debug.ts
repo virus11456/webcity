@@ -10,6 +10,8 @@ export interface DebugStats {
   shadows: number;
   fogDensity: number;
   hour: number;
+  postfx: number;
+  tilt: number;
 }
 /** Mount a diagnostic panel only when requested; update at the renderer's throttled interval. */
 export function createDebugPanel(parent: HTMLElement): {
@@ -34,6 +36,8 @@ export function createDebugPanel(parent: HTMLElement): {
       panel.dataset.shadows = String(stats.shadows);
       panel.dataset.fogDensity = String(stats.fogDensity);
       panel.dataset.hour = String(stats.hour);
+      panel.dataset.postfx = String(stats.postfx);
+      panel.dataset.tilt = String(stats.tilt);
     },
     dispose() {
       panel.remove();

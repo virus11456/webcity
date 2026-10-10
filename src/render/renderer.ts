@@ -1,4 +1,5 @@
 import type { SimEvent } from '../bridge/protocol';
+import { PostProcessing } from './postfx/pipeline';
 import { DayNight } from './dayNight';
 import { installNightWindows } from './nightWindows';
 import { BUILDING_DETAIL_PALETTE } from '../data/palette';
@@ -45,6 +46,8 @@ export interface RenderStats {
   shadows: number;
   fogDensity: number;
   hour: number;
+  postfx: number;
+  tilt: number;
 }
 export interface RendererOptions {
   seed?: number;
@@ -79,6 +82,7 @@ export class CityRenderer {
   private readonly water: WaterRenderer;
   private readonly sky = createSky();
   private lighting: Lighting;
+  private postfx: PostProcessing | null = null;
   private forced: QualityLevel | null;
   private readonly automaticQuality: QualityLevel;
   private readonly startup = new StartupQuality();
@@ -137,6 +141,8 @@ export class CityRenderer {
       shadows: 0,
       fogDensity: LIGHTING.fogDensity,
       hour: 12,
+      postfx: 0,
+      tilt: 0,
     };
     this.cameraController = new RtsCamera(this.camera, {
       bounds: {
@@ -163,6 +169,7 @@ export class CityRenderer {
       LIGHTING.fogDensity,
     );
     this.lighting = this.createLighting(level);
+    this.createPostfx(level);
     this.observer = new ResizeObserver(this.resize);
     this.observer.observe(canvas);
     window.addEventListener('resize', this.resize);
@@ -174,7 +181,8 @@ export class CityRenderer {
   }
   /** Capture after an explicit render so non-preserved WebGL buffers still produce a thumbnail. */
   thumbnail(width: number, height: number, quality: number): string {
-    this.renderer.render(this.scene, this.camera);
+    if (this.postfx) this.postfx.render();
+    else this.renderer.render(this.scene, this.camera);
     const output = document.createElement('canvas');
     output.width = width;
     output.height = height;
@@ -221,7 +229,15 @@ export class CityRenderer {
     this.lighting.dispose();
     this.stats.quality = level;
     this.lighting = this.createLighting(level);
+    this.createPostfx(level);
     this.resize();
+  }
+  private createPostfx(level: QualityLevel): void {
+    this.postfx?.dispose();
+    this.postfx =
+      level === 'low'
+        ? null
+        : new PostProcessing(this.renderer, this.scene, this.camera, level);
   }
   private createLighting(level: QualityLevel): Lighting {
     this.renderer.shadowMap.enabled = level !== 'low';
@@ -267,6 +283,7 @@ export class CityRenderer {
     this.cameraController.resize(width / height);
     this.stats.aspect = this.camera.aspect;
     this.lighting.resize();
+    this.postfx?.resize(width, height, this.stats.dpr);
   };
   private readonly visibility = (): void => {
     this.lastFrame = null;
@@ -304,6 +321,7 @@ export class CityRenderer {
       this.lighting.dispose();
       this.stats.quality = 'low';
       this.lighting = this.createLighting('low');
+      this.createPostfx('low');
       this.resize();
     }
     const seconds = this.lastFrame === null ? 0 : (now - this.lastFrame) / 1000;
@@ -327,8 +345,15 @@ export class CityRenderer {
     (this.scene.fog as FogExp2).density = this.stats.fogDensity;
     this.camera.updateMatrixWorld();
     this.lighting.update(this.focus);
+    this.postfx?.update(
+      Math.max(0, this.camera.position.y - this.focus.y),
+      this.dayNight.night,
+    );
+    this.stats.postfx = this.postfx?.flags ?? 0;
+    this.stats.tilt = this.postfx?.tilt ?? 0;
     this.renderer.info.reset();
-    this.renderer.render(this.scene, this.camera);
+    if (this.postfx) this.postfx.render();
+    else this.renderer.render(this.scene, this.camera);
     if (this.statsStart === 0) {
       this.statsStart = now;
       this.statsFrames = 0;
@@ -376,6 +401,7 @@ export class CityRenderer {
     this.canvas.removeEventListener('webglcontextlost', this.lost);
     this.canvas.removeEventListener('webglcontextrestored', this.restored);
     this.lighting.dispose();
+    this.postfx?.dispose();
     this.land.dispose();
     this.town.dispose();
     this.water.dispose();
