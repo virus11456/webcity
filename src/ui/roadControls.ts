@@ -115,7 +115,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   const catalog = createBuildCatalog(select, 'road');
   const roadMode = document.createElement('select');
   roadMode.setAttribute('aria-label', t('road.mode'));
-  for (const mode of ['straight', 'curve', 'free'] as const) {
+  for (const mode of ['straight', 'curve', 'free', 'upgrade'] as const) {
     const option = document.createElement('option');
     option.value = mode;
     option.textContent = t(`road.mode.${mode}`);
@@ -298,6 +298,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       panel.dataset.ready = String(state.ready);
       panel.dataset.phase = state.phase;
       panel.dataset.mode = state.mode;
+      panel.dataset.demolitions = String(state.demolitions);
       roadMode.value = state.mode;
       roadMode.disabled = state.pending;
       panel.dataset.pending = String(state.pending);
@@ -353,6 +354,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       metrics.textContent = p
         ? `${t('road.length')} ${p.length.toFixed(0)} m · ${t('road.cost')} $${format.format(p.cost)} · ${t('road.slope')} ${(p.slope * 100).toFixed(1)}%`
         : `${t('road.count')} ${state.segments}`;
+      if (state.mode === 'upgrade' && state.upgradeCount)
+        metrics.textContent += ` · ${t('road.upgradeCount')} ${state.upgradeCount} · ${t('road.demolitions')} ${state.demolitions}`;
       panel.dataset.cost = String(p?.cost ?? 0);
       const reason = state.reason ?? state.preview?.reason;
       status.dataset.invalid = String(Boolean(reason));
@@ -364,15 +367,17 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
             ? t('sim.loading')
             : !state.active
               ? t('road.exploreHint')
-              : state.mode === 'free'
-                ? t('road.freeHint')
-                : state.phase === 'control'
-                  ? t('road.control')
-                  : state.phase === 'start'
-                    ? t('road.start')
-                    : state.phase === 'end'
-                      ? t('road.end')
-                      : t('road.confirmHint');
+              : state.mode === 'upgrade'
+                ? t('road.upgradeHint')
+                : state.mode === 'free'
+                  ? t('road.freeHint')
+                  : state.phase === 'control'
+                    ? t('road.control')
+                    : state.phase === 'start'
+                      ? t('road.start')
+                      : state.phase === 'end'
+                        ? t('road.end')
+                        : t('road.confirmHint');
       if (!construction) body.hidden = true;
     },
     dispose() {

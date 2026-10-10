@@ -191,6 +191,7 @@ function split(
       subCurve(curve, from, to),
     );
     if (segment.regional) data.segments.get(id)!.regional = true;
+    if (segment.zoningReversed) data.segments.get(id)!.zoningReversed = true;
     children.push(id);
   }
   allocateCost(data, children, segment.paidCost);

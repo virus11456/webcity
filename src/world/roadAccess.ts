@@ -22,7 +22,7 @@ export function roadAccess(
         (p, i) =>
           i > 0 &&
           closestPointOnSegment(b.pos, path.points[i - 1]!, p).distance <=
-            path.width,
+            path.width + (b.frontageSetbackM ?? 0),
       ),
     );
 }

@@ -515,3 +515,7 @@ M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/st
 ### M2-02 道路車道
 
 `world/roadLanes.ts` 從路段推導 Lane，與道路 Mesh 共用橫斷面；車道屬可重建資料，不新增存檔權威。路樹使用單一 InstancedMesh，重建時釋放舊 GPU 資源。詳見 `ROAD_TYPES.md`。
+
+### M2-03 道路升級
+
+`world/roadUpgrade.ts` 共用報價、命中與拆除範圍；`upgradeRoad` 指令由 Worker 重新報價，保留路段 ID，透過 roads/zones/buildings/funds 事件同步。`RoadSegment.zoningReversed?` 保留實體分區方向並傳給切割子路段；`Building.frontageSetbackM?` 保存縮窄後退縮距離。兩個欄位為可選，舊 v1 存檔可直接載入，讀檔檢查型別與範圍。操作與退款政策見 `ROAD_UPGRADE.md`。
