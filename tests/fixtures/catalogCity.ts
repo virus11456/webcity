@@ -6,16 +6,16 @@ import { districtFixture } from '../../src/render/buildings/districtFixture';
 import { catalogModels } from '../../src/world/modelCatalog';
 import { serialize } from '../../src/save/serializer';
 /** Visual acceptance save: deliberately authored building inventory, not a progression test. */
-export async function catalogCity() {
+export async function catalogCity(group: 'res' | 'cio' = 'res') {
   const s = createState({
     seed: 20261006,
     mapId: 'valley',
     mode: 'sandbox',
-    cityName: '住宅模型街區',
+    cityName: group === 'res' ? '住宅模型街區' : '商業工業辦公街區',
   });
   s.terrain.heights.fill(60);
   const graph = new RoadGraph();
-  for (let row = 0; row < 9; row++)
+  for (let row = 0; row < 10; row++)
     graph.addRoad({
       start: { x: -225, z: row * 60 - 240 },
       end: { x: 225, z: row * 60 - 240 },
@@ -26,7 +26,12 @@ export async function catalogCity() {
     });
   Object.assign(s, graph.snapshot());
   const base = districtFixture(1)[0]!;
-  s.buildings = catalogModels().map((m, i) => ({
+  const models = catalogModels().filter((m) =>
+    group === 'res'
+      ? ['RL', 'RH'].includes(m.zone)
+      : ['CL', 'CH', 'I', 'O'].includes(m.zone),
+  );
+  s.buildings = models.map((m, i) => ({
     ...structuredClone(base),
     id: 10001 + i,
     defId: m.zone,
