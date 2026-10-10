@@ -613,3 +613,7 @@ WaterRenderer 共用一個 MeshStandardMaterial，兩層沿河道流向的週期
 
 ### M3-04 天空與高度霧
 CityRenderer 依鏡頭海拔每幀更新既有 FogExp2 密度；80–2000 m smoothstep 淡化到 30%，天空球維持 camera-relative。曝光、光暈與高度參數集中在 data/rendering，debug 只投影實際霧密度。見 SKY_LIGHTING.md。
+
+
+### M3-05 陰影穩定性
+高畫質 CSM 開啟 fade，更新 frustums 後才安裝材質 hooks。中畫質以 light-space texel 對齊追蹤中心，重用方向與暫存向量；保留 bias／normalBias 與完整資源清理。見 SHADOWS.md。
