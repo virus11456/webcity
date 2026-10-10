@@ -1,3 +1,5 @@
+import { FollowCamera } from './render/followCamera';
+import { createFollowControls } from './ui/followControls';
 import { createNotifications } from './ui/notifications';
 import { NOTIFICATIONS } from './data/notifications';
 import { InfoOverlays } from './render/overlays';
@@ -96,6 +98,8 @@ let pauseMenu: ReturnType<typeof createPauseMenu> | undefined;
 let saveController: ReturnType<typeof createSaveController> | undefined;
 let saveControls: ReturnType<typeof createSaveControls> | undefined;
 let infoOverlays: InfoOverlays | undefined;
+let followCamera: FollowCamera | undefined;
+let followControls: ReturnType<typeof createFollowControls> | undefined;
 let notifications: ReturnType<typeof createNotifications> | undefined;
 let infoControls: ReturnType<typeof createInfoControls> | undefined;
 let unsubscribeInfo: (() => void) | undefined;
@@ -196,6 +200,7 @@ if (canvas && status) {
       onBeforeFrame: (seconds) => {
         frameSeconds = seconds;
         input?.update(seconds);
+        followCamera?.update();
         roadPreview?.roads.update();
         zoneRenderer?.update();
       },
@@ -440,6 +445,15 @@ if (canvas && status) {
         },
       );
       inspectPreview = new BulldozePreview(city.scene, UI_PALETTE.accent);
+      followControls = createFollowControls(root, () => followCamera?.cancel());
+      followCamera = new FollowCamera(
+        city.cameraController,
+        (id, out) => vehicles?.copyPosition(id, out) ?? false,
+        (id) => {
+          followControls?.update(id);
+          input?.setEdgeScrolling(id === null && preferences.edgeScrolling);
+        },
+      );
       inspectPanel = createInspectPanel(
         root,
         () => inspectTool?.clear(),
@@ -450,6 +464,13 @@ if (canvas && status) {
         async (id, enabled) => {
           const r = await sim!.send({ t: 'setBuildingEnabled', id, enabled });
           return r.t === 'result' && r.ok;
+        },
+        (id) => {
+          inspectTool?.clear();
+          tools?.select(null);
+          infoControls?.set(null);
+          mode(true);
+          followCamera?.start(id);
         },
       );
       inspectTool = new InspectTool(
@@ -688,6 +709,10 @@ if (import.meta.hot)
     pauseMenu?.dispose();
     saveController?.dispose();
     saveControls?.dispose();
+    followCamera?.cancel();
+    followControls?.dispose();
+    followCamera = undefined;
+    followControls = undefined;
     notifications?.dispose();
     unsubscribeInfo?.();
     infoControls?.dispose();
