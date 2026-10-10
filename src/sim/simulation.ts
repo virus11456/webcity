@@ -1,4 +1,8 @@
-import { updateParks } from './systems/parks';
+import {
+  FieldsSystem,
+  updateLandValue,
+  environmentSummary,
+} from './systems/fields';
 import { previewTrees } from '../world/parks';
 import { PARKS } from '../data/parks';
 import { updateEducationSummary } from './systems/education';
@@ -85,6 +89,7 @@ export class Simulation {
   readonly services: ServiceSystem;
   readonly cargo: CargoSystem;
   readonly fire: FireSystem;
+  readonly fields: FieldsSystem;
   private emit(event: SimEvent): void {
     if (event.t === 'roadsChanged') {
       this.laneGraph.sync(this.state.nodes, this.state.segments);
@@ -126,6 +131,9 @@ export class Simulation {
       this.schedules,
       this.state.traffic,
     );
+    this.fields = new FieldsSystem(this.state, () =>
+      this.traffic.roadVehicleCounts(),
+    );
     this.cargo = new CargoSystem(
       this.state,
       this.laneGraph,
@@ -136,7 +144,9 @@ export class Simulation {
     this.services.update();
     updateHealth(this.state);
     updateEducationSummary(this.state);
-    updateParks(this.state);
+    if (restored?.environmentVersion === 1) environmentSummary(this.state);
+    else updateLandValue(this.state);
+    this.state.environmentVersion = 1;
     this.fire = new FireSystem(this.state, this.routePlanner, this.traffic);
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
@@ -145,7 +155,7 @@ export class Simulation {
       const servicePatches = [
         ...this.services.update(),
         ...updateEducationSummary(this.state),
-        ...updateParks(this.state),
+        ...updateLandValue(this.state),
       ];
       this.fire.daily();
       const firePatches = this.fire.patches();
@@ -163,7 +173,7 @@ export class Simulation {
               ...this.services.update(),
               ...updateHealth(this.state),
               ...updateEducationSummary(this.state),
-              ...updateParks(this.state),
+              ...updateLandValue(this.state),
             ]
           : [];
       updateDemand(this.state);
@@ -181,6 +191,18 @@ export class Simulation {
       ])
         updates.set(p.id, { ...updates.get(p.id), ...p });
       const updated = [...updates.values()];
+      if (updated.some((p) => p.landValue !== undefined)) {
+        this.emit({
+          t: 'fields',
+          which: 'landValue',
+          data: this.state.fields.landValue.slice(),
+        });
+        this.emit({
+          t: 'fields',
+          which: 'coverage.parks',
+          data: this.state.fields.coverage.parks.slice(),
+        });
+      }
       if (updated.length)
         this.emit({
           t: 'buildingsChanged',
@@ -288,7 +310,7 @@ export class Simulation {
       ...updateWater(this.state),
       ...updateHealth(this.state),
       ...updateEducationSummary(this.state),
-      ...updateParks(this.state),
+      ...updateLandValue(this.state),
       ...updateProblems(this.state),
     ];
     if (patches.some((p) => p.state === 'abandoned' && p.stateTimer === 0))
@@ -300,7 +322,7 @@ export class Simulation {
         ...this.services.update(),
         ...updateHealth(this.state),
         ...updateEducationSummary(this.state),
-        ...updateParks(this.state),
+        ...updateLandValue(this.state),
       );
     const merged = new Map<number, BuildingPatch>();
     for (const p of patches) merged.set(p.id, { ...merged.get(p.id), ...p });
@@ -312,6 +334,16 @@ export class Simulation {
         removed: [],
         updated: structuredClone(updated),
       });
+    this.emit({
+      t: 'fields',
+      which: 'landValue',
+      data: this.state.fields.landValue.slice(),
+    });
+    this.emit({
+      t: 'fields',
+      which: 'coverage.parks',
+      data: this.state.fields.coverage.parks.slice(),
+    });
     this.emit({
       t: 'stats',
       stats: structuredClone(this.state.stats),
@@ -971,6 +1003,28 @@ export class Simulation {
     this.schedules.tick();
     this.routePlanner.tick();
     this.traffic.step(tickMs / 1000, (this.state.clock.ticks * tickMs) / 1000);
+    const environment = this.fields.step();
+    if (environment) {
+      for (const which of environment.fields)
+        this.emit({
+          t: 'fields',
+          which,
+          data: this.state.fields[which].slice(),
+        });
+      if (environment.fields.includes('landValue'))
+        this.emit({
+          t: 'fields',
+          which: 'coverage.parks',
+          data: this.state.fields.coverage.parks.slice(),
+        });
+      if (environment.buildings.length)
+        this.emit({
+          t: 'buildingsChanged',
+          added: [],
+          removed: [],
+          updated: environment.buildings,
+        });
+    }
     this.fire.tick();
     this.cargo.tick();
     const cargoPatches = [...this.fire.patches(), ...this.cargo.patches()];

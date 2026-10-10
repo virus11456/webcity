@@ -1,9 +1,10 @@
+import { fieldIndex } from '../../world/fieldSampling';
 import { WATER_UTILITY as W } from '../../data/waterUtility';
 import { POWER } from '../../data/power';
 import { UTILITY_RULES } from '../../data/buildings';
 import { distance } from '../../core/math';
 import { shapeDistance } from '../../world/power';
-import { waterDefinition } from '../../world/waterUtility';
+import { waterDefinition, intakePoint } from '../../world/waterUtility';
 import { polygonBounds, zoneBuildingFootprint } from '../../world/zoneGeometry';
 import type { Building } from '../../world/types';
 import type { BuildingPatch } from '../../world/snapshot';
@@ -97,7 +98,11 @@ export function updateWater(s: SimState): BuildingPatch[] {
   }
   const capacities = (b: Building) => {
     const def = waterDefinition(b.defId);
-    return def && 'water' in def && (b.flags & POWER.flag) !== 0
+    return def &&
+      'water' in def &&
+      b.enabled !== false &&
+      !b.fire?.burning &&
+      (b.flags & POWER.flag) !== 0
       ? {
           ...def.water,
           capacityM3PerWeek: def.water.capacityM3PerWeek * s.budgets.water,
@@ -105,7 +110,9 @@ export function updateWater(s: SimState): BuildingPatch[] {
       : undefined;
   };
   const supplied = new Set<number>(),
-    drained = new Set<number>();
+    drained = new Set<number>(),
+    contamination = new Map<number, number>(),
+    discharge = new Map<number, number>();
   let served = 0,
     treated = 0;
   for (const group of groups)
@@ -116,6 +123,25 @@ export function updateWater(s: SimState): BuildingPatch[] {
         0,
       );
       if (!remaining) continue;
+      const totalCapacity = remaining;
+      const pollution =
+        kind === 'water'
+          ? sources.reduce(
+              (sum, b) =>
+                sum +
+                capacities(b)!.capacityM3PerWeek *
+                  (b.defId === 'water_pump'
+                    ? s.fields.waterPollution[
+                        fieldIndex(
+                          intakePoint(b.pos, b.rotation),
+                          s.fields.size,
+                        )
+                      ]!
+                    : 0),
+              0,
+            ) / totalCapacity
+          : 0;
+      let discharged = 0;
       const near = (b: Building) =>
         Math.min(...sources.map((source) => distance(b.pos, source.pos)));
       for (const b of [...group].sort(
@@ -128,12 +154,21 @@ export function updateWater(s: SimState): BuildingPatch[] {
         remaining -= load;
         if (kind === 'water') {
           supplied.add(b.id);
+          if (b.kind === 'zoned') contamination.set(b.id, pollution);
           served += load;
         } else {
           drained.add(b.id);
           treated += load;
+          discharged += load;
         }
       }
+      if (kind === 'sewage')
+        for (const source of sources)
+          discharge.set(
+            source.id,
+            (discharged * capacities(source)!.capacityM3PerWeek) /
+              totalCapacity,
+          );
     }
   let produced = 0,
     capacity = 0,
@@ -155,9 +190,22 @@ export function updateWater(s: SimState): BuildingPatch[] {
       (b.flags & ~(W.waterFlag | W.sewageFlag)) |
       (supplied.has(b.id) ? W.waterFlag : 0) |
       (drained.has(b.id) ? W.sewageFlag : 0);
-    if (flags !== b.flags) {
+    const drinkingWaterPollution = contamination.get(b.id) ?? 0,
+      sewageDischarge = discharge.get(b.id) ?? 0;
+    if (
+      flags !== b.flags ||
+      (b.drinkingWaterPollution ?? 0) !== drinkingWaterPollution ||
+      (b.sewageDischarge ?? 0) !== sewageDischarge
+    ) {
       b.flags = flags;
-      patches.push({ id: b.id, flags });
+      b.drinkingWaterPollution = drinkingWaterPollution;
+      b.sewageDischarge = sewageDischarge;
+      patches.push({
+        id: b.id,
+        flags,
+        drinkingWaterPollution,
+        sewageDischarge,
+      });
     }
   }
   s.stats.water = {

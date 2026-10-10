@@ -106,7 +106,10 @@ test('pollution harms residents, connected clinic restores health, and disabling
   expect(far.average).toBeLessThan(39);
   expect(far.sick).toBe(far.residents);
   await tap(page, 80, 16, touch);
-  await expect(page.locator('.inspect-data')).toContainText('40.4%');
+  expect(near.average).toBeCloseTo(40.46);
+  await expect(page.locator('.inspect-data')).toContainText(
+    `${near.average.toFixed(1)}%`,
+  );
   await page.screenshot({
     path: `docs/screenshots/m2-17/${name}-recovery.png`,
     scale: 'css',
@@ -133,7 +136,9 @@ test('pollution harms residents, connected clinic restores health, and disabling
       .locator('.inspect-data')
       .getByText('居民平均健康', { exact: true })
       .scrollIntoViewIfNeeded();
-    await expect(page.locator('.inspect-data')).toContainText('38.4%');
+    await expect(page.locator('.inspect-data')).toContainText(
+      `${disabled.toFixed(1)}%`,
+    );
     await page.screenshot({
       path: 'docs/screenshots/m2-17/iphone-landscape.png',
       scale: 'css',

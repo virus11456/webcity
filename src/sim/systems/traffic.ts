@@ -661,6 +661,19 @@ export class TrafficSystem {
       speed: v.speed,
     };
   }
+  /** Current physical occupancy for environmental noise; independent of the congestion sampling clock. */
+  roadVehicleCounts(): ReadonlyMap<number, { count: number }> {
+    const counts = new Map<number, { count: number }>();
+    for (const v of this.vehicles.values())
+      if (v.kind !== TrafficKind.pedestrian) {
+        const road = v.route.legs[v.leg]?.segment;
+        if (!road) continue;
+        const entry = counts.get(road) ?? { count: 0 };
+        entry.count++;
+        counts.set(road, entry);
+      }
+    return counts;
+  }
   snapshot(): TrafficState {
     for (const v of this.vehicles.values())
       if (

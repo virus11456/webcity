@@ -136,6 +136,8 @@ export function createGrowthControls(
         p.education !== undefined ||
         p.landValue !== undefined ||
         p.parkBonus !== undefined ||
+        p.environment !== undefined ||
+        p.drinkingWaterPollution !== undefined ||
         p.problemTimers !== undefined ||
         Object.hasOwn(p, 'roadDisconnectedDay') ||
         p.jobs !== undefined ||

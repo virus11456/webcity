@@ -1,9 +1,7 @@
 import { MAP_SIZE } from '../../data/config';
 import { PARKS } from '../../data/parks';
 import { parkDefinition } from '../../world/parks';
-import { fieldIndex } from '../../world/fieldSampling';
 import { zoneBuildingFootprint } from '../../world/zoneGeometry';
-import type { BuildingPatch } from '../../world/snapshot';
 import type { SimState } from '../state';
 /** Sparse source rasterization; output is reused by the environment system. */
 export function parkField(s: SimState): Float32Array {
@@ -56,26 +54,4 @@ export function parkField(s: SimState): Float32Array {
   for (let i = 0; i < bonus.length; i++)
     bonus[i]! += Math.min(PARKS.treeBonusCap, trees[i]!);
   return bonus;
-}
-export function updateParks(s: SimState): BuildingPatch[] {
-  const bonus = parkField(s),
-    patches: BuildingPatch[] = [];
-  for (let i = 0; i < bonus.length; i++) {
-    s.fields.coverage.parks[i] = Math.min(1, bonus[i]! / PARKS.treeBonusCap);
-    s.fields.landValue[i] = Math.min(
-      PARKS.maxLandValue,
-      PARKS.baseLandValue + bonus[i]!,
-    );
-  }
-  for (const b of s.buildings) {
-    const index = fieldIndex(b.pos, s.fields.size),
-      landValue = s.fields.landValue[index]!,
-      parkBonus = bonus[index]!;
-    if (b.landValue !== landValue || b.parkBonus !== parkBonus) {
-      b.landValue = landValue;
-      b.parkBonus = parkBonus;
-      patches.push({ id: b.id, landValue, parkBonus });
-    }
-  }
-  return patches;
 }

@@ -579,3 +579,6 @@ FireSystem 保存 WorldSnapshot.fire／Building.fire，日結依確定性 RNG �
 ### M2-19 公園及樹木
 
 `plantTrees` 是有上限的 Worker 原子指令，`world/parks.ts` 共用筆畫與地形／占用預覽，`sim/systems/parks.ts` 產生徑向休憩場。樹木採 park 建築記錄、保留 ID／費用／種植日，沿用分區阻擋、拆除與存檔，不參與電網或職缺。渲染以兩組共享幾何 InstancedMesh 承載最多 4,000 棵，公園原創模型按材質合併。詳見 `PARKS.md`。
+
+
+M2-20：FieldsSystem 以 clock.ticks 的 1／3／5／7 相位分散四個 300×300 場，差異才發送 fields 事件。environmentVersion 保留期中狀態，WaterSystem 產生實際排污與容量加權飲用水污染，TrafficSystem 提供可從存檔重建的即時道路車數。Building.environment／sewageDischarge 為向下相容摘要。見 ENVIRONMENT.md。
