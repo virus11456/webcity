@@ -38,6 +38,12 @@ export type CommandInput =
   | { t: 'setSpeed'; speed: SimSpeed }
   | { t: 'buildRoad'; type: RoadTypeId; points: RoadDraft }
   | { t: 'upgradeRoad'; segment: Id; type: RoadTypeId }
+  | {
+      t: 'setIntersection';
+      node: Id;
+      control: RoadNode['control'];
+      banLeft: boolean;
+    }
   | { t: 'zone'; cells: [Id, number][]; zone: ZoneType | null }
   | { t: 'place'; defId: BuildingDefId; pos: Vec2; rotation: number }
   | { t: 'buildRoadPipes' }

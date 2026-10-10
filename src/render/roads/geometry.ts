@@ -1,3 +1,4 @@
+import { INTERSECTIONS as J } from '../../data/intersections';
 import { laneOffsets, roadCrossSection } from '../../world/roadLanes';
 import { Color } from 'three';
 import { ROAD_MESH as C } from '../../data/roadMesh';
@@ -256,6 +257,8 @@ export function segmentMesh(
     );
   }
   if (s.type !== 'gravel') {
+    const markedFrom = from + (junctionStart ? J.stopLineOffsetM : 0),
+      markedTo = to - (junctionEnd ? J.stopLineOffsetM : 0);
     const lanes = def.lanesForward + def.lanesBackward;
     for (let lane = 1; lane < lanes; lane++) {
       const offset =
@@ -267,8 +270,8 @@ export function segmentMesh(
           strip(
             out,
             samples,
-            from,
-            to,
+            markedFrom,
+            markedTo,
             offset +
               section.median / 2 +
               side * (section.median / 2 + C.doubleLineGapM / 2) -
@@ -282,15 +285,16 @@ export function segmentMesh(
           );
       } else
         for (
-          let d = Math.ceil(from / (C.dashM + C.gapM)) * (C.dashM + C.gapM);
-          d < to;
+          let d =
+            Math.ceil(markedFrom / (C.dashM + C.gapM)) * (C.dashM + C.gapM);
+          d < markedTo;
           d += C.dashM + C.gapM
         )
           strip(
             out,
             samples,
             d,
-            Math.min(to, d + C.dashM),
+            Math.min(markedTo, d + C.dashM),
             offset - C.lineWidthM / 2,
             offset + C.lineWidthM / 2,
             P.lane_white,
@@ -331,28 +335,46 @@ export function segmentMesh(
             P.lane_white,
           );
         }
-    if (junctionStart)
-      strip(
-        out,
-        samples,
-        from + 1,
-        Math.min(to, from + 1 + C.lineWidthM * 2),
-        -inner,
-        inner,
-        P.lane_white,
-        C.markingLiftM,
-      );
-    if (junctionEnd)
-      strip(
-        out,
-        samples,
-        Math.max(from, to - 1 - C.lineWidthM * 2),
-        to - 1,
-        -inner,
-        inner,
-        P.lane_white,
-        C.markingLiftM,
-      );
+    for (const start of [true, false]) {
+      if (
+        !(start ? junctionStart : junctionEnd) ||
+        to - from < J.stopLineOffsetM + C.lineWidthM * 2
+      )
+        continue;
+      const near = start ? from : to,
+        sign = start ? 1 : -1;
+      if (arm.walk)
+        for (
+          let offset = -inner;
+          offset + J.stripeWidthM <= inner;
+          offset += J.stripeWidthM + J.stripeGapM
+        ) {
+          if (Math.abs(offset) < section.median / 2) continue;
+          strip(
+            out,
+            samples,
+            Math.min(near + sign, near + sign * (1 + J.crossingDepthM)),
+            Math.max(near + sign, near + sign * (1 + J.crossingDepthM)),
+            offset,
+            offset + J.stripeWidthM,
+            P.lane_white,
+            C.markingLiftM,
+          );
+        }
+      if (start ? def.lanesBackward > 0 : def.lanesForward > 0) {
+        const d = near + sign * J.stopLineOffsetM;
+        strip(
+          out,
+          samples,
+          d - C.lineWidthM,
+          d + C.lineWidthM,
+          start ? -inner : section.median / 2,
+          start ? -section.median / 2 : inner,
+          P.lane_white,
+          C.markingLiftM,
+        );
+      }
+    }
   }
   return out.data;
 }

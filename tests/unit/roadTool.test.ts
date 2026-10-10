@@ -31,7 +31,7 @@ afterEach(() => {
   disposers.splice(0).forEach((fn) => fn());
   vi.useRealTimers();
 });
-function setup(money = 70000, roads = false) {
+function setup(money = 70000, roads: boolean | 'junction' = false) {
   const transport = new Transport(),
     sim = new SimClient(transport as SimTransport);
   const snapshot = new Simulation({
@@ -43,11 +43,23 @@ function setup(money = 70000, roads = false) {
   snapshot.terrain.heights.fill(60);
   snapshot.money = snapshot.stats.money = money;
   if (roads) {
+    if (roads === 'junction') snapshot.unlocked = [0, 1, 2];
     const real = new Simulation(snapshot.settings, undefined, snapshot);
     for (const z of [-80, 80]) {
       const start = { x: -160, z },
         end = { x: 160, z };
       real.buildRoad('gravel', {
+        start,
+        end,
+        c1: lerp(start, end, 1 / 3),
+        c2: lerp(start, end, 2 / 3),
+        elevated: false,
+      });
+    }
+    if (roads === 'junction') {
+      const start = { x: 0, z: -160 },
+        end = { x: 0, z: 160 };
+      real.buildRoad('road_small', {
         start,
         end,
         c1: lerp(start, end, 1 / 3),
@@ -329,5 +341,31 @@ describe('road elevation controls', () => {
     expect(tool.readState().elevation).toBe(30);
     tool.setElevation(-5);
     expect(tool.readState().elevation).toBe(0);
+  });
+});
+
+describe('intersection tool', () => {
+  it('requires MS2 and sends a selected junction only after explicit confirmation', async () => {
+    const locked = setup();
+    locked.tool.setMode('junction');
+    expect(locked.tool.readState().mode).toBe('straight');
+    const { tool, tap, transport, respond } = setup(70000, 'junction');
+    tool.setMode('junction');
+    tap(0, -80);
+    expect(tool.readState().junctionId).not.toBeNull();
+    expect(transport.sent).toHaveLength(0);
+    tool.setJunction('stop', true);
+    tool.onConfirm();
+    expect(transport.sent[0]).toMatchObject({
+      t: 'setIntersection',
+      control: 'stop',
+      banLeft: true,
+    });
+    tool.onConfirm();
+    expect(transport.sent).toHaveLength(1);
+    await respond();
+    tool.onCancel();
+    tool.onConfirm();
+    expect(transport.sent).toHaveLength(1);
   });
 });

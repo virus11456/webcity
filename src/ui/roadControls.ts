@@ -1,3 +1,4 @@
+import { INTERSECTIONS } from '../data/intersections';
 import { ROAD_RULES, ROADS, type RoadTypeId } from '../data/roads';
 import type { RoadMode, RoadToolState } from '../tools/roadTool';
 import { t } from './i18n/t';
@@ -18,6 +19,7 @@ interface RoadActions {
   mode(mode: RoadMode): void;
   angle(enabled: boolean): void;
   elevation(value: number): void;
+  junction(control: 'none' | 'lights' | 'stop', banLeft: boolean): void;
 }
 /** Accessible construction controls; geometry and worker authority stay outside the UI layer. */
 export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
@@ -116,7 +118,13 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   const catalog = createBuildCatalog(select, 'road');
   const roadMode = document.createElement('select');
   roadMode.setAttribute('aria-label', t('road.mode'));
-  for (const mode of ['straight', 'curve', 'free', 'upgrade'] as const) {
+  for (const mode of [
+    'straight',
+    'curve',
+    'free',
+    'upgrade',
+    'junction',
+  ] as const) {
     const option = document.createElement('option');
     option.value = mode;
     option.textContent = t(`road.mode.${mode}`);
@@ -137,6 +145,30 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   const heightLabel = document.createElement('output');
   heightLabel.setAttribute('aria-live', 'polite');
   heightRow.append(lower, heightLabel, raise);
+  const junctionRow = document.createElement('div');
+  junctionRow.className = 'road-row';
+  const controlSelect = document.createElement('select');
+  controlSelect.setAttribute('aria-label', t('road.junctionControl'));
+  for (const value of ['none', 'lights', 'stop'] as const) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = t(`road.junction.${value}`);
+    controlSelect.append(option);
+  }
+  const banLabel = document.createElement('label');
+  banLabel.className = 'road-angle';
+  const ban = document.createElement('input');
+  ban.type = 'checkbox';
+  ban.setAttribute('aria-label', t('road.banLeft'));
+  banLabel.append(ban, t('road.banLeft'));
+  const junctionChange = () =>
+    actions.junction(
+      controlSelect.value as 'none' | 'lights' | 'stop',
+      ban.checked,
+    );
+  ban.addEventListener('change', junctionChange);
+  controlSelect.addEventListener('change', junctionChange);
+  junctionRow.append(controlSelect, banLabel);
   const metrics = document.createElement('output');
   metrics.className = 'road-metrics';
   const status = document.createElement('p');
@@ -150,7 +182,15 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   const note = document.createElement('small');
   note.textContent = t('road.temporary');
   const details = document.createElement('div');
-  details.append(catalog.host, options, heightRow, metrics, status, confirmRow);
+  details.append(
+    catalog.host,
+    options,
+    heightRow,
+    junctionRow,
+    metrics,
+    status,
+    confirmRow,
+  );
   const zoneHost = document.createElement('div');
   zoneHost.hidden = true;
   const bulldozeHost = document.createElement('div');
@@ -322,7 +362,20 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       panel.dataset.phase = state.phase;
       panel.dataset.mode = state.mode;
       panel.dataset.elevation = String(state.elevation);
-      heightRow.hidden = !state.active || state.mode === 'upgrade';
+      heightRow.hidden =
+        !state.active || state.mode === 'upgrade' || state.mode === 'junction';
+      junctionRow.hidden = !state.active || state.mode !== 'junction';
+      typeLabel.hidden = angleLabel.hidden = state.mode === 'junction';
+      controlSelect.value = state.junctionControl;
+      ban.checked = state.banLeft;
+      controlSelect.disabled = ban.disabled =
+        state.pending || state.junctionId === null;
+      panel.dataset.junction = String(state.junctionId ?? '');
+      panel.dataset.junctionControl = state.junctionControl;
+      panel.dataset.banLeft = String(state.banLeft);
+      for (const option of roadMode.options)
+        if (option.value === 'junction')
+          option.disabled = !state.unlocked.includes(INTERSECTIONS.unlock);
       lower.disabled = state.pending || state.elevation <= 0;
       raise.disabled =
         state.pending || state.elevation >= ROAD_RULES.maxElevationM;
@@ -362,7 +415,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         bulldozePending ||
         powerPending ||
         waterPending;
-      options.hidden = catalog.host.hidden = !state.active;
+      options.hidden = !state.active;
+      catalog.host.hidden = !state.active || state.mode === 'junction';
       select.disabled = state.pending;
       angle.disabled = state.pending;
       select.value = state.type;
@@ -375,10 +429,21 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       }
       catalog.update();
       confirm.disabled =
-        !state.ready || state.pending || !state.preview?.canBuild;
-      confirm.hidden = !state.active || !state.preview;
+        !state.ready ||
+        state.pending ||
+        (state.mode === 'junction'
+          ? state.junctionId === null
+          : !state.preview?.canBuild);
+      confirm.hidden =
+        !state.active ||
+        (state.mode === 'junction'
+          ? state.junctionId === null
+          : !state.preview);
       cancel.disabled = state.pending;
       cancel.hidden = !state.active || state.phase === 'start';
+      confirm.textContent = t(
+        state.mode === 'junction' ? 'road.applyJunction' : 'road.confirm',
+      );
       const p = state.preview?.preview;
       metrics.textContent = p
         ? `${t('road.length')} ${p.length.toFixed(0)} m · ${t('road.cost')} $${format.format(p.cost)} · ${t('road.slope')} ${(p.slope * 100).toFixed(1)}%`
@@ -396,17 +461,19 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
             ? t('sim.loading')
             : !state.active
               ? t('road.exploreHint')
-              : state.mode === 'upgrade'
-                ? t('road.upgradeHint')
-                : state.mode === 'free'
-                  ? t('road.freeHint')
-                  : state.phase === 'control'
-                    ? t('road.control')
-                    : state.phase === 'start'
-                      ? t('road.start')
-                      : state.phase === 'end'
-                        ? t('road.end')
-                        : t('road.confirmHint');
+              : state.mode === 'junction'
+                ? t('road.junctionHint')
+                : state.mode === 'upgrade'
+                  ? t('road.upgradeHint')
+                  : state.mode === 'free'
+                    ? t('road.freeHint')
+                    : state.phase === 'control'
+                      ? t('road.control')
+                      : state.phase === 'start'
+                        ? t('road.start')
+                        : state.phase === 'end'
+                          ? t('road.end')
+                          : t('road.confirmHint');
       if (!construction) body.hidden = true;
     },
     dispose() {

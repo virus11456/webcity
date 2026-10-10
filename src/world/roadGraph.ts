@@ -226,7 +226,9 @@ function checkJunctions(data: GraphData): void {
         road.lanesForward + road.lanesBackward >= ROAD_RULES.signalMinLanes
       );
     }).length;
-    node.control = wideArms >= ROAD_RULES.signalMinWideArms ? 'lights' : 'none';
+    if (!node.manualControl)
+      node.control =
+        wideArms >= ROAD_RULES.signalMinWideArms ? 'lights' : 'none';
   }
 }
 /** Positive collinear overlap at a common height, including opposite road direction. */

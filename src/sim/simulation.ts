@@ -1,3 +1,4 @@
+import { INTERSECTIONS } from '../data/intersections';
 import { previewRoadUpgrade, upgradedPayment } from '../world/roadUpgrade';
 import {
   chargeConstruction,
@@ -439,6 +440,39 @@ export class Simulation {
     return { ok: true, cost };
   }
 
+  setIntersection(
+    id: number,
+    control: 'none' | 'lights' | 'stop',
+    banLeft: boolean,
+  ): Omit<Result, 't' | 'reqId'> {
+    const s = this.state;
+    if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
+    if (
+      !GAME_MODES[s.settings.mode].allUnlocked &&
+      !s.unlocked.includes(INTERSECTIONS.unlock)
+    )
+      return { ok: false, reason: 'err.locked' };
+    const node = s.nodes.find((n) => n.id === id);
+    if (
+      !node ||
+      node.segments.length < 3 ||
+      !['none', 'lights', 'stop'].includes(control) ||
+      typeof banLeft !== 'boolean'
+    )
+      return { ok: false, reason: 'err.invalidCommand' };
+    node.control = control;
+    node.banLeft = banLeft;
+    node.manualControl = true;
+    this.emit({
+      t: 'roadsChanged',
+      added: [],
+      removed: [],
+      nodes: [structuredClone(node)],
+      removedNodes: [],
+    });
+    return { ok: true, cost: 0 };
+  }
+
   /** Replace one road after a fresh authoritative quote; unaffected buildings retain their IDs. */
   upgradeRoad(id: number, type: RoadTypeId): Omit<Result, 't' | 'reqId'> {
     if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
@@ -506,7 +540,8 @@ export class Simulation {
           ROAD_RULES.signalMinLanes
         );
       }).length;
-      n.control = wide >= ROAD_RULES.signalMinWideArms ? 'lights' : 'none';
+      if (!n.manualControl)
+        n.control = wide >= ROAD_RULES.signalMinWideArms ? 'lights' : 'none';
     }
     // A pure direction reversal has identical physical frontage and zoning.
     const reversal = old.type === type && old.start === segment.end;

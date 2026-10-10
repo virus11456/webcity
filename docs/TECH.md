@@ -523,3 +523,7 @@ M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/st
 ### M2-04 高架與橋樑
 
 `RoadDraft.startHeight/endHeight` 為可選海拔；明確高架草稿必須包含兩端高度。`roadGeometry` 共用垂直吸附、全寬地形驗證、曲線坡度與立體交叉淨高檢查。建造命令傳遞 `elevated` 到 RoadGraph，沿用既有分層拓撲與 earthworks 排除高架的邏輯。`render/roads/structures.ts` 生成混凝土橋面與橋墩，併入原有批次快取；下方道路變動會重建相關橋墩。規則見 `BRIDGES.md`。
+
+### M2-05 路口控制
+
+`setIntersection` 指令以 node/control/banLeft 更新 Worker；RoadNode 的可選 manualControl/banLeft 欄位向後相容舊存檔。RoadGraph 與升級重算時尊重手動控制。`world/intersections.ts` 提供命中、進入方向分組與相位選取，讓渲染與後续車流共用規則。`IntersectionProps` 將燈桿、停止標誌批次合併，燈色依 Worker ticks × 0.24 秒更新；相位改變之外不重建。見 `INTERSECTIONS.md`。
