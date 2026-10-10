@@ -1,4 +1,18 @@
 export const ZH_TW = {
+  'save.title': '存檔與讀檔',
+  'save.close': '關閉存檔',
+  'save.slot': '存檔槽',
+  'save.auto': '自動存檔',
+  'save.empty': '空的存檔槽',
+  'save.day': '遊戲日',
+  'save.write': '儲存',
+  'save.overwrite': '確認覆寫此存檔',
+  'save.load': '讀取',
+  'save.busy': '處理中…',
+  'save.saved': '存檔清單已更新',
+  'save.autoSaved': '已自動儲存',
+  'save.failed': '存讀檔失敗，原存檔仍保留。請確認儲存空間或重新開啟遊戲。',
+
   'finance.ledger': '每週收支明細',
   'finance.ledgerHint':
     '以下為最近一週已結算金額；尚未到週結算時為零。調整稅率與預算不會改写已結算紀錄。',

@@ -39,6 +39,8 @@ export interface RenderStats {
   shadows: number;
 }
 export interface RendererOptions {
+  seed?: number;
+  mapId?: string;
   search?: string;
   onBeforeFrame?: (seconds: number) => void;
   onAfterCamera?: () => void;
@@ -62,10 +64,10 @@ export class CityRenderer {
     Material,
     ((previous?: ShaderHook) => void) | undefined
   >();
-  readonly terrain = new Terrain(MAP_PRESETS[0].seed);
-  private readonly land = new TerrainRenderer(this.terrain);
-  private readonly town = new CityPreview(this.terrain);
-  private readonly water = new WaterRenderer(this.terrain);
+  readonly terrain: Terrain;
+  private readonly land: TerrainRenderer;
+  private readonly town: CityPreview;
+  private readonly water: WaterRenderer;
   private readonly sky = createSky();
   private lighting: Lighting;
   private readonly forced: QualityLevel | null;
@@ -82,6 +84,13 @@ export class CityRenderer {
     private readonly canvas: HTMLCanvasElement,
     private readonly options: RendererOptions = {},
   ) {
+    this.terrain = new Terrain(
+      options.seed ?? MAP_PRESETS[0].seed,
+      MAP_PRESETS.find((p) => p.id === options.mapId) ?? MAP_PRESETS[0],
+    );
+    this.land = new TerrainRenderer(this.terrain);
+    this.town = new CityPreview(this.terrain);
+    this.water = new WaterRenderer(this.terrain);
     this.renderer = new WebGLRenderer({
       canvas,
       antialias: false,
@@ -151,6 +160,15 @@ export class CityRenderer {
     canvas.addEventListener('webglcontextrestored', this.restored);
     this.resize();
     this.visibility();
+  }
+  /** Capture after an explicit render so non-preserved WebGL buffers still produce a thumbnail. */
+  thumbnail(width: number, height: number, quality: number): string {
+    this.renderer.render(this.scene, this.camera);
+    const output = document.createElement('canvas');
+    output.width = width;
+    output.height = height;
+    output.getContext('2d')!.drawImage(this.canvas, 0, 0, width, height);
+    return output.toDataURL('image/jpeg', quality);
   }
   /** Separate decorative city assets from the authoritative construction world. */
   setConstructionMode(enabled: boolean): void {

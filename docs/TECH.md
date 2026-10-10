@@ -499,3 +499,7 @@ M1-18：`WorldSnapshot.economy` 保存已結算週與破產連續週狀態，`ec
 
 
 M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/store.ts` 提供每座城市獨立的統計／時鐘 signals。鏡像 cityName getter 只讀字串，時鐘事件不複製 stats；資金事件即時刷新 HUD，速度仍須 Worker 確認。手機摘要與 BottomSheet、版面避讓和驗證約定見 `TOPBAR.md`。
+
+### M1-24 存檔轉接層補充
+
+`sim/worker.ts` 是序列化 I/O 的組裝點，唯一允許 import `save/serializer` 的 sim 檔案；它將非同步 codec 注入 CommandDispatcher。其餘 sim 邊界不變，Worker 仍禁止 DOM／UI／Three。IndexedDB 只在主執行緒 save/controller 使用；UI 取得 game 提供的 SaveActions，不能直接 import save 層。v1 header 與還原／驗證約定見 `SAVES.md`。

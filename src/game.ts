@@ -1,3 +1,8 @@
+import { startup } from './bootstrap';
+import { SAVE } from './data/persistence';
+import { createSaveController } from './save/controller';
+import { createSaveControls } from './ui/saveControls';
+import './ui/styles/save.css';
 import { InspectTool } from './tools/inspectTool';
 import { createInspectPanel } from './ui/panels/InspectPanel';
 import { UI_PALETTE } from './data/palette';
@@ -29,7 +34,7 @@ import { ROAD_TOOL_RENDER } from './data/roadTool';
 import { PickingPreview } from './input/pickingPreview';
 import { createPickingDebug } from './ui/pickingDebug';
 import type { TerrainPick } from './world/picking';
-import { CITY_PREVIEW, MAP_PRESETS, type CityView } from './data/terrain';
+import { CITY_PREVIEW, type CityView } from './data/terrain';
 import { SimClient } from './bridge/simClient';
 import { createSimControls } from './ui/simControls';
 import { CameraController } from './input/cameraController';
@@ -69,6 +74,8 @@ const root = document.querySelector<HTMLDivElement>('#app');
 
 if (!root) throw new Error('Missing #app element');
 
+let saveController: ReturnType<typeof createSaveController> | undefined;
+let saveControls: ReturnType<typeof createSaveControls> | undefined;
 let inspectTool: InspectTool | undefined;
 let inspectPanel: ReturnType<typeof createInspectPanel> | undefined;
 let inspectPreview: BulldozePreview | undefined;
@@ -126,15 +133,14 @@ try {
   );
   simControls = createSimControls(root, sim);
   void sim
-    .send({
-      t: 'init',
-      seed: MAP_PRESETS[0].seed,
-      mapId: MAP_PRESETS[0].id,
-      mode: 'normal',
-      cityName: t('city.name'),
-    })
+    .send(
+      startup.data
+        ? { t: 'load', data: startup.data }
+        : { t: 'init', ...startup.settings },
+    )
     .then((response) => {
       if (response.t !== 'ready') simControls?.showError();
+      else if (startup.construction) roadControls?.showCity();
     })
     .catch(() => simControls?.showError());
 } catch {
@@ -146,6 +152,8 @@ try {
 if (canvas && status) {
   try {
     city = new CityRenderer(canvas, {
+      seed: startup.settings.seed,
+      mapId: startup.settings.mapId,
       onStats: debug?.update,
       onBeforeFrame: (seconds) => {
         frameSeconds = seconds;
@@ -450,6 +458,17 @@ if (canvas && status) {
         root,
       );
       financeControls = createFinanceControls(root, sim!);
+      saveController = createSaveController(
+        sim,
+        () =>
+          city?.thumbnail(
+            SAVE.thumbnailWidth,
+            SAVE.thumbnailHeight,
+            SAVE.thumbnailQuality,
+          ) ?? null,
+        (failed) => saveControls?.notify(failed),
+      );
+      saveControls = createSaveControls(root, saveController);
       roadControls.update(roadTool.readState());
       zoneControls = createZoneControls(roadControls.zoneHost, {
         zone: (zone) => zoneTool!.setZone(zone),
@@ -510,6 +529,8 @@ if (import.meta.hot)
     delete window.__webcityRoadStats;
     delete window.__webcityZoneStats;
     delete window.__webcityPick;
+    saveController?.dispose();
+    saveControls?.dispose();
     tools?.dispose();
     inspectTool?.dispose();
     inspectPanel?.dispose();

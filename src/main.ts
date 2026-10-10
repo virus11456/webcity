@@ -1,3 +1,4 @@
+import { t } from './ui/i18n/t';
 import { registerPwa } from './pwa/register';
 import './ui/styles/tokens.css';
 import './ui/styles/base.css';
@@ -15,5 +16,15 @@ else if (new URLSearchParams(location.search).get('district') === '1')
   void import('./buildingDistrict').then(({ startDistrict }) =>
     startDistrict(root),
   );
-else void import('./game');
+else
+  void import('./bootstrap')
+    .then(async ({ prepareStartup }) => {
+      await prepareStartup();
+      await import('./game');
+    })
+    .catch(() => {
+      const message = document.createElement('p');
+      message.textContent = t('save.failed');
+      root.append(message);
+    });
 if (import.meta.env.PROD) void registerPwa();

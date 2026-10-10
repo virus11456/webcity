@@ -205,6 +205,10 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   content.append(hint);
   const format = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 });
   return {
+    showCity() {
+      enter.click();
+      explore.click();
+    },
     waterHost,
     updateWater(active: boolean, pending: boolean) {
       waterActive = active;

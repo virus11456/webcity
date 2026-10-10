@@ -67,8 +67,15 @@ export class Simulation {
   constructor(
     settings: CitySettings,
     private readonly emit: (event: SimEvent) => void = () => {},
+    restored?: WorldSnapshot,
   ) {
     this.state = createState(settings);
+    if (restored) {
+      const copy = structuredClone(restored),
+        terrain = this.state.terrain;
+      Object.assign(terrain, copy.terrain);
+      Object.assign(this.state, copy, { terrain });
+    }
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
       const power = [...updatePower(this.state), ...updateWater(this.state)];

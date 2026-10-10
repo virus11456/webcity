@@ -1,0 +1,58 @@
+.save-dialog {
+  width: min(580px, calc(100vw - 24px));
+  max-height: calc(
+    100dvh - max(24px, env(safe-area-inset-top)) -
+      max(24px, env(safe-area-inset-bottom))
+  );
+  padding: 16px;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-panel);
+}
+.save-dialog::backdrop {
+  background: var(--color-backdrop);
+}
+.save-dialog h1 {
+  font-size: 18px;
+}
+.save-dialog h2 {
+  font-size: 14px;
+  margin: 0;
+}
+.save-dialog button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  padding: 8px 12px;
+  color: var(--color-text);
+  background: var(--color-background);
+  font: inherit;
+}
+.save-dialog button:disabled {
+  opacity: 0.5;
+}
+.save-slot {
+  border-top: 1px solid var(--color-border);
+  padding: 12px 0;
+}
+.save-slot img {
+  width: 120px;
+  height: auto;
+  float: right;
+  margin-left: 8px;
+  border-radius: var(--radius-card);
+}
+.save-slot p {
+  font-size: 12px;
+  white-space: pre-line;
+}
+.save-actions {
+  display: flex;
+  gap: 8px;
+  clear: both;
+}
+.save-status {
+  font-size: 12px;
+}
