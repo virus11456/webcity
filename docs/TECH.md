@@ -571,3 +571,7 @@ FireSystem 保存 WorldSnapshot.fire／Building.fire，日結依確定性 RNG �
 ### M2-17 健康與小數累積
 
 每日服務、火勢結算後執行 updateHealth；CitizenTable 新增 healthFraction Uint8Array 與 lastHealthDay，每人 16 Int32／14 Uint8 共 78 bytes。結構重算只聚合 Building.health／CityStats.health，不治療；每日才更新個別居民。world/fieldSampling 共用 300×300 場取樣，Building.drinkingWaterPollution 為供水污染掛接欄位。舊 v1 表補零小數，驗證欄位、上限與日期。詳見 HEALTH.md。
+
+### M2-18 教育配置
+
+`CitizenSystem` 追蹤教育預算、設施啟停／火災與道路版本，在計算就學日前檢查學位。沿用 `ServiceNetwork` 道路距離，配置由居民穩定 ID 決定；`education.ts` 只由個人權威資料產生住宅／學校摘要，透過 BuildingPatch 更新檢視。存檔驗證新增可選摘要且向下相容。詳見 `EDUCATION.md`。

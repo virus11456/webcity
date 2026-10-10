@@ -64,6 +64,7 @@ export class ServiceSystem {
       for (let i = 0; level && i < c.count; i++)
         if (
           targetIds.has(c.homeId[i]!) &&
+          c.education[i] === level - 1 &&
           c.age[i]! >= CITIZEN_RULES.schoolMinAge[level - 1]! &&
           c.age[i]! <= CITIZEN_RULES.schoolMaxAge[level - 1]!
         )

@@ -1,3 +1,4 @@
+import { updateEducationSummary } from './systems/education';
 import { updateHealth } from './systems/health';
 import { FireSystem } from './systems/fire';
 import { updateCrime } from './systems/police';
@@ -131,12 +132,16 @@ export class Simulation {
     this.services = new ServiceSystem(this.state);
     this.services.update();
     updateHealth(this.state);
+    updateEducationSummary(this.state);
     this.fire = new FireSystem(this.state, this.routePlanner, this.traffic);
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
       const power = [...updatePower(this.state), ...updateWater(this.state)];
       this.cargo.daily();
-      const servicePatches = this.services.update();
+      const servicePatches = [
+        ...this.services.update(),
+        ...updateEducationSummary(this.state),
+      ];
       this.fire.daily();
       const firePatches = this.fire.patches();
       const crimePatches = updateCrime(this.state);
@@ -152,6 +157,7 @@ export class Simulation {
               ...updateProblems(this.state),
               ...this.services.update(),
               ...updateHealth(this.state),
+              ...updateEducationSummary(this.state),
             ]
           : [];
       updateDemand(this.state);
@@ -247,7 +253,10 @@ export class Simulation {
             ? takeLoan(s, command.bank)
             : repayLoan(s, command.index);
     if (result.ok) {
-      if (command.t === 'setBudget') this.refreshPower();
+      if (command.t === 'setBudget') {
+        if (command.dept === 'education') this.refreshPopulation();
+        else this.refreshPower();
+      }
       this.emit({ t: 'fundsChanged', money: s.money });
       this.emit({ t: 'economy', finance: financeView(s) });
     }
@@ -272,6 +281,7 @@ export class Simulation {
       ...updatePower(this.state),
       ...updateWater(this.state),
       ...updateHealth(this.state),
+      ...updateEducationSummary(this.state),
       ...updateProblems(this.state),
     ];
     if (patches.some((p) => p.state === 'abandoned' && p.stateTimer === 0))
@@ -282,6 +292,7 @@ export class Simulation {
         ...updateProblems(this.state),
         ...this.services.update(),
         ...updateHealth(this.state),
+        ...updateEducationSummary(this.state),
       );
     const merged = new Map<number, BuildingPatch>();
     for (const p of patches) merged.set(p.id, { ...merged.get(p.id), ...p });
@@ -373,7 +384,9 @@ export class Simulation {
       removedNodes: [],
     });
     this.emit({ t: 'fundsChanged', money: s.money });
-    this.refreshPower();
+    if (serviceDefinition(b.defId)?.service === 'education')
+      this.refreshPopulation();
+    else this.refreshPower();
     return { ok: true, cost: preview.cost };
   }
   setBuildingEnabled(
@@ -391,7 +404,9 @@ export class Simulation {
       removed: [],
       updated: [{ id, enabled }],
     });
-    this.refreshPower();
+    if (serviceDefinition(b.defId)?.service === 'education')
+      this.refreshPopulation();
+    else this.refreshPower();
     this.emit({ t: 'economy', finance: financeView(this.state) });
     return { ok: true, cost: 0 };
   }

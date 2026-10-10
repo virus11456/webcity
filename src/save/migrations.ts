@@ -219,6 +219,16 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
             b.crimeUpdatedDay >= 0 &&
             b.crimeUpdatedDay <= s.clock.day)),
     );
+    if (b.education)
+      requireValue(
+        Number.isSafeInteger(b.education.enrolled) &&
+          b.education.enrolled >= 0 &&
+          Number.isSafeInteger(b.education.eligible) &&
+          b.education.eligible >= b.education.enrolled &&
+          (b.education.capacity === undefined ||
+            (Number.isSafeInteger(b.education.capacity) &&
+              b.education.capacity >= b.education.enrolled)),
+      );
     if (b.health)
       requireValue(
         Number.isFinite(b.health.average) &&
