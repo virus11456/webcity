@@ -531,3 +531,7 @@ M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/st
 ### M2-06 有向車道圖
 
 `Simulation.laneGraph` 為 Worker 本機衍生快取，不進入 WorldSnapshot 或傳給主執行緒。發送 roadsChanged 前先同步，確保建造、升級、拆除、路口禁轉均同步生效。`world/roadJunctions` 共用路口裁切距離，畫面道路與車道端點使用相同規則；車道連接包含可插值的轉彎路徑。全圖 O(n) 簽章掃描後，只重建改變的車道幾何與鄰接路口，revision 供後續尋路快取失效。見 `LANE_GRAPH.md`。
+
+### M2-07 市民 SoA
+
+`WorldSnapshot.citizens` 為 `CitizenTable`（7 個 Int32Array、9 個 Uint8Array），Worker `CitizenSystem` 保留穩定個人／家庭 ID，以 swap-remove 壓縮活動列。MessagePack 沿用既有 typed array codec；v1 舊檔的空陣列轉為空表，Simulation 初始化轉換住宅人口。每日生命週期增量更新彙總，就業保留已有職位；結構變更重新驗證容量。見 `CITIZENS.md`。

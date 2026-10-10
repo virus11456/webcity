@@ -372,8 +372,8 @@ it('tutorial golden: real construction, migration and employment turn profitable
   }).toMatchInlineSnapshot(`
     {
       "expenses": 389.28,
-      "income": 637.2,
-      "population": 741,
+      "income": 702.72,
+      "population": 820,
     }
   `);
   expect(

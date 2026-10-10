@@ -1,16 +1,12 @@
 import { Rng } from '../../core/rng';
-import { SpatialHash } from '../../core/spatial';
-import { CITIZENS, DEMAND, POPULATION_PROFILE } from '../../data/simulation';
+import { citizenSystem } from './citizens';
+import { CITIZENS, POPULATION_PROFILE } from '../../data/simulation';
 import {
   buildingCapacity,
-  emptyEducation,
   initialHousing,
-  jobPlaces,
   residential,
-  summarizeHousing,
-  distribute,
 } from '../../world/population';
-import type { Building, EducationCounts } from '../../world/types';
+import type { Building } from '../../world/types';
 import type { BuildingPatch } from '../../world/snapshot';
 import type { SimState } from '../state';
 
@@ -37,7 +33,7 @@ function pick(weights: readonly number[], rng: Rng): number {
   }
   return weights.length - 1;
 }
-/** Daily aggregate migration, then nearest qualified employment. Structural edits only reconcile. */
+/** Household migration and agent-authoritative employment; structural edits do not advance lifetimes. */
 export function updatePopulation(
   s: SimState,
   migrate = false,
@@ -46,10 +42,11 @@ export function updatePopulation(
     s.buildings.map((b) => [b.id, JSON.stringify(patch(b))]),
   );
   const previousPopulation = s.stats.population;
+  const citizens = citizenSystem(s);
+  const life = migrate ? citizens.daily() : { births: 0, deaths: 0 };
   let movedIn = 0,
     movedOut = 0;
-  const homes: Building[] = [],
-    workplaces: Building[] = [];
+  const homes: Building[] = [];
   for (const b of s.buildings) {
     if (b.kind !== 'zoned') continue;
     const capacity = buildingCapacity(b);
@@ -98,92 +95,15 @@ export function updatePopulation(
           }
         }
       }
-      b.residents = summarizeHousing(h);
+      b.residents = h.sizes.reduce((sum, n, i) => sum + n * (i + 1), 0);
       homes.push(b);
     } else {
       b.households = b.residents = 0;
       b.housing = undefined;
       b.jobs = capacity;
-      b.workers = 0;
-      b.jobEducation = jobPlaces(b);
-      b.workerEducation = emptyEducation();
-      if (capacity && b.roadDisconnectedDay === undefined) workplaces.push(b);
     }
   }
-  homes.sort((a, b) => a.id - b.id);
-  workplaces.sort((a, b) => a.id - b.id);
-  const labour = distribute(
-    Math.floor(
-      homes.reduce((sum, b) => sum + b.residents, 0) *
-        DEMAND.estimatedWorkerFraction,
-    ),
-    homes.map((b) => b.residents),
-  );
-  homes.forEach((home, i) => {
-    home.housing!.availableWorkers = distribute(
-      labour[i]!,
-      home.housing!.education,
-    ) as EducationCounts;
-  });
-  const vacancies = new Map(
-    workplaces.map((b) => [b.id, [...b.jobEducation!] as EducationCounts]),
-  );
-  const jobById = new Map(workplaces.map((b) => [b.id, b]));
-  // Low-education groups first prevent overqualified workers consuming scarce entry-level jobs.
-  for (let education = 0; education < 4; education++) {
-    const index = new SpatialHash<number>(POPULATION_PROFILE.jobSearchCellM);
-    for (const job of workplaces)
-      if (vacancies.get(job.id)!.some((n, i) => i <= education && n > 0))
-        index.set(job.id, job.pos);
-    for (const home of homes) {
-      if (!index.size) break;
-      const h = home.housing!;
-      if (home.roadDisconnectedDay !== undefined) continue;
-      let available = h.availableWorkers[education]!;
-      while (available > 0 && index.size) {
-        let nearest: Building | undefined,
-          best = Infinity;
-        let radius: number = POPULATION_PROFILE.jobSearchCellM;
-        let candidates = index.queryRadius(home.pos, radius);
-        while (!candidates.length) {
-          radius *= 2;
-          candidates = index.queryRadius(home.pos, radius);
-        }
-        for (const id of candidates) {
-          const job = jobById.get(id)!;
-          const distance =
-            (job.pos.x - home.pos.x) ** 2 + (job.pos.z - home.pos.z) ** 2;
-          if (distance < best || (distance === best && job.id < nearest!.id)) {
-            best = distance;
-            nearest = job;
-          }
-        }
-        if (!nearest) break;
-        const slots = vacancies.get(nearest.id)!;
-        for (
-          let required = education;
-          required >= 0 && available > 0;
-          required--
-        ) {
-          const count = Math.min(available, slots[required]!);
-          if (!count) continue;
-          available -= count;
-          slots[required]! -= count;
-          nearest.workers += count;
-          nearest.workerEducation![education]! += count;
-          h.employed += count;
-          h.assignments.push({
-            workplaceId: nearest.id,
-            education,
-            requiredEducation: required,
-            workers: count,
-          });
-        }
-        if (!slots.some((n, i) => i <= education && n > 0))
-          index.delete(nearest.id);
-      }
-    }
-  }
+  citizens.reconcile();
   const population = s.buildings.reduce((sum, b) => sum + b.residents, 0);
   const jobs = s.buildings.reduce((sum, b) => sum + b.jobs, 0),
     employed = s.buildings.reduce((sum, b) => sum + b.workers, 0);
@@ -194,7 +114,11 @@ export function updatePopulation(
   // Demolition/abandonment/capacity reduction count as displaced residents in today's outflow.
   const displaced = Math.max(
     0,
-    previousPopulation + movedIn - movedOut - population,
+    previousPopulation +
+      movedIn -
+      movedOut +
+      (life.births - life.deaths) -
+      population,
   );
   const previous =
     s.stats.populationDetails?.day === s.clock.day

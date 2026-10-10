@@ -1,3 +1,4 @@
+import { createCitizens } from '../world/citizens';
 import { addStarterCity } from './starterCity';
 import { updateDemand } from './systems/demand';
 import { SERVICE_TYPES } from '../data/buildings';
@@ -72,7 +73,7 @@ export function createState(settings: CitySettings): SimState {
         SERVICE_TYPES.map((key) => [key, field()]),
       ) as Fields['coverage'],
     },
-    citizens: [],
+    citizens: createCitizens(),
     transitLines: [],
     districts: [],
     policies: [],
