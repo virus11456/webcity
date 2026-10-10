@@ -1,0 +1,77 @@
+.info-panel {
+  position: absolute;
+  z-index: 7;
+  right: max(12px, env(safe-area-inset-right));
+  width: min(280px, calc(100vw - 24px));
+  max-height: calc(100dvh - 180px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-panel);
+  color: var(--color-text);
+  font: 14px var(--font-family);
+}
+.info-panel[hidden] {
+  display: none;
+}
+.info-panel strong {
+  display: inline-block;
+  line-height: 44px;
+}
+.info-panel button {
+  float: right;
+}
+.info-panel button,
+.info-select,
+.info-trigger {
+  min-height: 44px;
+  min-width: 44px;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  padding: 8px;
+}
+.info-select {
+  width: 100%;
+}
+.info-scale {
+  height: 12px;
+  border-radius: 6px;
+  margin-top: 12px;
+}
+.info-legend,
+.info-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.info-hint {
+  color: var(--color-secondary);
+}
+[data-info]:not([data-info='none']) .picking-debug,
+[data-info]:not([data-info='none']) .toolbar-content,
+[data-info]:not([data-info='none']) .population-summary {
+  display: none;
+}
+@media (max-width: 599px), (max-height: 500px) {
+  .info-panel {
+    width: 200px;
+    padding: 8px;
+  }
+}
+
+[data-info]:not([data-info='none'])
+  .road-controls[data-layout='phone-landscape'] {
+  background: transparent;
+  border: 0;
+  pointer-events: none;
+}
+[data-info]:not([data-info='none'])
+  .road-controls[data-layout='phone-landscape']
+  .road-tabs {
+  pointer-events: auto;
+}

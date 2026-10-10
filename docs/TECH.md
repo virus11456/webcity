@@ -585,3 +585,6 @@ M2-20：FieldsSystem 以 clock.ticks 的 1／3／5／7 相位分散四個 300×3
 
 
 M2-21：happiness／levels 在 Worker 更新 Building.happiness、upgrade 與 development；每日守衛及低地價計時保存在存檔，更新容量後重跑人口／供應，HUD 與個人幸福度由權威聚合。BuildingRenderer 既有 level recipe 使模型與有界改建特效同步更新。詳見 LEVELS.md。
+
+
+M2-22：world/infoViews 純衍生、InfoOverlays 消費權威事件；300×300 地形 DataTexture，加 600×600 設施占地遮罩。分區模型使用 per-instance 顏色；既有合併批次設施使用第二貼圖，保留 draw calls。材質 hook 與 CSM 組合且避免重複注入；建築改色沿用分幀佇列，資料最多 250 ms 刷新。詳見 INFO_VIEWS.md。

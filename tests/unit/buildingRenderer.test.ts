@@ -3,6 +3,7 @@ import { Simulation } from '../../src/sim/simulation';
 import { describe, expect, it, vi } from 'vitest';
 import {
   Vector3,
+  InstancedMesh,
   BoxGeometry,
   CanvasTexture,
   Color,
@@ -110,6 +111,46 @@ describe('building event rendering', () => {
       near.dispose();
       far.dispose();
     }
+  });
+  it('overrides instance colors for information views and restores original material colors', () => {
+    const s = setup(),
+      b = districtFixture(1)[0]!;
+    b.state = 'active';
+    s.renderer.reset([b]);
+    s.settle();
+    const meshes: InstancedMesh[] = [];
+    s.group.traverse((o) => {
+      if (
+        o instanceof InstancedMesh &&
+        o.count &&
+        !Array.isArray(o.material) &&
+        o.material.userData.infoRole === 'instance'
+      )
+        meshes.push(o);
+    });
+    expect(meshes.length).toBeGreaterThan(0);
+    const before = meshes.map((m) => {
+      const c = new Color();
+      m.getColorAt(0, c);
+      return c;
+    });
+    s.renderer.setInfoColors(new Map([[b.id, '#E53935']]));
+    s.settle();
+    for (const m of meshes) {
+      const c = new Color();
+      m.getColorAt(0, c);
+      expect(c.getHexString()).toBe('e53935');
+    }
+    s.renderer.setInfoColors(null);
+    s.settle();
+    meshes.forEach((m, i) => {
+      const c = new Color();
+      m.getColorAt(0, c);
+      expect(c.r).toBeCloseTo(before[i]!.r);
+      expect(c.g).toBeCloseTo(before[i]!.g);
+      expect(c.b).toBeCloseTo(before[i]!.b);
+    });
+    s.dispose();
   });
   it('rebuilds the model and emits a bounded change effect when an occupied home upgrades', () => {
     const s = setup(),

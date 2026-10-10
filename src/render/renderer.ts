@@ -224,6 +224,8 @@ export class CityRenderer {
       this.water.material,
       ...this.extraMaterials.keys(),
     ]);
+    this.land.material.userData.infoRole = 'field';
+    this.water.material.userData.infoRole = 'field';
     this.land.installShader(
       lighting.csm ? this.land.material.onBeforeCompile : undefined,
     );
