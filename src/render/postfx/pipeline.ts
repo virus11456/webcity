@@ -70,8 +70,8 @@ export class PostProcessing {
     );
     this.fxaa.enabled = dpr < 2;
   }
-  update(height: number, night: number): void {
-    this.tilt = tiltStrength(height);
+  update(height: number, night: number, tiltEnabled = true): void {
+    this.tilt = tiltEnabled ? tiltStrength(height) : 0;
     this.horizontal.enabled = this.vertical.enabled = this.tilt > 0;
     this.horizontal.uniforms.strength!.value =
       this.vertical.uniforms.strength!.value = this.tilt;

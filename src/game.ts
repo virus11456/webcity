@@ -67,6 +67,7 @@ import { App } from './ui/App';
 
 declare global {
   interface Window {
+    __webcityGraphics?: () => ReturnType<CityRenderer['readGraphics']>;
     __webcityStats?: () => ReturnType<SimClient['mirror']['readStats']>;
     __webcityBuildings?: () => ReturnType<SimClient['mirror']['readBuildings']>;
     __webcityProblemIcons?: () => ReturnType<ProblemIcons['readStats']>;
@@ -223,6 +224,7 @@ if (canvas && status) {
       seed: startup.settings.seed,
       mapId: startup.settings.mapId,
       onStats: debug?.update,
+      onAutoQuality: (level) => notifications?.quality(level),
       onBeforeFrame: (seconds) => {
         frameSeconds = seconds;
         audioElapsed += seconds;
@@ -249,6 +251,7 @@ if (canvas && status) {
             fireRenderer?.setEnabled(enabled);
             problemIcons?.setMotion(enabled);
             cityEffects?.setQuality(city.quality);
+            vehicles?.setQuality(city.quality);
           }
           buildings?.setHour(city.dayNight.hour.value);
           if (facilityAssets)
@@ -278,7 +281,10 @@ if (canvas && status) {
           fireRenderer?.update(frameSeconds, city.camera);
           cityEffects?.update(frameSeconds, city.camera);
         }
-        if (city) vehicles?.update(frameSeconds, city.camera);
+        if (city) {
+          vehicles?.setQuality(city.quality);
+          vehicles?.update(frameSeconds, city.camera);
+        }
       },
       onContextState(lost) {
         status.hidden = !lost;
@@ -318,6 +324,7 @@ if (canvas && status) {
       },
     });
     input.setEdgeScrolling(preferences.edgeScrolling);
+    city.setGraphics(preferences);
     city.setDayNight(preferences.dayNight);
     if (sim?.mirror.clock) city.acceptClock(sim.mirror.clock);
     if (sim) {
@@ -749,6 +756,7 @@ if (canvas && status) {
         (value) => {
           input?.setEdgeScrolling(value.edgeScrolling);
           city?.setQuality(value.quality);
+          city?.setGraphics(value);
           city?.setDayNight(value.dayNight);
         },
         () => saveController!.save(SAVE.autoId),
@@ -767,6 +775,7 @@ if (canvas && status) {
       bulldozeControls.update(bulldozeTool.readState());
     }
     if (debug) {
+      window.__webcityGraphics = () => city!.readGraphics();
       window.__webcityCamera = city.cameraController;
       window.__webcityVehicles = {
         stats: () => vehicles!.stats(),
@@ -824,6 +833,7 @@ if (import.meta.hot)
     delete window.__webcityEffects;
     delete window.__webcityBuildings;
     delete window.__webcityStats;
+    delete window.__webcityGraphics;
     delete window.__webcityCamera;
     delete window.__webcityVehicles;
     delete window.__webcityRoadStats;

@@ -161,3 +161,36 @@ it('stabilizes the medium shadow image while following large camera moves', () =
   expect(sun.shadow.normalBias).toBe(0.02);
   lighting.dispose();
 });
+
+it('only downgrades after two sustained slow windows, resets on recovery, ignores forced and hidden gaps', async () => {
+  const { SustainedQuality } = await import('../../src/render/quality');
+  const sample = (
+    q: InstanceType<typeof SustainedQuality>,
+    start: number,
+    end: number,
+    step: number,
+    forced = false,
+    level: 'high' | 'medium' | 'low' = 'high',
+  ) => {
+    const result: string[] = [];
+    for (let t = start; t <= end; t += step) {
+      const next = q.sample(t, forced, level);
+      if (next) result.push(next);
+    }
+    return result;
+  };
+  const slow = new SustainedQuality();
+  expect(sample(slow, 0, 19900, 100)).toEqual([]);
+  expect(slow.sample(20000, false, 'high')).toBe('medium');
+  expect(sample(slow, 20100, 40100, 100, false, 'medium')).toEqual(['low']);
+  const recovery = new SustainedQuality();
+  expect(sample(recovery, 0, 10000, 100)).toEqual([]);
+  expect(sample(recovery, 10010, 20000, 10)).toEqual([]);
+  expect(sample(recovery, 20100, 30000, 100)).toEqual([]);
+  recovery.reset();
+  expect(recovery.sample(999999, false, 'high')).toBeNull();
+  expect(sample(new SustainedQuality(), 0, 50000, 100, true)).toEqual([]);
+  expect(sample(new SustainedQuality(), 0, 50000, 100, false, 'low')).toEqual(
+    [],
+  );
+});

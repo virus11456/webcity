@@ -80,6 +80,8 @@ export const QUALITY = {
 export const QUALITY_DETECTION = {
   sampleSeconds: 5,
   lowFpsThreshold: 30,
+  sustainedSeconds: 10,
+  slowWindows: 2,
 } as const;
 export const UI_RULES = {
   maxNotifications: 3,
@@ -116,3 +118,16 @@ export type WorldConfig = typeof WORLD;
 export type QualityLevel = keyof typeof QUALITY;
 export type QualityConfig = (typeof QUALITY)[QualityLevel];
 export type GameMode = keyof typeof GAME_MODES;
+
+export interface GraphicsOptions {
+  shadows: boolean;
+  postprocessing: boolean;
+  tiltShift: boolean;
+  treeDensity: number;
+}
+export const GRAPHICS_DEFAULTS: GraphicsOptions = {
+  shadows: true,
+  postprocessing: true,
+  tiltShift: true,
+  treeDensity: 100,
+};

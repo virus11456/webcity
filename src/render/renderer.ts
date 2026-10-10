@@ -1,3 +1,8 @@
+import {
+  GRAPHICS_DEFAULTS,
+  QUALITY,
+  type GraphicsOptions,
+} from '../data/config';
 import { VegetationRenderer } from './vegetation/vegetation';
 import type { SimEvent } from '../bridge/protocol';
 import { PostProcessing } from './postfx/pipeline';
@@ -35,6 +40,7 @@ import {
   qualityOverride,
   renderPixelRatio,
   StartupQuality,
+  SustainedQuality,
 } from './quality';
 
 export interface RenderStats {
@@ -57,6 +63,7 @@ export interface RendererOptions {
   onBeforeFrame?: (seconds: number) => void;
   onAfterCamera?: () => void;
   onStats?: (stats: Readonly<RenderStats>) => void;
+  onAutoQuality?: (level: 'low' | 'medium') => void;
   onContextState?: (lost: boolean) => void;
 }
 /** Own the WebGL scene, frame lifecycle, viewport and resource cleanup. */
@@ -88,6 +95,8 @@ export class CityRenderer {
   private forced: QualityLevel | null;
   private readonly automaticQuality: QualityLevel;
   private readonly startup = new StartupQuality();
+  private readonly sustained = new SustainedQuality();
+  private graphics: GraphicsOptions = { ...GRAPHICS_DEFAULTS };
   private readonly observer: ResizeObserver;
   private readonly stats: RenderStats;
   private statsStart = 0;
@@ -236,9 +245,12 @@ export class CityRenderer {
   }
   /** Apply saved quality without reloading or losing the current city. */
   setQuality(value: QualityLevel | 'auto'): void {
-    this.forced = value === 'auto' ? null : value;
+    const requested = value === 'auto' ? null : value;
+    if (this.forced === requested) return;
+    this.forced = requested;
     const level = this.forced ?? this.automaticQuality;
-    this.startup.reset();
+    this.startup.reset(true);
+    this.sustained.reset();
     if (level === this.stats.quality) return;
     this.lighting.dispose();
     this.stats.quality = level;
@@ -246,22 +258,63 @@ export class CityRenderer {
     this.createPostfx(level);
     this.resize();
   }
+  setGraphics(value: GraphicsOptions): void {
+    const lighting = this.graphics.shadows !== value.shadows;
+    const postfx = this.graphics.postprocessing !== value.postprocessing;
+    this.graphics = {
+      shadows: value.shadows,
+      postprocessing: value.postprocessing,
+      tiltShift: value.tiltShift,
+      treeDensity: value.treeDensity,
+    };
+    if (lighting) {
+      this.lighting.dispose();
+      this.lighting = this.createLighting(this.stats.quality);
+    }
+    if (postfx) {
+      this.createPostfx(this.stats.quality);
+      this.resize();
+    }
+    this.vegetation.setDensity(
+      (QUALITY[this.stats.quality].treeDensity * this.graphics.treeDensity) /
+        100,
+    );
+  }
+  readGraphics() {
+    return {
+      ...this.graphics,
+      quality: this.stats.quality,
+      shadowsActive: this.stats.shadows,
+      postfxActive: this.stats.postfx,
+      tilt: this.stats.tilt,
+      density:
+        (QUALITY[this.stats.quality].treeDensity * this.graphics.treeDensity) /
+        100,
+    };
+  }
   private createPostfx(level: QualityLevel): void {
     this.postfx?.dispose();
     this.postfx =
-      level === 'low'
+      level === 'low' || !this.graphics.postprocessing
         ? null
         : new PostProcessing(this.renderer, this.scene, this.camera, level);
   }
   private createLighting(level: QualityLevel): Lighting {
-    this.vegetation.setQuality(level);
-    this.renderer.shadowMap.enabled = level !== 'low';
+    this.vegetation.setDensity(
+      (QUALITY[level].treeDensity * this.graphics.treeDensity) / 100,
+    );
+    const shadowLevel = this.graphics.shadows ? level : 'low';
+    this.renderer.shadowMap.enabled = shadowLevel !== 'low';
     this.stats.shadows =
-      level === 'high' ? LIGHTING.cascades : level === 'medium' ? 1 : 0;
+      shadowLevel === 'high'
+        ? LIGHTING.cascades
+        : shadowLevel === 'medium'
+          ? 1
+          : 0;
     this.canvas.dataset.quality = level;
     this.town.glass.emissive.set(BUILDING_DETAIL_PALETTE.windowLight);
     this.town.glass.emissiveIntensity = DAY_NIGHT.windowIntensity;
-    const lighting = new Lighting(this.scene, this.camera, level, [
+    const lighting = new Lighting(this.scene, this.camera, shadowLevel, [
       this.land.material,
       this.town.material,
       this.town.glass,
@@ -312,6 +365,7 @@ export class CityRenderer {
     this.statsStart = 0;
     this.statsFrames = 0;
     this.startup.reset();
+    this.sustained.reset();
     this.renderer.setAnimationLoop(
       document.hidden || this.contextLost || this.disposed ? null : this.frame,
     );
@@ -336,15 +390,18 @@ export class CityRenderer {
       renderPixelRatio(this.stats.quality, window.devicePixelRatio)
     )
       this.resize();
-    if (
-      this.startup.sample(now, this.forced !== null) === 'low' &&
-      this.stats.quality !== 'low'
-    ) {
+    const automatic = this.forced === null;
+    const downgrade =
+      this.startup.sample(now, !automatic) ??
+      this.sustained.sample(now, !automatic, this.stats.quality);
+    if (downgrade && this.stats.quality !== downgrade) {
       this.lighting.dispose();
-      this.stats.quality = 'low';
-      this.lighting = this.createLighting('low');
-      this.createPostfx('low');
+      this.stats.quality = downgrade;
+      this.lighting = this.createLighting(downgrade);
+      this.createPostfx(downgrade);
       this.resize();
+      this.sustained.reset();
+      this.options.onAutoQuality?.(downgrade);
     }
     const seconds = this.lastFrame === null ? 0 : (now - this.lastFrame) / 1000;
     this.dayNight.update(seconds);
@@ -371,6 +428,7 @@ export class CityRenderer {
     this.postfx?.update(
       Math.max(0, this.camera.position.y - this.focus.y),
       this.dayNight.night,
+      this.graphics.tiltShift,
     );
     this.stats.postfx = this.postfx?.flags ?? 0;
     this.stats.tilt = this.postfx?.tilt ?? 0;

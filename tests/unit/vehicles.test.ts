@@ -173,3 +173,19 @@ it('switches formal vehicle detail at 400 m and hides it at 900 m without losing
   expect(r.stats().agents).toBe(1);
   r.dispose();
 });
+
+it('quality caps rendered vehicles without deleting authoritative trip poses', () => {
+  const { r, camera } = fixture();
+  r.accept(frame(1, 0, 0, 1200));
+  r.setQuality('low');
+  r.update(0.24, camera);
+  expect(r.stats().visible).toBe(300);
+  expect(r.sample(1200)).not.toBeNull();
+  r.setQuality('medium');
+  r.update(0.24, camera);
+  expect(r.stats().visible).toBe(1000);
+  r.setQuality('high');
+  r.update(0.24, camera);
+  expect(r.stats().visible).toBe(1200);
+  r.dispose();
+});

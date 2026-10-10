@@ -73,6 +73,11 @@ export function createNotifications(
   window.addEventListener('resize', position);
   position();
   return {
+    quality(level: 'low' | 'medium') {
+      const code = level === 'low' ? 'qualityLow' : 'qualityMedium';
+      if (queue.push({ key: code, code, tone: 'info' }, performance.now()))
+        paint();
+    },
     dispose() {
       off();
       clearInterval(timer);
