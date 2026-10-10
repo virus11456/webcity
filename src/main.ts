@@ -1,3 +1,4 @@
+import { cityMusic } from './audio/music';
 import { cityAudio } from './audio/manager';
 import { attachAudioControls } from './audio/controls';
 import { readPreferences, type Preferences } from './ui/preferences';
@@ -12,13 +13,18 @@ import './ui/styles/toolbar.css';
 const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('Missing #app element');
 cityAudio.setLevels(readPreferences());
+cityMusic.setLevels(readPreferences());
 const stopAudio = attachAudioControls(root);
-window.addEventListener('webcity-preferences-change', (e) =>
-  cityAudio.setLevels((e as CustomEvent<Preferences>).detail),
-);
+window.addEventListener('webcity-preferences-change', (e) => {
+  const levels = (e as CustomEvent<Preferences>).detail;
+  cityAudio.setLevels(levels);
+  cityMusic.setLevels(levels);
+});
 window.addEventListener('pagehide', stopAudio, { once: true });
-if (new URLSearchParams(location.search).get('debug') === '1')
+if (new URLSearchParams(location.search).get('debug') === '1') {
   window.__webcityAudio = () => cityAudio.readStats();
+  window.__webcityMusic = () => cityMusic.readStats();
+}
 const stopIcons = decorateControls(root);
 window.addEventListener('pagehide', stopIcons, { once: true });
 if (new URLSearchParams(location.search).get('asset-gallery') === '1')
@@ -80,6 +86,7 @@ if (import.meta.env.PROD) void registerPwa();
 
 declare global {
   interface Window {
+    __webcityMusic?: () => ReturnType<typeof cityMusic.readStats>;
     __webcityAudio?: () => ReturnType<typeof cityAudio.readStats>;
   }
 }

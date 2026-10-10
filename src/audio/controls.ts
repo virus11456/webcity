@@ -1,8 +1,10 @@
 import { cityAudio } from './manager';
+import { cityMusic } from './music';
 /** Unlock only from user interaction; suspend immediately when the page is hidden. */
 export function attachAudioControls(root: HTMLElement): () => void {
   const gesture = () => {
     void cityAudio.unlock();
+    cityMusic.unlock();
   };
   const click = (event: Event) => {
     const button =
@@ -12,7 +14,10 @@ export function attachAudioControls(root: HTMLElement): () => void {
     if (button && !button.matches(':disabled'))
       void cityAudio.unlock().then(() => cityAudio.play('click'));
   };
-  const visibility = () => cityAudio.setHidden(document.hidden);
+  const visibility = () => {
+    cityAudio.setHidden(document.hidden);
+    cityMusic.setHidden(document.hidden);
+  };
   root.addEventListener('pointerdown', gesture, { passive: true });
   root.addEventListener('keydown', gesture);
   root.addEventListener('click', click);
@@ -22,6 +27,7 @@ export function attachAudioControls(root: HTMLElement): () => void {
     root.removeEventListener('keydown', gesture);
     root.removeEventListener('click', click);
     document.removeEventListener('visibilitychange', visibility);
+    cityMusic.dispose();
     cityAudio.dispose();
   };
 }

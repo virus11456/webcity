@@ -42,3 +42,7 @@ Original six tree and two shrub geometries, plus a procedurally authored silhoue
 ## M3-17 原創音效
 
 `public/assets/audio/{click,place,demolish,road,milestone,error,wind,traffic,birds,voices,industry,water}.{ogg,mp3}` 由 `scripts/generateSfx.py` 為本專案原創合成，允許本專案商用與再發布。沒有採樣外部錄音或商業歌曲；voices 為非語言合成音。ffmpeg 僅為離線編碼工具，不隨遊戲發佈。
+
+## M3-18 原創背景音樂
+
+`audio/music/*.m4a`：River Morning、Little Avenue、Sunlit Roofs、Garden Walk、Blue Hour、City Lights，六首各 192 秒，AAC 128 kbps。WebCity 專案原創合成器樂編曲，由 `scripts/generateMusic.mjs` 的固定種子音符／和弦／音色合成，無外部音源、錄音、採樣或既有歌曲；供本專案商用及再製，不涉及第三方歌曲授權。音色為合成撥弦、鍵盤、長音及電子節奏，非現場樂器錄音。FFmpeg 僅為離線編碼工具，未隨遊戲散布。

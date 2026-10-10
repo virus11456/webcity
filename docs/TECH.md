@@ -660,3 +660,5 @@ CityEffects 消費 ready／buildingsChanged，以兩個預配 InstancedBufferGeo
 
 ### M3-17 Audio
 主執行緒 audio 模組只依賴 data／core／world／bridge，管理 Web Audio 與已確認事件；game 提供鏡頭、地形與實際車數，UI 透過 preferences-change 傳遞純音量設定。音源數量有上限、背景 suspend、頁面卸載清理。詳見 AUDIO.md。
+
+M3-18：`audio/music.ts` 使用單一串流 HTMLAudioElement 與 MediaElementAudioSource，獨立音樂 gain 接既有主音量；純 playlist 邏輯採 core/Rng，長音樂不建立完整 AudioBuffer。六首 AAC 各 192 秒，未選曲不預載、不進 SW precache；背景與音量零暫停。詳見 MUSIC.md。
