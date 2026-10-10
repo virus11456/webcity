@@ -205,6 +205,17 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     );
     for (const key of Object.keys(PROBLEMS) as (keyof typeof PROBLEMS)[])
       requireValue(typeof b.problemTimers?.[key] === 'number');
+    requireValue(
+      (b.crime === undefined ||
+        (typeof b.crime === 'number' &&
+          Number.isFinite(b.crime) &&
+          b.crime >= 0 &&
+          b.crime <= 100)) &&
+        (b.crimeUpdatedDay === undefined ||
+          (Number.isSafeInteger(b.crimeUpdatedDay) &&
+            b.crimeUpdatedDay >= 0 &&
+            b.crimeUpdatedDay <= s.clock.day)),
+    );
     if (b.coverage)
       for (const [key, value] of Object.entries(b.coverage))
         requireValue(

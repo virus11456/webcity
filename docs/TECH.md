@@ -559,3 +559,7 @@ CargoSystem 管理 WorldSnapshot.cargo 與 Building.cargo，每 tick 最多八�
 ### M2-14 公共服務框架
 
 world/ServiceNetwork 共用道路接入、二元堆 Dijkstra、預覽路段裁切及覆蓋場取樣；sim/ServiceSystem 在 Worker 計算 Building.coverage／serviceStatus 與既有 coverage TypedArray。新增 setBuildingEnabled 命令，暫停時仍重新计算並送 building patches；derived coverage 在載入時重算。ServiceTool 只讀鏡像預覽，設置由 Worker 重驗；ServiceRenderer 按材質合併原創幾何。見 SERVICES.md。
+
+### M2-15 警察與犯罪
+
+每日服務覆蓋更新後執行 updateCrime；可選 Building.crime/crimeUpdatedDay 保存犯罪率與最後結算日，避免讀檔及重複重算累加。crime 問題加入共用判定、40 天連續計時、圖集與檢視，實際條件不依賴 UI 計時值。公共設施圖示以保守高度定位，分區仍採原有精確屋頂位置。見 POLICE.md。

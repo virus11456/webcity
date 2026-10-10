@@ -1,5 +1,6 @@
 export const ZH_TW = {
   'err.serviceRoad': '需要緊鄰可進出的地面道路',
+  'inspect.crime': '犯罪率',
   'service.tab': '公共服務',
   'service.title': '公共服務建設',
   'service.type': '公共設施類型',

@@ -255,8 +255,11 @@ if (canvas && status) {
       vehicles.group.visible = false;
       buildings.group.visible = false;
       buildings.reset(sim.mirror.readBuildings());
-      problemIcons = new ProblemIcons(city.scene, (id, out) =>
-        buildings!.roof(id, out),
+      problemIcons = new ProblemIcons(
+        city.scene,
+        (id, out) => buildings!.roof(id, out),
+        undefined,
+        (x, z) => city!.terrain.heightAt(x, z),
       );
       problemIcons.reset(sim.mirror.readBuildings());
       problemIcons.group.visible = false;

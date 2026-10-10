@@ -5,6 +5,7 @@ export const PROBLEM_ICONS = {
   sizePx: 30,
   spacingPx: 38,
   roofGapM: 7,
+  facilityHeightM: 40,
   bobPx: 2,
   bobSpeed: 2.4,
   atlasCellPx: 96,
