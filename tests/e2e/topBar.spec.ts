@@ -5,7 +5,7 @@ test('top bar reflects real worker days, funds and demand on every layout', asyn
 }, info) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('./?quality=low&debug=1');
+  await page.goto('./?play=1&quality=low&debug=1');
   await expect(page.locator('.sim-controls')).toHaveAttribute(
     'data-ready',
     'true',
@@ -148,7 +148,7 @@ test('top bar renders negative funds and long city names from worker message fix
     };
   `,
   });
-  await page.goto('./?quality=low');
+  await page.goto('./?play=1&quality=low');
   const hud = page.locator('.topbar');
   await expect(hud).toHaveAttribute('data-money', '-987654321.45');
   await page.getByRole('button', { name: '暫停', exact: true }).click();

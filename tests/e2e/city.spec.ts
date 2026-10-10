@@ -5,7 +5,7 @@ test('opens a populated city and navigates to real city viewpoints', async ({
   test.setTimeout(90_000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('./?quality=low&debug=1');
+  await page.goto('./?play=1&quality=low&debug=1');
   const canvas = page.locator('canvas');
   await expect(canvas).toHaveAttribute('data-ready', 'true');
   expect(Number(await canvas.getAttribute('data-buildings'))).toBeGreaterThan(

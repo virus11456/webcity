@@ -5,7 +5,7 @@ test('catalogs expose real costs, locks, tools and responsive construction contr
 }, info) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('./?quality=low');
+  await page.goto('./?play=1&quality=low');
   const toolbar = page.locator('.road-controls');
   await expect(toolbar).toHaveAttribute('data-ready', 'true');
   await page.getByRole('button', { name: '開始鋪路', exact: true }).click();

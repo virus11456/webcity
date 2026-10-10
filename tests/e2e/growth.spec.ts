@@ -29,7 +29,7 @@ test('roadside zones grow, pause, finish construction and rezone through native 
     if (m.type() === 'error') errors.push(m.text());
   });
   const touch = Boolean(info.project.use.hasTouch);
-  await page.goto('./?quality=high&debug=1');
+  await page.goto('./?play=1&quality=high&debug=1');
   await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'true');
   await expect(page.locator('.road-controls')).toHaveAttribute(
     'data-ready',

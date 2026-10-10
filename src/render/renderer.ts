@@ -70,7 +70,8 @@ export class CityRenderer {
   private readonly water: WaterRenderer;
   private readonly sky = createSky();
   private lighting: Lighting;
-  private readonly forced: QualityLevel | null;
+  private forced: QualityLevel | null;
+  private readonly automaticQuality: QualityLevel;
   private readonly startup = new StartupQuality();
   private readonly observer: ResizeObserver;
   private readonly stats: RenderStats;
@@ -109,15 +110,14 @@ export class CityRenderer {
       ? String(gl.getParameter(extension.UNMASKED_RENDERER_WEBGL))
       : '';
     this.forced = qualityOverride(options.search ?? location.search);
-    const level =
-      this.forced ??
-      detectQuality({
-        userAgent: navigator.userAgent,
-        touchPoints: navigator.maxTouchPoints,
-        screenWidth: screen.width,
-        screenHeight: screen.height,
-        gpu,
-      });
+    this.automaticQuality = detectQuality({
+      userAgent: navigator.userAgent,
+      touchPoints: navigator.maxTouchPoints,
+      screenWidth: screen.width,
+      screenHeight: screen.height,
+      gpu,
+    });
+    const level = this.forced ?? this.automaticQuality;
     this.stats = {
       fps: 0,
       calls: 0,
@@ -200,6 +200,17 @@ export class CityRenderer {
   unregisterMaterial(material: Material): void {
     this.extraMaterials.delete(material);
     this.lighting.csm?.shaders.delete(material);
+  }
+  /** Apply saved quality without reloading or losing the current city. */
+  setQuality(value: QualityLevel | 'auto'): void {
+    this.forced = value === 'auto' ? null : value;
+    const level = this.forced ?? this.automaticQuality;
+    this.startup.reset();
+    if (level === this.stats.quality) return;
+    this.lighting.dispose();
+    this.stats.quality = level;
+    this.lighting = this.createLighting(level);
+    this.resize();
   }
   private createLighting(level: QualityLevel): Lighting {
     this.renderer.shadowMap.enabled = level !== 'low';

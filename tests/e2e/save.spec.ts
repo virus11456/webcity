@@ -23,7 +23,7 @@ test('saves an actual city and restores it after reload with thumbnails and sepa
   page,
 }, info) => {
   const touch = Boolean(info.project.use.hasTouch);
-  await page.goto('./?quality=low&debug=1');
+  await page.goto('./?play=1&quality=low&debug=1');
   await page.waitForSelector('.road-controls[data-ready="true"]');
   await page.getByRole('button', { name: '暫停', exact: true }).click();
   await page.getByRole('button', { name: '開始鋪路', exact: true }).click();

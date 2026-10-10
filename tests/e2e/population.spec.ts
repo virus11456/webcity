@@ -29,7 +29,7 @@ test('actual residents move in, find work, pause, and leave demolished housing',
   page.on('console', (m) => {
     if (m.type() === 'error') errors.push(m.text());
   });
-  await page.goto('./?quality=high&debug=1');
+  await page.goto('./?play=1&quality=high&debug=1');
   await expect(page.locator('.road-controls')).toHaveAttribute(
     'data-ready',
     'true',

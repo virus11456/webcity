@@ -16,7 +16,11 @@ else if (new URLSearchParams(location.search).get('district') === '1')
   void import('./buildingDistrict').then(({ startDistrict }) =>
     startDistrict(root),
   );
-else
+else if (
+  new URLSearchParams(location.search).get('play') === '1' ||
+  sessionStorage.getItem('webcity-load') !== null ||
+  sessionStorage.getItem('webcity-new') !== null
+)
   void import('./bootstrap')
     .then(async ({ prepareStartup }) => {
       await prepareStartup();
@@ -27,4 +31,23 @@ else
       message.textContent = t('save.failed');
       root.append(message);
     });
+else
+  void Promise.all([
+    import('./ui/screens/MainMenu'),
+    import('./save/storage'),
+  ]).then(async ([{ showMainMenu }, { listSaves }]) => {
+    const saves = await listSaves().catch(() => []);
+    showMainMenu(
+      root,
+      saves,
+      (settings) => {
+        sessionStorage.setItem('webcity-new', JSON.stringify(settings));
+        location.reload();
+      },
+      (id) => {
+        sessionStorage.setItem('webcity-load', id);
+        location.reload();
+      },
+    );
+  });
 if (import.meta.env.PROD) void registerPwa();

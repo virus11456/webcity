@@ -17,6 +17,23 @@ export const startup: {
 };
 /** Read only an explicitly selected save; ordinary reloads never overwrite stored cities. */
 export async function prepareStartup(): Promise<void> {
+  const fresh = sessionStorage.getItem('webcity-new');
+  if (fresh) {
+    sessionStorage.removeItem('webcity-new');
+    const settings = JSON.parse(fresh) as CitySettings;
+    if (
+      !settings ||
+      !MAP_PRESETS.some((p) => p.id === settings.mapId) ||
+      !Number.isSafeInteger(settings.seed) ||
+      typeof settings.cityName !== 'string' ||
+      !settings.cityName.trim() ||
+      settings.cityName.length > 64 ||
+      !['normal', 'easy', 'sandbox'].includes(settings.mode)
+    )
+      throw new Error('Invalid city settings');
+    startup.settings = settings;
+    startup.construction = true;
+  }
   const slot = sessionStorage.getItem('webcity-load');
   if (slot !== null) {
     sessionStorage.removeItem('webcity-load');

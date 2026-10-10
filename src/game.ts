@@ -1,3 +1,5 @@
+import { readPreferences } from './ui/preferences';
+import { createPauseMenu } from './ui/screens/PauseMenu';
 import { startup } from './bootstrap';
 import { SAVE } from './data/persistence';
 import { createSaveController } from './save/controller';
@@ -74,6 +76,7 @@ const root = document.querySelector<HTMLDivElement>('#app');
 
 if (!root) throw new Error('Missing #app element');
 
+let pauseMenu: ReturnType<typeof createPauseMenu> | undefined;
 let saveController: ReturnType<typeof createSaveController> | undefined;
 let saveControls: ReturnType<typeof createSaveControls> | undefined;
 let inspectTool: InspectTool | undefined;
@@ -151,7 +154,16 @@ try {
 }
 if (canvas && status) {
   try {
+    const preferences = readPreferences();
+    document.documentElement.style.setProperty(
+      '--ui-scale',
+      String(preferences.uiScale / 100),
+    );
+    const renderSearch = new URLSearchParams(location.search);
+    if (!renderSearch.has('quality') && preferences.quality !== 'auto')
+      renderSearch.set('quality', preferences.quality);
     city = new CityRenderer(canvas, {
+      search: `?${renderSearch}`,
       seed: startup.settings.seed,
       mapId: startup.settings.mapId,
       onStats: debug?.update,
@@ -210,6 +222,7 @@ if (canvas && status) {
         else if (action === 'speed3') void simControls?.setSpeed(4);
       },
     });
+    input.setEdgeScrolling(preferences.edgeScrolling);
     if (sim) {
       buildings = new BuildingRenderer(city.scene, {
         heightAt: (x, z) => city!.terrain.heightAt(x, z),
@@ -469,6 +482,15 @@ if (canvas && status) {
         (failed) => saveControls?.notify(failed),
       );
       saveControls = createSaveControls(root, saveController);
+      pauseMenu = createPauseMenu(
+        root,
+        sim,
+        (value) => {
+          input?.setEdgeScrolling(value.edgeScrolling);
+          city?.setQuality(value.quality);
+        },
+        () => saveController!.save(SAVE.autoId),
+      );
       roadControls.update(roadTool.readState());
       zoneControls = createZoneControls(roadControls.zoneHost, {
         zone: (zone) => zoneTool!.setZone(zone),
@@ -529,6 +551,7 @@ if (import.meta.hot)
     delete window.__webcityRoadStats;
     delete window.__webcityZoneStats;
     delete window.__webcityPick;
+    pauseMenu?.dispose();
     saveController?.dispose();
     saveControls?.dispose();
     tools?.dispose();
