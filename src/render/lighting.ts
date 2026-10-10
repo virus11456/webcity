@@ -24,6 +24,16 @@ export class Lighting {
     ...LIGHTING.sunDirection,
   ).normalize();
 
+  private readonly shadowFocus = new Vector3();
+  private readonly shadowRight = new Vector3(
+    this.direction.z,
+    0,
+    -this.direction.x,
+  ).normalize();
+  private readonly shadowUp = new Vector3()
+    .crossVectors(this.direction, this.shadowRight)
+    .normalize();
+
   /** Install three cascades on high, a single shadow on medium, and no shadow on low. */
   constructor(
     private readonly scene: Scene,
@@ -45,6 +55,8 @@ export class Lighting {
         lightDirection: this.direction.clone().negate(),
         lightIntensity: LIGHTING.sunIntensity,
       });
+      this.csm.fade = true;
+      this.csm.updateFrustums();
       for (const light of this.csm.lights) {
         light.color.set(LIGHT_PALETTE.sun);
         light.shadow.normalBias = LIGHTING.shadowNormalBias;
@@ -73,11 +85,26 @@ export class Lighting {
   /** Follow the camera focus without allocating vectors per frame. */
   update(focus: Vector3): void {
     if (this.sun) {
-      this.sun.target.position.copy(focus);
+      this.shadowFocus.copy(focus);
+      if (this.sun.castShadow) {
+        // Snap in the light's image plane, retaining the exact light direction.
+        const texel = LIGHTING.shadowRangeM / this.sun.shadow.mapSize.x;
+        const x = focus.dot(this.shadowRight),
+          y = focus.dot(this.shadowUp);
+        this.shadowFocus.addScaledVector(
+          this.shadowRight,
+          Math.round(x / texel) * texel - x,
+        );
+        this.shadowFocus.addScaledVector(
+          this.shadowUp,
+          Math.round(y / texel) * texel - y,
+        );
+      }
+      this.sun.target.position.copy(this.shadowFocus);
       this.sun.position
         .copy(this.direction)
         .multiplyScalar(LIGHTING.shadowRangeM)
-        .add(focus);
+        .add(this.shadowFocus);
       this.sun.target.updateMatrixWorld();
     }
     this.csm?.update();

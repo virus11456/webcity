@@ -93,10 +93,14 @@ describe('lighting ownership', () => {
         expect(lighting.csm?.lights).toHaveLength(3);
         expect(lighting.csm?.lights[0]?.shadow.mapSize.x).toBe(2048);
         expect(material.defines?.USE_CSM).toBe(1);
+        expect(material.defines?.CSM_FADE).toBeDefined();
+        expect(lighting.csm?.fade).toBe(true);
       } else {
         expect(lighting.sun?.castShadow).toBe(level === 'medium');
         expect(lighting.sun?.shadow.mapSize.x).toBe(1024);
-        expect(lighting.sun?.target.position).toEqual(new Vector3(10, 0, 20));
+        expect(
+          lighting.sun!.target.position.distanceTo(new Vector3(10, 0, 20)),
+        ).toBeLessThan(0.5);
       }
       lighting.dispose();
       expect(scene.children).toHaveLength(0);
@@ -130,4 +134,30 @@ it('thins fog smoothly at altitude without removing the horizon or varying below
   expect(
     Math.abs(fogDensityAtHeight(120.01) - fogDensityAtHeight(119.99)),
   ).toBeLessThan(1e-10);
+});
+
+it('stabilizes the medium shadow image while following large camera moves', () => {
+  const lighting = new Lighting(
+    new Scene(),
+    new PerspectiveCamera(),
+    'medium',
+    [],
+  );
+  const focus = new Vector3();
+  lighting.update(focus);
+  const sun = lighting.sun!,
+    first = sun.target.position.clone();
+  // Move only in the shadow image plane by substantially less than one texel.
+  focus.set(0.001, 0, 0.001);
+  lighting.update(focus);
+  const right = new Vector3(1, 0, 1).normalize();
+  expect(sun.target.position.dot(right)).toBeCloseTo(first.dot(right), 10);
+  lighting.update(focus.set(1200, 50, -300));
+  expect(sun.target.position.distanceTo(focus)).toBeLessThan(0.5);
+  expect(sun.position.clone().sub(sun.target.position).length()).toBeCloseTo(
+    600,
+  );
+  expect(sun.shadow.bias).toBe(-0.0005);
+  expect(sun.shadow.normalBias).toBe(0.02);
+  lighting.dispose();
 });
