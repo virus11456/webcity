@@ -79,6 +79,9 @@ declare global {
       instances: number;
       pending: boolean;
     };
+    __webcityVegetation?: () => ReturnType<
+      CityRenderer['vegetation']['readStats']
+    >;
     __webcityRoadStats?: () => {
       batches: number;
       pending: boolean;
@@ -266,6 +269,8 @@ if (canvas && status) {
     city.setDayNight(preferences.dayNight);
     if (sim?.mirror.clock) city.acceptClock(sim.mirror.clock);
     if (sim) {
+      const vegetationWorld = sim.mirror.readVegetationWorld();
+      if (vegetationWorld) city.vegetation.sync(vegetationWorld);
       buildings = new BuildingRenderer(city.scene, {
         heightAt: (x, z) => city!.terrain.heightAt(x, z),
         registerMaterial: (material, install) =>
@@ -300,6 +305,15 @@ if (canvas && status) {
           roadPreview?.roads.setTime(
             (event.clock.ticks * TIME.secondsPerDay[1]) / TIME.ticksPerDay,
           );
+        if (event.t === 'ready') city!.vegetation.sync(event.snapshot);
+        else if (
+          event.t === 'roadsChanged' ||
+          (event.t === 'buildingsChanged' &&
+            (event.added.length || event.removed.length))
+        ) {
+          const world = sim!.mirror.readVegetationWorld();
+          if (world) city!.vegetation.sync(world);
+        }
         vehicles!.accept(event);
         buildings!.accept(event);
         problemIcons!.accept(event);
@@ -706,6 +720,7 @@ if (canvas && status) {
       window.__webcityBuildings = () => sim!.mirror.readBuildings();
       window.__webcityProblemIcons = () => problemIcons!.readStats();
       window.__webcityBuildingStats = () => buildings!.readStats();
+      window.__webcityVegetation = () => city!.vegetation.readStats();
       window.__webcityRoadStats = () => roadPreview!.roads.readStats();
     }
   } catch {

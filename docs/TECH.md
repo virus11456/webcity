@@ -629,3 +629,7 @@ PostProcessing 管理 HDR targets 與所有 pass，真實深度重建 AO、夜�
 ### M3-08 道路表面
 
 world/roadDetail 生成確定性表面像素；render/roads/detail 使用同一批次材質的 world-space 紋理，與 CSM hook 組合。道路 draw call 不變，dispose 釋放 GPU 貼圖；遠距淡出＋mipmap 保持穩定。見 ROAD_DETAIL.md。
+
+### M3-09 森林植被
+
+world/vegetation 從既有森林場與 seed 分批衍生植被與權威地物占用。Mirror 僅複製道路與建築足跡，不帶整張地形／模擬場；render/vegetation 以雙緩衝 instancing、分幀生成、三段 LOD 與程序 billboard atlas 顯示，逐幀不配置矩陣。見 VEGETATION.md。
