@@ -1,3 +1,4 @@
+import { RoutePlanner } from './systems/routePlanner';
 import { ScheduleSystem } from './systems/schedules';
 import { LaneGraph } from '../world/laneGraph';
 import { INTERSECTIONS } from '../data/intersections';
@@ -68,6 +69,7 @@ export class Simulation {
   private readonly state: SimState;
   readonly laneGraph = new LaneGraph();
   readonly schedules: ScheduleSystem;
+  readonly routePlanner: RoutePlanner;
   private emit(event: SimEvent): void {
     if (event.t === 'roadsChanged')
       this.laneGraph.sync(this.state.nodes, this.state.segments);
@@ -91,6 +93,11 @@ export class Simulation {
     }
     updatePopulation(this.state);
     this.schedules = new ScheduleSystem(this.state);
+    this.routePlanner = new RoutePlanner(
+      this.state,
+      this.laneGraph,
+      this.schedules,
+    );
     this.laneGraph.sync(this.state.nodes, this.state.segments);
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
@@ -758,6 +765,7 @@ export class Simulation {
     )
       this.refreshPopulation();
     this.schedules.tick();
+    this.routePlanner.tick();
     if (!dayCompleted) return;
     this.state.stats.day = this.state.clock.day;
     this.state.stats.money = this.state.money;

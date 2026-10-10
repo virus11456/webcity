@@ -539,3 +539,7 @@ M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/st
 ### M2-08 行程資料
 
 市民 SoA 擴充為 16 個 Int32 與 13 個 Uint8 欄位，含 locationId、destinationId、tripOriginId、tripStartTick、shiftEndTick、班次／活動週期、行程用途／狀態。ScheduleSystem 每 tick 產生個別請求，由尋路／交通系統呼叫 pending → depart → arrive；過期結果依個人 ID、請求 tick、目的地檢查。schema 缺少整組行程欄位時補零，保留 M2-07 及 M1 v1 讀檔。見 `SCHEDULES.md`。
+
+### M2-09 路徑規劃
+
+Pathfinder 重用數值化車道相位圖、TypedArray 搜索工作區、二元堆積與 ALT 下界；一般道路另建雙向行人路網。RoutePlanner 在 Worker 每 tick 處理有上限的個人 Journey，输出带 revision 的 RouteLeg 陣列。一般車道腿共用取樣 points，加上 startDistance 偏移，路口／換道腿保留所屬節點及車道。衍生圖與路徑不寫入存檔。完整界面、快取及驗證見 `PATHFINDING.md`。
