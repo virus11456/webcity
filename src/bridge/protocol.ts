@@ -46,6 +46,7 @@ export type CommandInput =
     }
   | { t: 'zone'; cells: [Id, number][]; zone: ZoneType | null }
   | { t: 'place'; defId: BuildingDefId; pos: Vec2; rotation: number }
+  | { t: 'setBuildingEnabled'; id: Id; enabled: boolean }
   | { t: 'buildRoadPipes' }
   | { t: 'buildNetwork'; net: NetworkKind; points: Vec2[] }
   | {

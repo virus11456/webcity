@@ -230,7 +230,7 @@ export const BUILDINGS = [
     cost: 4000,
     upkeepPerWeek: 240,
     unlock: 1,
-    footprintCells: null,
+    footprintCells: [4, 4],
     service: 'police',
     radiusM: 500,
     capacity: {
@@ -243,7 +243,7 @@ export const BUILDINGS = [
     cost: 18000,
     upkeepPerWeek: 800,
     unlock: 5,
-    footprintCells: null,
+    footprintCells: [6, 6],
     service: 'police',
     radiusM: 900,
     capacity: {
@@ -257,7 +257,7 @@ export const BUILDINGS = [
     cost: 4000,
     upkeepPerWeek: 240,
     unlock: 1,
-    footprintCells: null,
+    footprintCells: [4, 4],
     service: 'fire',
     radiusM: 500,
     capacity: {
@@ -270,7 +270,7 @@ export const BUILDINGS = [
     cost: 20000,
     upkeepPerWeek: 880,
     unlock: 5,
-    footprintCells: null,
+    footprintCells: [6, 6],
     service: 'fire',
     radiusM: 900,
     capacity: {
@@ -283,7 +283,7 @@ export const BUILDINGS = [
     cost: 5000,
     upkeepPerWeek: 320,
     unlock: 1,
-    footprintCells: null,
+    footprintCells: [3, 3],
     service: 'health',
     radiusM: 500,
     capacity: {
@@ -297,7 +297,7 @@ export const BUILDINGS = [
     cost: 25000,
     upkeepPerWeek: 1200,
     unlock: 4,
-    footprintCells: null,
+    footprintCells: [6, 6],
     service: 'health',
     radiusM: 1000,
     capacity: {
@@ -311,7 +311,7 @@ export const BUILDINGS = [
     cost: 6000,
     upkeepPerWeek: 360,
     unlock: 2,
-    footprintCells: null,
+    footprintCells: [5, 5],
     service: 'education',
     radiusM: 600,
     capacity: {
@@ -325,7 +325,7 @@ export const BUILDINGS = [
     cost: 16000,
     upkeepPerWeek: 640,
     unlock: 3,
-    footprintCells: null,
+    footprintCells: [6, 6],
     service: 'education',
     radiusM: 900,
     capacity: {
@@ -339,7 +339,7 @@ export const BUILDINGS = [
     cost: 50000,
     upkeepPerWeek: 1600,
     unlock: 5,
-    footprintCells: null,
+    footprintCells: [8, 8],
     service: 'education',
     radiusM: 1500,
     capacity: {

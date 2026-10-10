@@ -1,3 +1,5 @@
+import { serviceDefinition } from '../../world/services';
+import type { ServiceId } from '../../data/services';
 import { render } from 'preact';
 import { BUILDINGS } from '../../data/buildings';
 import { ZONES, type ZoneType } from '../../data/zones';
@@ -14,9 +16,15 @@ import '../styles/inspect.css';
 function Content({
   info,
   locate,
+  toggle,
+  pending,
+  failure,
 }: {
   info: InspectInfo;
   locate?: (p: Vec2) => void;
+  toggle?: (id: number, enabled: boolean) => void;
+  pending: boolean;
+  failure: string | null;
 }) {
   if (info.kind === 'vehicle') {
     const v = info.value;
@@ -99,8 +107,9 @@ function Content({
   if (info.kind === 'building') {
     const b = info.value;
     const definition = BUILDINGS.find((d) => d.id === b.defId);
-    name =
-      b.defId in ZONES
+    name = serviceDefinition(b.defId)
+      ? t(`service.${b.defId as ServiceId}`)
+      : b.defId in ZONES
         ? t(`zone.${b.defId as ZoneType}`)
         : b.defId.startsWith('power_')
           ? t(`power.${b.defId as 'power_wind' | 'power_coal'}`).split(
@@ -111,11 +120,17 @@ function Content({
                 `water.${b.defId as 'water_tower' | 'water_pump' | 'water_drain' | 'water_treatment'}`,
               ).split(' · ')[0]!
             : b.defId;
+    rows.push([t('inspect.state'), t(`inspect.${b.state}`)]);
+    if (!serviceDefinition(b.defId))
+      rows.push(
+        [t('inspect.level'), b.level],
+        [t('inspect.residents'), b.residents],
+        [
+          t('inspect.capacity'),
+          `${b.housing?.occupied ?? 0} / ${b.households}`,
+        ],
+      );
     rows.push(
-      [t('inspect.state'), t(`inspect.${b.state}`)],
-      [t('inspect.level'), b.level],
-      [t('inspect.residents'), b.residents],
-      [t('inspect.capacity'), `${b.housing?.occupied ?? 0} / ${b.households}`],
       [t('inspect.jobs'), `${b.workers} / ${b.jobs}`],
       [
         t('inspect.utilities'),
@@ -124,6 +139,28 @@ function Content({
           .join(' / '),
       ],
     );
+    if (b.serviceStatus) {
+      const q = b.serviceStatus;
+      rows.push(
+        [
+          t('service.status'),
+          t(b.enabled === false ? 'service.off' : 'service.on'),
+        ],
+        [t('service.radius'), `${q.radius.toFixed(0)} m`],
+        [
+          t('service.capacity'),
+          `${q.demand.toFixed(0)} / ${q.capacity.toFixed(0)}`,
+        ],
+        [t('service.efficiency'), `${Math.round(q.efficiency * 100)}%`],
+        [t('service.connected'), t(q.connected ? 'inspect.yes' : 'inspect.no')],
+      );
+    }
+    if (b.coverage && !b.serviceStatus)
+      for (const [service, value] of Object.entries(b.coverage))
+        rows.push([
+          `${t(`finance.${service as keyof NonNullable<typeof b.coverage>}`)} ${t('service.coverage')}`,
+          `${Math.round(value * 100)}%`,
+        ]);
     if (b.cargo)
       rows.push([
         t('cargo.stock'),
@@ -165,26 +202,63 @@ function Content({
           </div>
         ))}
       </dl>
+      {failure && <p role="alert">{failure}</p>}
+      {info.kind === 'building' && serviceDefinition(info.value.defId) && (
+        <Button
+          disabled={pending}
+          onClick={() => toggle?.(info.value.id, info.value.enabled === false)}
+        >
+          {t(
+            info.value.enabled === false ? 'service.enable' : 'service.disable',
+          )}
+        </Button>
+      )}
     </div>
   );
 }
-/** Mount a live read-only inspector, switching to a modal sheet on phone layouts. */
+/** Mount live details with authoritative service actions and a modal sheet on phones. */
 export function createInspectPanel(
   parent: HTMLElement,
   dismiss: () => void,
   locate?: (p: Vec2) => void,
+  toggle?: (id: number, enabled: boolean) => Promise<boolean>,
 ) {
   const host = document.createElement('div');
   host.className = 'inspect-host';
   parent.append(host);
   let current: InspectInfo | null = null;
+  let pending = false;
+  let failure: string | null = null;
+  let disposed = false;
   const stop = observeLayout();
   const paint = () => {
+    if (disposed) return;
     if (!current) {
       render(null, host);
       return;
     }
-    const body = <Content info={current} locate={locate} />;
+    const body = (
+      <Content
+        info={current}
+        locate={locate}
+        pending={pending}
+        failure={failure}
+        toggle={async (id, enabled) => {
+          if (pending || !toggle) return;
+          pending = true;
+          failure = null;
+          paint();
+          try {
+            if (!(await toggle(id, enabled))) failure = t('err.invalidCommand');
+          } catch {
+            failure = t('sim.failed');
+          } finally {
+            pending = false;
+            paint();
+          }
+        }}
+      />
+    );
     render(
       layout.value.startsWith('phone') ? (
         <BottomSheet open title={t('inspect.title')} onDismiss={dismiss}>
@@ -201,10 +275,13 @@ export function createInspectPanel(
   const off = layout.subscribe(paint);
   return {
     update(info: InspectInfo | null) {
+      if (info?.kind !== current?.kind || info?.value.id !== current?.value.id)
+        failure = null;
       current = info;
       paint();
     },
     dispose() {
+      disposed = true;
       off();
       stop();
       render(null, host);

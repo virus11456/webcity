@@ -1,3 +1,6 @@
+import { ServiceRenderer } from './render/services';
+import { ServiceTool } from './tools/serviceTool';
+import { createServiceControls } from './ui/serviceControls';
 import { VehicleRenderer } from './render/vehicles';
 import { TIME } from './data/config';
 import { readPreferences } from './ui/preferences';
@@ -90,6 +93,10 @@ let saveControls: ReturnType<typeof createSaveControls> | undefined;
 let inspectTool: InspectTool | undefined;
 let inspectPanel: ReturnType<typeof createInspectPanel> | undefined;
 let inspectPreview: BulldozePreview | undefined;
+let serviceRenderer: ServiceRenderer | undefined;
+let serviceTool: ServiceTool | undefined;
+let serviceControls: ReturnType<typeof createServiceControls> | undefined;
+let unsubscribeServices: (() => void) | undefined;
 let waterTool: WaterTool | undefined;
 let waterUtilities: WaterUtilityRenderer | undefined;
 let waterControls: ReturnType<typeof createWaterControls> | undefined;
@@ -393,6 +400,24 @@ if (canvas && status) {
           root.dataset.underground = String(underground);
         },
       );
+      serviceRenderer = new ServiceRenderer(city.scene, (x, z) =>
+        city!.terrain.heightAt(x, z),
+      );
+      serviceRenderer.group.visible = false;
+      if (powerSnapshot)
+        serviceRenderer.accept({
+          t: 'ready',
+          reqId: 0,
+          snapshot: powerSnapshot,
+        });
+      unsubscribeServices = sim.onEvent((e) => serviceRenderer!.accept(e));
+      serviceTool = new ServiceTool(
+        { ...powerContext, preview: (p) => serviceRenderer?.show(p) },
+        (s) => {
+          roadControls?.updateService(s.active, s.pending);
+          serviceControls?.update(s);
+        },
+      );
       inspectPreview = new BulldozePreview(city.scene, UI_PALETTE.accent);
       inspectPanel = createInspectPanel(
         root,
@@ -400,6 +425,10 @@ if (canvas && status) {
         (p) => {
           inspectTool?.clear();
           city!.cameraController.flyTo(p, 160);
+        },
+        async (id, enabled) => {
+          const r = await sim!.send({ t: 'setBuildingEnabled', id, enabled });
+          return r.t === 'result' && r.ok;
         },
       );
       inspectTool = new InspectTool(
@@ -425,6 +454,7 @@ if (canvas && status) {
         vehicles!.group.visible = construction;
         powerRenderer!.group.visible = construction;
         waterUtilities!.group.visible = construction;
+        serviceRenderer!.group.visible = construction;
         if (first)
           city!.cameraController.flyTo(
             ROAD_TOOL_RENDER.focus,
@@ -440,6 +470,11 @@ if (canvas && status) {
         zone() {
           mode(true);
           tools!.select(zoneTool!);
+          canvas.focus({ preventScroll: true });
+        },
+        service() {
+          mode(true);
+          tools!.select(serviceTool!);
           canvas.focus({ preventScroll: true });
         },
         water() {
@@ -490,6 +525,12 @@ if (canvas && status) {
           networkTool!.readState().active
             ? networkTool!.onCancel()
             : placeTool!.onCancel(),
+      });
+      serviceControls = createServiceControls(roadControls.serviceHost, {
+        mode: (id) => serviceTool!.setDefinition(id),
+        rotate: () => serviceTool!.rotate(),
+        confirm: () => serviceTool!.onConfirm(),
+        cancel: () => serviceTool!.onCancel(),
       });
       waterControls = createWaterControls(roadControls.waterHost, {
         mode: (m) => waterTool!.setMode(m),
@@ -602,6 +643,10 @@ if (import.meta.hot)
     inspectTool?.dispose();
     inspectPanel?.dispose();
     inspectPreview?.dispose();
+    unsubscribeServices?.();
+    serviceTool?.dispose();
+    serviceControls?.dispose();
+    serviceRenderer?.dispose();
     unsubscribeWater?.();
     waterTool?.dispose();
     waterControls?.dispose();

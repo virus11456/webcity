@@ -675,11 +675,13 @@ h1 {
 }
 
 .power-controls .road-row,
-.water-controls .road-row {
+.water-controls .road-row,
+.service-controls .road-row {
   flex-wrap: wrap;
 }
 .power-controls select,
-.water-controls select {
+.water-controls select,
+.service-controls select {
   max-width: 100%;
   font-size: 12px;
 }

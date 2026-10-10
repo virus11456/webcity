@@ -555,3 +555,7 @@ VehicleRenderer 消費十欄 vehicles 封包，以 tick/speed 決定插值時間
 ### M2-13 貨運任務
 
 CargoSystem 管理 WorldSnapshot.cargo 與 Building.cargo，每 tick 最多八次路徑查詢、輪流處理企業。TrafficSystem 的負數個人欄位代表獨立物流 mission ID，與正數居民分離；貨車沿相同車道占用系統移動，抵達通知由 CargoSystem 入庫，斷路則保留原地裝載貨單。traffic.nextMissionId 保留任務識別，遷移驗證貨單與車流關聯。詳見 `CARGO.md`。
+
+### M2-14 公共服務框架
+
+world/ServiceNetwork 共用道路接入、二元堆 Dijkstra、預覽路段裁切及覆蓋場取樣；sim/ServiceSystem 在 Worker 計算 Building.coverage／serviceStatus 與既有 coverage TypedArray。新增 setBuildingEnabled 命令，暫停時仍重新计算並送 building patches；derived coverage 在載入時重算。ServiceTool 只讀鏡像預覽，設置由 Worker 重驗；ServiceRenderer 按材質合併原創幾何。見 SERVICES.md。

@@ -1,4 +1,29 @@
 export const ZH_TW = {
+  'err.serviceRoad': '需要緊鄰可進出的地面道路',
+  'service.tab': '公共服務',
+  'service.title': '公共服務建設',
+  'service.type': '公共設施類型',
+  'service.radius': '道路覆蓋距離',
+  'service.hint': '沿道路放置設施；綠線預覽可覆蓋的道路，覆蓋隨道路距離遞減。',
+  'service.police_station': '警察局',
+  'service.police_hq': '警察總局',
+  'service.fire_station': '消防局',
+  'service.fire_hq': '消防總局',
+  'service.clinic': '診所',
+  'service.hospital': '醫院',
+  'service.school_elementary': '小學',
+  'service.school_high': '高中',
+  'service.university': '大學',
+  'service.capacity': '服務需求 / 容量',
+  'service.efficiency': '容量效率',
+  'service.connected': '道路連通',
+  'service.enable': '啟用設施',
+  'service.disable': '停用設施',
+  'service.on': '運作中',
+  'service.off': '已停用',
+  'service.status': '營運狀態',
+  'service.coverage': '服務覆蓋',
+
   'cargo.truck': '貨運卡車',
   'cargo.origin': '出發地',
   'cargo.outside': '城外',
@@ -111,7 +136,7 @@ export const ZH_TW = {
   'toolbar.straight': '道路模式：直線',
   'toolbar.future': '後續開放的分類',
   'toolbar.futureItems':
-    '行政區、垃圾、醫療、消防、警察、教育、大眾運輸、公園美化、獨特建築與政策尚未開放。',
+    '行政區、垃圾、殯葬、大眾運輸、公園美化、獨特建築與政策尚未開放。',
   'toolbar.shortcuts':
     '1–3 速度 · 4 道路 · 5 分區 · 6 電力 · 7 水務 · 8 拆除 · Esc 取消',
 

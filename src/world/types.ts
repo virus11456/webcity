@@ -82,6 +82,9 @@ export interface PopulationDetails {
   movedOut: number;
 }
 export interface Building {
+  enabled?: boolean;
+  coverage?: Partial<Record<ServiceType, number>>;
+  serviceStatus?: import('./services').ServiceStatus;
   cargo?: import('./cargo').CargoInventory;
   frontageSetbackM?: number; // Retained driveway after road narrowing.
   id: Id;
