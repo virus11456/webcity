@@ -60,6 +60,8 @@ export type InspectInfo =
   | { kind: 'network'; net: NetworkKind; value: NetworkSegment };
 
 export interface EconomyState {
+  transitUnsettled?: number;
+  transitIncome?: number;
   distressWeeks: number;
   status: 'normal' | 'warning' | 'gameOver';
   settledWeek: number;
@@ -102,7 +104,7 @@ export interface WorldSnapshot {
   // Reserved empty collections; concrete schemas belong to M2 / M4.
   citizens: CitizenTable;
   traffic: TrafficState;
-  transitLines: never[];
+  transitLines: import('./transit').BusLine[];
   districts: never[];
   policies: PolicyId[];
   unlocked: number[];

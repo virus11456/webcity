@@ -25,6 +25,7 @@ export class RoutePlanner {
   ) {
     this.paths = new Pathfinder(graph);
   }
+  transit?: (journey: Journey) => boolean;
   tick(): number {
     const s = this.state,
       c = s.citizens;
@@ -58,6 +59,7 @@ export class RoutePlanner {
         continue;
       }
       calculated++;
+      if (!stranded && this.transit?.(journey)) continue;
       const mode = journey.mode === TravelMode.walk ? 'walk' : 'drive';
       const route = stranded
         ? this.paths.between(

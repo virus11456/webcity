@@ -35,6 +35,9 @@ export type CommandInput =
   | ({ t: 'init' } & CitySettings)
   | { t: 'load'; data: ArrayBuffer }
   | { t: 'save' }
+  | { t: 'createBusLine'; stops: Vec2[] }
+  | { t: 'setBusVehicles'; id: number; vehicles: number }
+  | { t: 'deleteBusLine'; id: number }
   | { t: 'setSpeed'; speed: SimSpeed }
   | { t: 'buildRoad'; type: RoadTypeId; points: RoadDraft }
   | { t: 'upgradeRoad'; segment: Id; type: RoadTypeId }
@@ -69,6 +72,9 @@ export type FailureReason =
   | ConstructionReason
   | ZoningReason
   | BulldozeReason
+  | 'err.busDepot'
+  | 'err.busRoute'
+  | 'err.busCapacity'
   | 'err.gameOver'
   | 'err.loanLimit'
   | 'err.locked'
@@ -93,6 +99,7 @@ export type Response =
     }
   | { t: 'inspectResult'; reqId: number; info: InspectInfo };
 export type SimEvent =
+  | { t: 'transit'; lines: import('../world/transit').BusLineView[] }
   | Response
   | { t: 'clock'; clock: SimClock }
   | { t: 'fundsChanged'; money: number }

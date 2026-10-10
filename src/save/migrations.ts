@@ -1,3 +1,4 @@
+import { validateTransit } from './transitValidation';
 import { HEALTH } from '../data/health';
 import { emptyFire } from '../world/fire';
 import { FIRE } from '../data/fire';
@@ -139,6 +140,8 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     ...s.buildings,
     ...s.networks.power,
     ...s.networks.water,
+    ...s.transitLines,
+    ...s.transitLines.flatMap((l) => l.buses ?? []),
   ]) {
     requireValue(
       item &&
@@ -611,12 +614,18 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
         );
     }
   }
+  const transitMissions = validateTransit(s);
   const vehicleIds = new Set<number>(),
     travelling = new Set<number>();
   const journeyValid = (j: (typeof traffic.vehicles)[number]['journey']) =>
     j &&
     Number.isSafeInteger(j.citizenId) &&
     (citizenIds.has(j.citizenId) ||
+      (j.citizenId < 0 &&
+        j.purpose === 8 &&
+        transitMissions.get(-j.citizenId)?.destination === j.destinationId &&
+        j.mode === (transitMissions.get(-j.citizenId)?.kind === 8 ? 0 : 1) &&
+        j.originId === 0) ||
       (j.citizenId < 0 &&
         j.mode === 1 &&
         ((j.purpose === 6 &&
@@ -630,7 +639,7 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     Number.isSafeInteger(j.destinationId) &&
     (j.destinationId > 0 || (j.citizenId < 0 && j.destinationId === 0)) &&
     (j.citizenId < 0
-      ? [6, 7].includes(j.purpose)
+      ? [6, 7, 8].includes(j.purpose)
       : [1, 2, 3, 4, 5].includes(j.purpose)) &&
     [0, 1].includes(j.mode) &&
     Number.isSafeInteger(j.requestedTick) &&
@@ -645,6 +654,8 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
         journeyValid(v.journey) &&
         !travelling.has(v.journey.citizenId) &&
         Number.isSafeInteger(v.kind) &&
+        (v.journey.purpose !== 8 ||
+          transitMissions.get(-v.journey.citizenId)?.kind === v.kind) &&
         v.kind >= 0 &&
         v.kind <= 8 &&
         Number.isSafeInteger(v.route) &&
@@ -678,5 +689,9 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     );
     travelling.add(v.journey.citizenId);
   }
+  for (const id of transitMissions.keys())
+    requireValue(
+      travelling.has(-id) && !shipmentIds.has(id) && !fireIds.has(id),
+    );
   return s;
 }

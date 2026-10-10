@@ -141,6 +141,9 @@ function line(a: LanePoint, b: LanePoint): LanePoint[] {
 /** Road-derived routing graphs. Walking is bidirectional even on one-way streets, never on highways. */
 export class Pathfinder {
   private revision = -1;
+  get graphRevision(): number {
+    return this.graph.revision;
+  }
   private readonly walk = new Map<string, Lane>();
   private readonly walkingNext = new Map<string, Edge[]>();
   private readonly cache = new Map<

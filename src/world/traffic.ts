@@ -67,6 +67,7 @@ export function saveRoute(route: Route): SavedRoute {
 }
 
 export interface TrafficInfo {
+  bus?: { line: number; passengers: number };
   id: number;
   citizenId: number;
   kind: number;

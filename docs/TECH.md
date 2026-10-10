@@ -666,3 +666,6 @@ M3-18：`audio/music.ts` 使用單一串流 HTMLAudioElement 與 MediaElementAud
 M3-19：GraphicsOptions 為 data 中的偏好契約，UI 經 game 注入 CityRenderer，個別陰影／後製資源按需釋放與重建。SustainedQuality 以兩個十秒低 FPS 視窗降級；onAutoQuality callback 由 game 轉通知。車輛畫面上限不修改 Worker 行程。詳見 QUALITY_SETTINGS.md。
 
 M3-20：離線 GLB 稽核核對內容雜湊、命名與各 LOD 面數；Playwright 經 IndexedDB 正常載入固定城市，在 12／19／22 時驗證實際 renderer。展示存檔依負载計算水電設施，鏡頭停止及 LOD 轉換完成後才截圖。主選單 gzip JS 與高畫質渲染數據分開記錄，不能取代真機／10 萬人口效能驗證。見 ART_REVIEW.md。
+
+### M4-01 公車權威
+TransitSystem 管理每條路線與個別乘客，RoutePlanner 將可搭直達公車的居民請求交由它處理；TrafficSystem 仍是車輛與接駁行人的位置權威，新增 purpose 8 任務。createBusLine／setBusVehicles／deleteBusLine 皆經 Worker 邊界驗證。transit event 僅送路線摘要，完整乘客／派車狀態隨 Worker 存檔；WorldMirror.readTransit 回傳防禦拷貝，UI 不寫模擬。停止服務會將真實位置保存在 traffic.stranded，跨存檔不回到住宅起點。新增票款待結算欄位向後相容，讀檔核對乘客與交通任務所有權。見 BUS.md。

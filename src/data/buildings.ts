@@ -432,7 +432,7 @@ export const BUILDINGS = [
     cost: 6000,
     upkeepPerWeek: 300,
     unlock: 4,
-    footprintCells: null,
+    footprintCells: [4, 4],
     service: 'transit',
     capacity: {
       vehicles: 20,

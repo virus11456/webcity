@@ -14,6 +14,9 @@ import { Simulation } from './simulation';
 
 const futureCommands = new Set([
   'load',
+  'createBusLine',
+  'setBusVehicles',
+  'deleteBusLine',
   'save',
   'upgradeRoad',
   'place',
@@ -189,6 +192,51 @@ export class CommandDispatcher {
     }
     if (this.simulation.gameOver) {
       fail('err.gameOver');
+      return;
+    }
+    if (
+      value.t === 'createBusLine' ||
+      value.t === 'setBusVehicles' ||
+      value.t === 'deleteBusLine'
+    ) {
+      if (
+        value.t === 'createBusLine' &&
+        'stops' in value &&
+        Array.isArray(value.stops) &&
+        value.stops.every(finitePoint)
+      )
+        this.emit({
+          t: 'result',
+          reqId,
+          ...this.simulation.busCommand({ t: value.t, stops: value.stops }),
+        });
+      else if (
+        value.t === 'deleteBusLine' &&
+        'id' in value &&
+        Number.isSafeInteger(value.id)
+      )
+        this.emit({
+          t: 'result',
+          reqId,
+          ...this.simulation.busCommand({ t: value.t, id: value.id as number }),
+        });
+      else if (
+        value.t === 'setBusVehicles' &&
+        'id' in value &&
+        Number.isSafeInteger(value.id) &&
+        'vehicles' in value &&
+        Number.isSafeInteger(value.vehicles)
+      )
+        this.emit({
+          t: 'result',
+          reqId,
+          ...this.simulation.busCommand({
+            t: value.t,
+            id: value.id as number,
+            vehicles: value.vehicles as number,
+          }),
+        });
+      else fail('err.invalidCommand');
       return;
     }
     if (

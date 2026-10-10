@@ -1,3 +1,4 @@
+import { busLineViews, type BusLineView } from '../world/transit';
 import type { VegetationWorld } from '../world/vegetation';
 import type { SimSpeed } from '../data/config';
 import type { PowerWorld } from '../world/power';
@@ -22,6 +23,10 @@ function upsert<T extends { id: number }>(
 /** Read-only public view; all snapshots and incoming mutable data are copied. */
 export class WorldMirror {
   private state: WorldSnapshot | undefined;
+  private busLines: BusLineView[] = [];
+  readTransit(): BusLineView[] {
+    return structuredClone(this.busLines);
+  }
   private vehicles: {
     data: Float32Array;
     count: number;
@@ -160,6 +165,7 @@ export class WorldMirror {
   apply(event: SimEvent): void {
     if (event.t === 'ready') {
       this.state = structuredClone(event.snapshot);
+      this.busLines = busLineViews(event.snapshot.transitLines);
       this.vehicles = { data: new Float32Array(), count: 0 };
       return;
     }
@@ -202,6 +208,9 @@ export class WorldMirror {
           structuredClone(event.nodes),
           event.removedNodes,
         );
+        break;
+      case 'transit':
+        this.busLines = structuredClone(event.lines);
         break;
       case 'zonesChanged':
         for (const block of event.blocks)
