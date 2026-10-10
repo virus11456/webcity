@@ -67,6 +67,7 @@ declare global {
       batches: number;
       pending: boolean;
       generation: number;
+      trees: number;
     };
     __webcityPick?: (x: number, y: number) => TerrainPick | null;
   }

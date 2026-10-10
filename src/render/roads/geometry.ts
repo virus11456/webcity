@@ -1,3 +1,4 @@
+import { laneOffsets, roadCrossSection } from '../../world/roadLanes';
 import { Color } from 'three';
 import { ROAD_MESH as C } from '../../data/roadMesh';
 import { ROAD_PALETTE as P } from '../../data/palette';
@@ -48,9 +49,7 @@ export class Surface {
   }
 }
 function walk(segment: RoadSegment): number {
-  return segment.type === 'gravel' || segment.type.startsWith('highway')
-    ? 0
-    : C.sidewalkM;
+  return roadCrossSection(segment.type).sidewalk;
 }
 /** Interpolate by travelled metres so dashed lines retain consistent lengths on curves. */
 export function at(samples: RoadSample[], d: number): RoadSample {
@@ -69,7 +68,7 @@ export function at(samples: RoadSample[], d: number): RoadSample {
   }
   return samples[samples.length - 1]!;
 }
-function edge(
+export function edge(
   samples: RoadSample[],
   d: number,
   offset: number,
@@ -233,10 +232,36 @@ export function segmentMesh(
         );
       }
     }
+  const section = roadCrossSection(s.type);
+  if (section.median) {
+    strip(
+      out,
+      samples,
+      from,
+      to,
+      -section.median / 2,
+      section.median / 2,
+      P.curb,
+      C.curbHeightM,
+    );
+    strip(
+      out,
+      samples,
+      from,
+      to,
+      -section.median / 2 + C.curbM,
+      section.median / 2 - C.curbM,
+      P.median_grass,
+      C.curbHeightM + C.markingLiftM,
+    );
+  }
   if (s.type !== 'gravel') {
     const lanes = def.lanesForward + def.lanesBackward;
     for (let lane = 1; lane < lanes; lane++) {
-      const offset = -inner + (2 * inner * lane) / lanes;
+      const offset =
+        -inner +
+        section.laneWidth * lane +
+        (lane > def.lanesBackward ? section.median : 0);
       if (def.lanesBackward > 0 && lanes >= 4 && lane === def.lanesBackward) {
         for (const side of [-1, 1])
           strip(
@@ -244,8 +269,14 @@ export function segmentMesh(
             samples,
             from,
             to,
-            offset + (side * C.doubleLineGapM) / 2 - C.lineWidthM / 2,
-            offset + (side * C.doubleLineGapM) / 2 + C.lineWidthM / 2,
+            offset +
+              section.median / 2 +
+              side * (section.median / 2 + C.doubleLineGapM / 2) -
+              C.lineWidthM / 2,
+            offset +
+              section.median / 2 +
+              side * (section.median / 2 + C.doubleLineGapM / 2) +
+              C.lineWidthM / 2,
             P.lane_yellow,
             C.markingLiftM,
           );
@@ -266,6 +297,40 @@ export function segmentMesh(
             C.markingLiftM,
           );
     }
+    if (def.lanesBackward === 0)
+      for (const lane of laneOffsets(s.type))
+        for (
+          let d = from + C.arrowSpacingM / 2;
+          d + C.arrowLengthM < to;
+          d += C.arrowSpacingM
+        ) {
+          strip(
+            out,
+            samples,
+            d,
+            d + C.arrowLengthM * 0.65,
+            lane.offset - C.lineWidthM,
+            lane.offset + C.lineWidthM,
+            P.lane_white,
+            C.markingLiftM,
+          );
+          out.triangle(
+            edge(
+              samples,
+              d + C.arrowLengthM * 0.6,
+              lane.offset - C.arrowWidthM / 2,
+              C.markingLiftM,
+            ),
+            edge(samples, d + C.arrowLengthM, lane.offset, C.markingLiftM),
+            edge(
+              samples,
+              d + C.arrowLengthM * 0.6,
+              lane.offset + C.arrowWidthM / 2,
+              C.markingLiftM,
+            ),
+            P.lane_white,
+          );
+        }
     if (junctionStart)
       strip(
         out,
