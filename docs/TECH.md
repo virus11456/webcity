@@ -597,3 +597,7 @@ Worker 發送精簡 `roadTraffic` 事件；路段檢視向 Worker 取得統計�
 
 ### M2-24 跟隨鏡頭
 render/FollowCamera 只讀 VehicleRenderer 的重用座標輸出；RtsCamera 追蹤焦點並沿用幀率獨立阻尼。UI 僅透過 callback 開始／取消，game 組合事件與生命週期，不新增跨層依賴。每幀不分配追蹤物件，不向 Worker 輪詢。
+
+
+### M3-01 素材管線
+`render/assets.ts` 是 scene-scoped GLTFLoader / MeshoptDecoder / KTX2Loader 管理器；Promise 去重、失敗重試、共享 GPU 資源統一釋放。`core/assetManifest.ts` 驗證內容雜湊路徑及授權 metadata；decoder 在本站預快取，模型使用既有 media CacheFirst。工具依賴只加入 devDependencies，正常 build 不需 KTX CLI。詳見 `ASSET_PIPELINE.md`。

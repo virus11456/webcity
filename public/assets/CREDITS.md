@@ -1,0 +1,8 @@
+# 素材來源與授權
+
+- `models/bld_rl_l2_2x2_sample.*.glb`：WebCity 原創測試住宅，由 `scripts/generateAssetSample.ts` 生成，含原創立面貼圖；未使用第三方遊戲素材。原始檔保留於 `assets-source/`。
+- KTX2 解碼器：Three.js 隨附的 Basis Universal transcoder，來源 [BinomialLLC/basis_universal](https://github.com/BinomialLLC/basis_universal)，Apache-2.0。由 Vite 打包為同站、帶內容雜湊的 JS/WASM，不連接外部 CDN。
+- Three.js GLTFLoader / KTX2Loader：MIT，隨 Three.js 套件。
+- Meshopt decoder：MIT，來源 [zeux/meshoptimizer](https://github.com/zeux/meshoptimizer)，使用 Three.js 隨附版本。
+
+原始碼中的第三方授權註記由建置工具保留。新增外部模型時須另列作者、原始下載來源、授權版本及修改內容，不能沿用原創標示。
