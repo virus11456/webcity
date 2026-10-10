@@ -231,6 +231,9 @@ export class CityRenderer {
     this.extraMaterials.delete(material);
     this.lighting.csm?.shaders.delete(material);
   }
+  get quality(): QualityLevel {
+    return this.stats.quality;
+  }
   /** Apply saved quality without reloading or losing the current city. */
   setQuality(value: QualityLevel | 'auto'): void {
     this.forced = value === 'auto' ? null : value;

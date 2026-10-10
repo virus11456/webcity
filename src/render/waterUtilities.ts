@@ -1,3 +1,4 @@
+import { FIRE_PALETTE } from '../data/palette';
 import type { FacilityAssets } from './facilities/assets';
 import {
   BoxGeometry,
@@ -32,6 +33,11 @@ export class WaterUtilityRenderer {
   readonly group = new Group();
   readonly pipes = new Group();
   private preview = new Group();
+  private readonly records = new Map<number, Building>();
+  private readonly charred = new MeshStandardMaterial({
+    color: FIRE_PALETTE.char,
+    roughness: 0.95,
+  });
   private assets = new Map<number, Group>();
   private networks = new Map<number, NetworkSegment>();
   private underground = false;
@@ -123,6 +129,7 @@ export class WaterUtilityRenderer {
   }
   private plant(b: Building) {
     if (!waterDefinition(b.defId)) return;
+    this.records.set(b.id, structuredClone(b));
     this.remove(b.id);
     const g = new Group(),
       width = b.lotW * CELL_SIZE,
@@ -144,7 +151,7 @@ export class WaterUtilityRenderer {
           this.cylinder(g, 0.7, support, x, -support / 2, z, this.concrete);
       }
     const formal = this.catalog?.request(b, () => {
-      if (this.assets.has(b.id)) this.plant(b);
+      if (this.assets.has(b.id)) this.plant(this.records.get(b.id) ?? b);
     });
     if (formal) g.add(formal);
     else {
@@ -199,6 +206,10 @@ export class WaterUtilityRenderer {
         delta.normalize(),
       );
     }
+    if (b.state === 'burned' || b.fire?.burning)
+      g.traverse((o) => {
+        if (o instanceof Mesh) o.material = this.charred;
+      });
     this.assets.set(b.id, g);
     this.group.add(g);
   }
@@ -259,14 +270,30 @@ export class WaterUtilityRenderer {
   }
   accept(e: SimEvent) {
     if (e.t === 'ready') {
+      this.records.clear();
       for (const id of [...this.assets.keys()]) this.remove(id);
       for (const b of e.snapshot.buildings) this.plant(b);
       this.networks = new Map(e.snapshot.networks.water.map((n) => [n.id, n]));
       this.rebuild();
     }
     if (e.t === 'buildingsChanged') {
-      for (const id of e.removed) this.remove(id);
+      for (const id of e.removed) {
+        this.records.delete(id);
+        this.remove(id);
+      }
       for (const b of e.added) this.plant(b);
+      for (const patch of e.updated) {
+        const old = this.records.get(patch.id);
+        if (!old) continue;
+        const b = { ...old, ...structuredClone(patch) };
+        this.records.set(b.id, b);
+        if (
+          old.state !== b.state ||
+          old.enabled !== b.enabled ||
+          Boolean(old.fire?.burning) !== Boolean(b.fire?.burning)
+        )
+          this.plant(b);
+      }
     }
     if (e.t === 'networksChanged' && e.net === 'water') {
       for (const id of e.removed) this.networks.delete(id);
@@ -311,6 +338,8 @@ export class WaterUtilityRenderer {
     this.preview.add(line);
   }
   dispose() {
+    this.records.clear();
+    this.charred.dispose();
     for (const id of [...this.assets.keys()]) this.remove(id);
     this.clear(this.pipes);
     this.clear(this.preview);

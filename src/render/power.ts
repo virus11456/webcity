@@ -1,3 +1,4 @@
+import { FIRE_PALETTE } from '../data/palette';
 import type { FacilityAssets } from './facilities/assets';
 import { SEA_LEVEL } from '../data/config';
 import {
@@ -30,6 +31,11 @@ import type { NetworkSegment } from '../world/snapshot';
 export class PowerRenderer {
   readonly group = new Group();
   private readonly preview = new Group();
+  private readonly records = new Map<number, Building>();
+  private readonly charred = new MeshStandardMaterial({
+    color: FIRE_PALETTE.char,
+    roughness: 0.95,
+  });
   private readonly assets = new Map<string, Group>();
   private readonly rotors = new Map<
     number,
@@ -118,13 +124,14 @@ export class PowerRenderer {
     const key = `b${b.id}`;
     this.remove(key);
     if (!plantDefinition(b.defId)) return;
+    this.records.set(b.id, structuredClone(b));
     const g = new Group();
     g.position.set(b.pos.x, this.height(b.pos.x, b.pos.z), b.pos.z);
     g.rotation.y = b.rotation;
     const w = b.lotW * 8,
       d = b.lotD * 8;
     const formal = this.catalog?.request(b, () => {
-      if (this.assets.has(key)) this.plant(b);
+      if (this.assets.has(key)) this.plant(this.records.get(b.id) ?? b);
     });
     if (formal) {
       g.add(formal);
@@ -182,6 +189,10 @@ export class PowerRenderer {
       for (let i = 0; i < 4; i++)
         this.box(g, 5, 4, 2, -15 + i * 10, 4, 1, this.dark);
     }
+    if (b.state === 'burned' || b.fire?.burning)
+      g.traverse((o) => {
+        if (o instanceof Mesh) o.material = this.charred;
+      });
     this.assets.set(key, g);
     this.group.add(g);
   }
@@ -222,14 +233,30 @@ export class PowerRenderer {
   }
   accept(e: SimEvent) {
     if (e.t === 'ready') {
+      this.records.clear();
       this.seed = e.snapshot.seed;
       for (const key of [...this.assets.keys()]) this.remove(key);
       for (const b of e.snapshot.buildings) this.plant(b);
       for (const n of e.snapshot.networks.power) this.line(n);
     }
     if (e.t === 'buildingsChanged') {
-      for (const id of e.removed) this.remove(`b${id}`);
+      for (const id of e.removed) {
+        this.records.delete(id);
+        this.remove(`b${id}`);
+      }
       for (const b of e.added) this.plant(b);
+      for (const patch of e.updated) {
+        const old = this.records.get(patch.id);
+        if (!old) continue;
+        const b = { ...old, ...structuredClone(patch) };
+        this.records.set(b.id, b);
+        if (
+          old.state !== b.state ||
+          old.enabled !== b.enabled ||
+          Boolean(old.fire?.burning) !== Boolean(b.fire?.burning)
+        )
+          this.plant(b);
+      }
     }
     if (e.t === 'networksChanged' && e.net === 'power') {
       for (const id of e.removed) this.remove(`n${id}`);
@@ -330,6 +357,8 @@ export class PowerRenderer {
       r.group.rotation.z += Math.min(seconds, 0.1) * r.speed;
   }
   dispose() {
+    this.records.clear();
+    this.charred.dispose();
     for (const key of [...this.assets.keys()]) this.remove(key);
     this.show(null);
     this.group.removeFromParent();

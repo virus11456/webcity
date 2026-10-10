@@ -31,10 +31,17 @@ export class ConstructionBuilding {
   private readonly scaffold: LineSegments<BufferGeometry, LineBasicMaterial>;
   private readonly site = new Group();
   private readonly crane = new Group();
+  private readonly craneSite = new Group();
   private readonly structurePlane = new Plane(new Vector3(0, -1, 0), 0);
   private readonly facadePlane = new Plane(new Vector3(0, -1, 0), 0);
   readonly height: number;
   private progress = 1;
+  private effects = true;
+  setEffects(enabled: boolean): void {
+    this.effects = enabled;
+    this.scaffold.visible = enabled && this.visual.scaffolding;
+    this.craneSite.visible = enabled;
+  }
   private readonly visual = constructionVisual(1);
   private readonly ownedGeometries: BufferGeometry[] = [];
   private readonly ownedMaterials: (
@@ -175,9 +182,10 @@ export class ConstructionBuilding {
       };
       const h = this.height + 5,
         cx = width / 2 + 1;
-      add(0.6, h, 0.6, cx, h / 2, centerZ, this.site);
+      add(0.6, h, 0.6, cx, h / 2, centerZ, this.craneSite);
       this.crane.position.set(cx, h, centerZ);
-      this.site.add(this.crane);
+      this.craneSite.add(this.crane);
+      this.site.add(this.craneSite);
       add(width * 1.15, 0.5, 0.5, -width * 0.3, 0, 0, this.crane);
       add(1.5, 1, 1, width * 0.2, -0.5, 0, this.crane);
       add(0.06, 4, 0.06, -width * 0.75, -2, 0, this.crane);
@@ -196,7 +204,7 @@ export class ConstructionBuilding {
       baseY + this.height * s.facade + (s.progress === 1 ? 1 : 0);
     this.completed.visible = s.facade > 0;
     this.frame.visible = s.progress > 0 && s.progress < 1;
-    this.scaffold.visible = s.scaffolding;
+    this.scaffold.visible = this.effects && s.scaffolding;
     this.site.visible = s.progress < 1;
     // The completed facade sits on the gray frame; polygon offset prevents coplanar flicker.
     this.completed.material.polygonOffset = s.progress < 1;
@@ -207,7 +215,7 @@ export class ConstructionBuilding {
     this.completed.material.emissiveIntensity = night ? 1.4 : 0;
   }
   update(seconds: number): void {
-    if (this.progress > 0 && this.progress < 1)
+    if (this.effects && this.progress > 0 && this.progress < 1)
       this.crane.rotation.y += seconds * 0.2;
   }
   readState() {

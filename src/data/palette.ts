@@ -203,3 +203,5 @@ export const DAY_NIGHT_PALETTE = {
   ],
   streetlight: '#FFC870',
 } as const;
+
+export const EFFECT_PALETTE = { smoke: '#D1D0CA', upgrade: '#8EDCFF' } as const;

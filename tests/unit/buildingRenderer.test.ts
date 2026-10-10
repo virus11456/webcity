@@ -341,3 +341,29 @@ it('prioritizes the inspected construction inside the four-model detail budget',
   expect(s.renderer.readStats().detail).toBeLessThanOrEqual(4);
   s.dispose();
 });
+
+it('disables decorative building effects while keeping construction state and removing demolished objects immediately', () => {
+  const { renderer, settle, dispose } = setup(),
+    b = {
+      ...districtFixture(1)[0]!,
+      state: 'construction' as const,
+      stateTimer: 1.5,
+    };
+  renderer.setEffects(false);
+  renderer.reset([b]);
+  settle();
+  expect(renderer.readStats()).toMatchObject({
+    effects: false,
+    dust: 0,
+    construction: 1,
+  });
+  renderer.accept({
+    t: 'buildingsChanged',
+    added: [],
+    updated: [],
+    removed: [b.id],
+  });
+  settle(1);
+  expect(renderer.readStats().buildings).toBe(0);
+  dispose();
+});

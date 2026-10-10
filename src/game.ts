@@ -1,3 +1,4 @@
+import { CityEffects } from './render/effects';
 import { FacilityAssets } from './render/facilities/assets';
 import { CatalogAssets } from './render/buildings/catalogAssets';
 import { FollowCamera } from './render/followCamera';
@@ -11,7 +12,7 @@ import { ServiceRenderer } from './render/services';
 import { ServiceTool } from './tools/serviceTool';
 import { createServiceControls } from './ui/serviceControls';
 import { VehicleRenderer } from './render/vehicles';
-import { TIME } from './data/config';
+import { TIME, type QualityLevel } from './data/config';
 import { readPreferences } from './ui/preferences';
 import { createPauseMenu } from './ui/screens/PauseMenu';
 import { startup } from './bootstrap';
@@ -68,6 +69,8 @@ declare global {
     __webcityProblemIcons?: () => ReturnType<ProblemIcons['readStats']>;
     __webcityFacilityStats?: () => ReturnType<FacilityAssets['readStats']> &
       ReturnType<PowerRenderer['readStats']>;
+    __webcityEffects?: () => ReturnType<CityEffects['readStats']> &
+      ReturnType<FireRenderer['readStats']>;
     __webcityBuildingStats?: () => ReturnType<BuildingRenderer['readStats']>;
     __webcityCamera?: RtsCamera;
     __webcityVehicles?: {
@@ -144,6 +147,8 @@ let city: CityRenderer | undefined;
 let buildings: BuildingRenderer | undefined;
 let catalogAssets: CatalogAssets | undefined;
 let fireRenderer: FireRenderer | undefined;
+let cityEffects: CityEffects | undefined;
+let effectsQuality: QualityLevel | undefined;
 let problemIcons: ProblemIcons | undefined;
 let vehicles: VehicleRenderer | undefined;
 let frameSeconds = 0;
@@ -210,6 +215,14 @@ if (canvas && status) {
       onBeforeFrame: (seconds) => {
         frameSeconds = seconds;
         if (city) {
+          if (effectsQuality !== city.quality) {
+            effectsQuality = city.quality;
+            const enabled = city.quality !== 'low';
+            buildings?.setEffects(enabled);
+            fireRenderer?.setEnabled(enabled);
+            problemIcons?.setMotion(enabled);
+            cityEffects?.setQuality(city.quality);
+          }
           buildings?.setHour(city.dayNight.hour.value);
           if (facilityAssets)
             facilityAssets.hour.value = city.dayNight.hour.value;
@@ -234,7 +247,10 @@ if (canvas && status) {
           );
         infoOverlays?.update(frameSeconds);
         powerRenderer?.update(frameSeconds);
-        if (city) fireRenderer?.update(frameSeconds, city.camera);
+        if (city) {
+          fireRenderer?.update(frameSeconds, city.camera);
+          cityEffects?.update(frameSeconds, city.camera);
+        }
         if (city) vehicles?.update(frameSeconds, city.camera);
       },
       onContextState(lost) {
@@ -304,9 +320,19 @@ if (canvas && status) {
         (x, z) => city!.terrain.heightAt(x, z),
       );
       problemIcons.reset(sim.mirror.readBuildings());
-      fireRenderer = new FireRenderer(city.scene, (x, z) =>
-        city!.terrain.heightAt(x, z),
+      fireRenderer = new FireRenderer(
+        city.scene,
+        (x, z) => city!.terrain.heightAt(x, z),
+        (id, out) => buildings!.roof(id, out),
       );
+      cityEffects = new CityEffects(
+        city.scene,
+        (id, out) => buildings!.smokeAnchor(id, out),
+        (x, z) => city!.terrain.heightAt(x, z),
+      );
+      cityEffects.reset(sim.mirror.readBuildings());
+      cityEffects.group.visible = false;
+      effectsQuality = undefined;
       fireRenderer.reset(sim.mirror.readBuildings());
       fireRenderer.group.visible = false;
       problemIcons.group.visible = false;
@@ -330,6 +356,7 @@ if (canvas && status) {
         buildings!.accept(event);
         problemIcons!.accept(event);
         fireRenderer!.accept(event);
+        cityEffects!.accept(event);
       });
       const picker = new TerrainPicker(city.terrain);
       roadPreview = new RoadPreviewRenderer(city.scene);
@@ -545,6 +572,7 @@ if (canvas && status) {
         buildings!.group.visible = construction;
         problemIcons!.group.visible = construction;
         fireRenderer!.group.visible = construction;
+        cityEffects!.group.visible = construction;
         vehicles!.group.visible = construction;
         powerRenderer!.group.visible = construction;
         waterUtilities!.group.visible = construction;
@@ -746,6 +774,10 @@ if (canvas && status) {
         ...facilityAssets!.readStats(),
         ...powerRenderer!.readStats(),
       });
+      window.__webcityEffects = () => ({
+        ...cityEffects!.readStats(),
+        ...fireRenderer!.readStats(),
+      });
       window.__webcityBuildingStats = () => buildings!.readStats();
       window.__webcityVegetation = () => city!.vegetation.readStats();
       window.__webcityRoadStats = () => roadPreview!.roads.readStats();
@@ -760,6 +792,7 @@ if (import.meta.hot)
     delete window.__webcityProblemIcons;
     delete window.__webcityFacilityStats;
     delete window.__webcityBuildingStats;
+    delete window.__webcityEffects;
     delete window.__webcityBuildings;
     delete window.__webcityStats;
     delete window.__webcityCamera;
@@ -813,6 +846,7 @@ if (import.meta.hot)
     unsubscribeBuildings?.();
     problemIcons?.dispose();
     fireRenderer?.dispose();
+    cityEffects?.dispose();
     buildings?.dispose();
     catalogAssets?.dispose();
     catalogAssets = undefined;

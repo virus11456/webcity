@@ -1,0 +1,21 @@
+/** ART §9. These limits affect visuals only. */
+export const CITY_EFFECTS = {
+  maxEmitters: 64,
+  smokePerEmitter: { low: 0, medium: 16, high: 40 },
+  smokeLifeSeconds: 6,
+  smokeRiseM: 22,
+  windXM: 9,
+  windZM: 4,
+  smokeRadiusM: 4,
+  cullM: 1200,
+  fallbackStackM: 28.2,
+  industrialInsetM: 1.6,
+  industrialStackFraction: 0.39,
+  industrialBackInsetM: 2,
+  plantStackXFraction: -0.25,
+  plantStackZFraction: -0.85,
+  haloSeconds: 0.8,
+  maxHalos: 128,
+  haloRiseM: 18,
+  haloWidthM: 0.6,
+} as const;
