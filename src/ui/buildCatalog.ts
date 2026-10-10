@@ -3,9 +3,10 @@ import { ROADS, type RoadTypeId } from '../data/roads';
 import { GROWTH, ZONES } from '../data/zones';
 import { t } from './i18n/t';
 
-type Category = 'road' | 'zone' | 'power' | 'water';
+type Category = 'road' | 'zone' | 'power' | 'water' | 'service';
 const money = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 2 });
 const paths: Record<Category, string> = {
+  service: 'M3 21h18M5 21V8l7-5 7 5v13M9 21v-7h6v7M12 6v5m-2-3h4',
   road: 'M6 3 3 21M18 3l3 18M12 3v4m0 3v4m0 3v4',
   zone: 'm3 11 9-8 9 8M5 10v11h14V10M10 21v-7h4v7',
   power: 'm13 2-9 12h7l-1 8 10-13h-7z',

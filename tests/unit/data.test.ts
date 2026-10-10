@@ -245,13 +245,13 @@ it('world dimensions, samples, device limits and speeds are consistent', () => {
     300, 1000, 3000,
   ]);
 });
-it('does not invent unspecified hydro output, footprints or track upkeep', () => {
+it('keeps unspecified hydro output and track upkeep while using documented civic footprints', () => {
   expect(
     BUILDINGS.find((building) => building.id === 'power_hydro')?.power.maxMW,
   ).toBeNull();
   expect(
     BUILDINGS.find((building) => building.id === 'clinic')?.footprintCells,
-  ).toBeNull();
+  ).toEqual([3, 3]);
   expect(
     NETWORKS.find((network) => network.id === 'metro_track')?.upkeepPer8MWeek,
   ).toBeNull();

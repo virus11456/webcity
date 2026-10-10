@@ -194,6 +194,7 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
         (b.frontageSetbackM >= 0 &&
           b.frontageSetbackM <=
             Math.max(...Object.values(ROADS).map((r) => r.widthM)) / 2)) &&
+        (b.enabled === undefined || typeof b.enabled === 'boolean') &&
         point(b.pos) &&
         typeof b.defId === 'string' &&
         ['construction', 'active', 'abandoned', 'burned'].includes(b.state) &&
@@ -204,6 +205,26 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     );
     for (const key of Object.keys(PROBLEMS) as (keyof typeof PROBLEMS)[])
       requireValue(typeof b.problemTimers?.[key] === 'number');
+    if (b.coverage)
+      for (const [key, value] of Object.entries(b.coverage))
+        requireValue(
+          (SERVICE_TYPES as readonly string[]).includes(key) &&
+            typeof value === 'number' &&
+            Number.isFinite(value) &&
+            value >= 0 &&
+            value <= 1,
+        );
+    if (b.serviceStatus)
+      requireValue(
+        ['radius', 'capacity', 'demand', 'efficiency'].every((key) => {
+          const value = b.serviceStatus![key as 'radius'];
+          return (
+            typeof value === 'number' && Number.isFinite(value) && value >= 0
+          );
+        }) &&
+          b.serviceStatus.efficiency <= 1 &&
+          typeof b.serviceStatus.connected === 'boolean',
+      );
     if (b.housing)
       requireValue(
         Array.isArray(b.housing.sizes) &&

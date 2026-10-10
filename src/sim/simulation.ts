@@ -1,3 +1,5 @@
+import { ServiceSystem } from './systems/services';
+import { serviceDefinition, previewService } from '../world/services';
 import { CargoSystem } from './systems/cargo';
 import { TrafficSystem } from './systems/traffic';
 import { RoutePlanner } from './systems/routePlanner';
@@ -73,12 +75,14 @@ export class Simulation {
   readonly schedules: ScheduleSystem;
   readonly routePlanner: RoutePlanner;
   readonly traffic: TrafficSystem;
+  readonly services: ServiceSystem;
   readonly cargo: CargoSystem;
   private emit(event: SimEvent): void {
     if (event.t === 'roadsChanged') {
       this.laneGraph.sync(this.state.nodes, this.state.segments);
       this.traffic?.networkChanged();
       this.cargo?.networkChanged();
+      this.services?.networkChanged();
     }
     this.sink(event);
   }
@@ -119,10 +123,13 @@ export class Simulation {
       this.routePlanner,
       this.traffic,
     );
+    this.services = new ServiceSystem(this.state);
+    this.services.update();
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
       const power = [...updatePower(this.state), ...updateWater(this.state)];
       this.cargo.daily();
+      const servicePatches = this.services.update();
       const problems = updateProblems(this.state);
       const reconciliation = problems.some(
         (p) => p.state === 'abandoned' && p.stateTimer === 0,
@@ -132,12 +139,14 @@ export class Simulation {
             ...updatePower(this.state),
             ...updateWater(this.state),
             ...updateProblems(this.state),
+            ...this.services.update(),
           ]
         : [];
       updateDemand(this.state);
       const updates = new Map<number, BuildingPatch>();
       for (const p of [
         ...population,
+        ...servicePatches,
         ...power,
         ...this.cargo.patches(),
         ...problems,
@@ -242,6 +251,7 @@ export class Simulation {
   private refreshPower(): void {
     this.cargo.reconcile();
     const patches = [
+      ...this.services.update(),
       ...this.cargo.patches(),
       ...updatePower(this.state),
       ...updateWater(this.state),
@@ -253,6 +263,7 @@ export class Simulation {
         ...updatePower(this.state),
         ...updateWater(this.state),
         ...updateProblems(this.state),
+        ...this.services.update(),
       );
     const merged = new Map<number, BuildingPatch>();
     for (const p of patches) merged.set(p.id, { ...merged.get(p.id), ...p });
@@ -275,10 +286,21 @@ export class Simulation {
     pos: Vec2,
     rotation: number,
   ): Omit<Result, 't' | 'reqId'> {
-    const d = waterDefinition(defId) ?? plantDefinition(defId),
+    const d =
+        serviceDefinition(defId) ??
+        waterDefinition(defId) ??
+        plantDefinition(defId),
       preview = waterDefinition(defId)
         ? previewWaterFacility(this.powerWorld(), defId, pos, rotation)
-        : previewPlant(this.powerWorld(), defId, pos, rotation);
+        : serviceDefinition(defId)
+          ? previewService(
+              this.powerWorld(),
+              defId,
+              pos,
+              rotation,
+              this.state.budgets[serviceDefinition(defId)!.service!],
+            )
+          : previewPlant(this.powerWorld(), defId, pos, rotation);
     if (!preview.valid || !d || !d.footprintCells)
       return { ok: false, reason: preview.reason ?? 'err.invalidCommand' };
     const charge = chargeConstruction(this.state, preview.cost);
@@ -287,7 +309,7 @@ export class Simulation {
       id = s.nextId++;
     const b: Building = {
       id,
-      kind: 'utility',
+      kind: d.kind,
       defId,
       level: 1,
       pos: { ...pos },
@@ -335,6 +357,25 @@ export class Simulation {
     this.emit({ t: 'fundsChanged', money: s.money });
     this.refreshPower();
     return { ok: true, cost: preview.cost };
+  }
+  setBuildingEnabled(
+    id: number,
+    enabled: boolean,
+  ): Omit<Result, 't' | 'reqId'> {
+    if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
+    const b = this.state.buildings.find((b) => b.id === id);
+    if (!b || !serviceDefinition(b.defId) || typeof enabled !== 'boolean')
+      return { ok: false, reason: 'err.invalidCommand' };
+    b.enabled = enabled;
+    this.emit({
+      t: 'buildingsChanged',
+      added: [],
+      removed: [],
+      updated: [{ id, enabled }],
+    });
+    this.refreshPower();
+    this.emit({ t: 'economy', finance: financeView(this.state) });
+    return { ok: true, cost: 0 };
   }
   buildPowerLine(points: Vec2[]): Omit<Result, 't' | 'reqId'> {
     const p = previewLine(this.powerWorld(), points);

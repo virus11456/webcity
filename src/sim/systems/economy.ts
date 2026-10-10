@@ -94,7 +94,7 @@ export function weeklyAccounts(s: SimState) {
           : d.water
             ? 'water'
             : (d.service ?? 'parks');
-      upkeep[dept] += d.upkeepPerWeek;
+      if (b.enabled !== false) upkeep[dept] += d.upkeepPerWeek;
     }
   }
   for (const r of s.segments.filter((road) => !road.regional))

@@ -16,6 +16,7 @@ const futureCommands = new Set([
   'save',
   'upgradeRoad',
   'place',
+  'setBuildingEnabled',
   'buildNetwork',
   'buildRoadPipes',
   'undo',
@@ -236,6 +237,22 @@ export class CommandDispatcher {
         return;
       }
       this.emit({ t: 'result', reqId, ...this.simulation.finance(command) });
+    } else if (value.t === 'setBuildingEnabled') {
+      if (
+        !('id' in value) ||
+        typeof value.id !== 'number' ||
+        !Number.isSafeInteger(value.id) ||
+        !('enabled' in value) ||
+        typeof value.enabled !== 'boolean'
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.setBuildingEnabled(value.id, value.enabled),
+      });
     } else if (value.t === 'place') {
       if (
         !('defId' in value) ||
