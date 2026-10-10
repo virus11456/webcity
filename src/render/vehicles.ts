@@ -1,3 +1,9 @@
+import { VEHICLE_MODELS } from '../data/vehicleModels';
+import { vehicleModelIndex } from '../world/vehicleModels';
+import { formalVehicleGeometry } from './vehicleModels/geometry';
+import { vehicleLods } from './vehicleModels/load';
+import { AssetLibrary } from './assets';
+import { ShaderChunk, type WebGLRenderer } from 'three';
 import {
   BoxGeometry,
   BufferGeometry,
@@ -53,6 +59,8 @@ export function vehicleColor(id: number, kind: number): string {
   if (kind === TrafficKind.police) return SERVICE_PALETTE.police;
   if (kind === TrafficKind.fire) return SERVICE_PALETTE.fire;
   if (kind === TrafficKind.ambulance) return SERVICE_PALETTE.health;
+  if (kind === TrafficKind.garbage) return P.paint[5];
+  if (kind === TrafficKind.hearse) return P.paint[1];
   let roll = (Math.imul(id, 2654435761) >>> 0) % 100;
   for (let i = 0; i < C.weights.length; i++) {
     roll -= C.weights[i]!;
@@ -159,20 +167,42 @@ export class VehicleRenderer {
   private readonly scale = new Vector3(1, 1, 1);
   private readonly up = new Vector3(0, 1, 0);
   private readonly projection = new Vector3();
-  private readonly counts = new Uint16Array(18);
+  private readonly counts = new Uint16Array(34);
+  private library?: AssetLibrary;
+  private disposed = false;
+  private loaded = 0;
   constructor(
     private readonly scene: Scene,
-    register?: (m: Material) => void,
-    private readonly unregister?: (m: Material) => void,
+    register?: (
+      m: Material,
+      install?: (previous?: Material['onBeforeCompile']) => void,
+    ) => void,
+    private readonly unregister?: (
+      m: Material,
+      install?: (previous?: Material['onBeforeCompile']) => void,
+    ) => void,
+    renderer?: WebGLRenderer,
   ) {
     this.group.name = 'citizen-traffic';
-    for (let kind = 0; kind <= TrafficKind.pedestrian; kind++)
+    for (let model = 0; model <= VEHICLE_MODELS.length; model++)
       for (let lod = 0; lod < 2; lod++) {
         const mesh = new InstancedMesh(
-          vehicleGeometry(kind, !!lod),
+          model < VEHICLE_MODELS.length
+            ? formalVehicleGeometry(VEHICLE_MODELS[model]!, lod as 0 | 1)
+            : vehicleGeometry(TrafficKind.pedestrian, !!lod),
           this.material,
           C.capacity,
         );
+        if (!mesh.geometry.getAttribute('_paint'))
+          mesh.geometry.setAttribute(
+            '_paint',
+            new Float32BufferAttribute(
+              new Float32Array(
+                mesh.geometry.getAttribute('position').count,
+              ).fill(1),
+              1,
+            ),
+          );
         mesh.setColorAt(0, new Color(P.paint[0]));
         mesh.instanceMatrix.setUsage(DynamicDrawUsage);
         mesh.count = 0;
@@ -184,7 +214,42 @@ export class VehicleRenderer {
       }
     this.group.add(this.frontGlow.mesh, this.rearGlow.mesh);
     scene.add(this.group);
-    register?.(this.material);
+    const install = (previous?: Material['onBeforeCompile']) => {
+      this.material.onBeforeCompile = (shader, renderer) => {
+        previous?.call(this.material, shader, renderer);
+        shader.vertexShader =
+          'attribute float _paint;\n' +
+          shader.vertexShader.replace(
+            '#include <color_vertex>',
+            ShaderChunk.color_vertex.replace(
+              'vColor.rgb *= instanceColor.rgb;',
+              'vColor.rgb *= mix(vec3(1.0), instanceColor.rgb, _paint);',
+            ),
+          );
+      };
+      this.material.customProgramCacheKey = () => 'vehicle-paint-mask-v1';
+    };
+    if (register) register(this.material, install);
+    else install();
+    if (renderer) {
+      this.library = new AssetLibrary(renderer);
+      VEHICLE_MODELS.forEach((model, index) => {
+        void this.library!.load(model.id)
+          .then((root) => {
+            if (this.disposed) return;
+            const geometries = vehicleLods(root);
+            geometries.forEach((g, lod) => {
+              const mesh = this.meshes[index * 2 + lod]!;
+              mesh.geometry.dispose();
+              mesh.geometry = g;
+            });
+            this.loaded++;
+          })
+          .catch(() => {
+            /* Authored fallback keeps traffic visible offline. */
+          });
+      });
+    }
   }
   accept(event: SimEvent): void {
     if (event.t === 'ready') {
@@ -280,7 +345,9 @@ export class VehicleRenderer {
         a.kind === TrafficKind.pedestrian ? C.pedestrianCullM : C.cullM;
       a.visible = distance < limit * limit;
       if (!a.visible) continue;
-      const meshId = a.kind * 2 + (distance > C.lodM * C.lodM ? 1 : 0),
+      const meshId =
+          vehicleModelIndex(a.citizenId, a.kind) * 2 +
+          (distance > C.lodM * C.lodM ? 1 : 0),
         mesh = this.meshes[meshId]!,
         index = this.counts[meshId]!;
       this.position.set(a.x, a.y + C.roadLiftM, a.z);
@@ -297,7 +364,9 @@ export class VehicleRenderer {
         const size =
           a.kind === TrafficKind.bus
             ? C.bus
-            : a.kind === TrafficKind.truck || a.kind === TrafficKind.garbage
+            : a.kind === TrafficKind.truck ||
+                a.kind === TrafficKind.garbage ||
+                a.kind === TrafficKind.fire
               ? C.truck
               : C.car;
         const sin = Math.sin(a.yaw),
@@ -408,6 +477,7 @@ export class VehicleRenderer {
   }
   stats() {
     return {
+      modelsLoaded: this.loaded,
       agents: this.agents.size,
       lightPairs: this.frontGlow.mesh.count,
       visible: this.counts.reduce((a, b) => a + b, 0),
@@ -422,6 +492,8 @@ export class VehicleRenderer {
     this.frontGlow.mesh.count = this.rearGlow.mesh.count = 0;
   }
   dispose(): void {
+    this.disposed = true;
+    this.library?.dispose();
     this.scene.remove(this.group);
     for (const m of this.meshes) {
       m.geometry.dispose();

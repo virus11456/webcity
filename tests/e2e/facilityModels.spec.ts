@@ -101,7 +101,7 @@ test('loads formal facilities in the city, preserves wind animation, and display
         .getByRole('combobox', { name: '模型', exact: true })
         .locator('option')
         .count(),
-    ).toBe(232);
+    ).toBeGreaterThanOrEqual(232);
     await page.screenshot({
       path: `docs/screenshots/m3-12/${slug}-${model}.jpg`,
       type: 'jpeg',

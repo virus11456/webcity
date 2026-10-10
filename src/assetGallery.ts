@@ -14,6 +14,8 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { AssetLibrary } from './render/assets';
+import { VEHICLE_MODELS } from './data/vehicleModels';
+import { vehicleColor } from './render/vehicles';
 import { BUILDING_DETAIL_PALETTE as P, LIGHT_PALETTE } from './data/palette';
 import { LIGHTING } from './data/rendering';
 import { t } from './ui/i18n/t';
@@ -74,6 +76,7 @@ export function startAssetGallery(root: HTMLElement): void {
         .copy(center)
         .add(new Vector3(0.9, 0.7, 1).normalize().multiplyScalar(distance));
       camera.far = Math.max(200, size * 10);
+      controls.minDistance = Math.max(1, size * 0.3);
       controls.maxDistance = Math.max(80, size * 5);
       camera.updateProjectionMatrix();
       controls.update();
@@ -120,8 +123,22 @@ export function startAssetGallery(root: HTMLElement): void {
       model?.removeFromParent();
       model = replacement;
       scene.add(model);
+      const vehicle = VEHICLE_MODELS.find((v) => v.id === selected);
+      const paint = vehicle
+        ? new Color(vehicleColor(100, vehicle.kind))
+        : undefined;
       model.traverse((node) => {
         if (/^(LOD|Rotor)[12]$/.test(node.name)) node.visible = false;
+        if (paint && node instanceof Mesh) {
+          const colors = node.geometry.getAttribute('color'),
+            mask = node.geometry.getAttribute('_paint');
+          if (colors && mask) {
+            for (let i = 0; i < colors.count; i++)
+              if (mask.getX(i) > 0.5)
+                colors.setXYZ(i, paint.r, paint.g, paint.b);
+            colors.needsUpdate = true;
+          }
+        }
       });
       resetCamera();
       let triangles = 0,

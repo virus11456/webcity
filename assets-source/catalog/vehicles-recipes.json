@@ -1,0 +1,130 @@
+[
+  {
+    "id": "veh_car_1",
+    "kind": 0,
+    "variant": 0,
+    "triangles": [212, 36],
+    "url": "models/veh_car_1.20a2f818e099.glb",
+    "bytes": 7552
+  },
+  {
+    "id": "veh_car_2",
+    "kind": 0,
+    "variant": 1,
+    "triangles": [212, 36],
+    "url": "models/veh_car_2.d0a891a252d7.glb",
+    "bytes": 7548
+  },
+  {
+    "id": "veh_car_3",
+    "kind": 0,
+    "variant": 2,
+    "triangles": [224, 36],
+    "url": "models/veh_car_3.0e68a6bd52d2.glb",
+    "bytes": 7740
+  },
+  {
+    "id": "veh_car_4",
+    "kind": 0,
+    "variant": 3,
+    "triangles": [212, 36],
+    "url": "models/veh_car_4.344b5c563801.glb",
+    "bytes": 7556
+  },
+  {
+    "id": "veh_car_5",
+    "kind": 0,
+    "variant": 4,
+    "triangles": [212, 36],
+    "url": "models/veh_car_5.760c994af0d4.glb",
+    "bytes": 7556
+  },
+  {
+    "id": "veh_car_6",
+    "kind": 0,
+    "variant": 5,
+    "triangles": [224, 36],
+    "url": "models/veh_car_6.5391c0e9f71d.glb",
+    "bytes": 7732
+  },
+  {
+    "id": "veh_truck_1",
+    "kind": 1,
+    "variant": 0,
+    "triangles": [224, 48],
+    "url": "models/veh_truck_1.d0dc677bcc19.glb",
+    "bytes": 7524
+  },
+  {
+    "id": "veh_truck_2",
+    "kind": 1,
+    "variant": 1,
+    "triangles": [224, 48],
+    "url": "models/veh_truck_2.eb6eca918794.glb",
+    "bytes": 7540
+  },
+  {
+    "id": "veh_truck_3",
+    "kind": 1,
+    "variant": 2,
+    "triangles": [260, 60],
+    "url": "models/veh_truck_3.96b9a39ac404.glb",
+    "bytes": 7928
+  },
+  {
+    "id": "veh_bus_1",
+    "kind": 2,
+    "variant": 0,
+    "triangles": [284, 36],
+    "url": "models/veh_bus_1.799e411006b3.glb",
+    "bytes": 8152
+  },
+  {
+    "id": "veh_police_1",
+    "kind": 3,
+    "variant": 0,
+    "triangles": [224, 36],
+    "url": "models/veh_police_1.08d4eca68fea.glb",
+    "bytes": 7740
+  },
+  {
+    "id": "veh_fire_1",
+    "kind": 4,
+    "variant": 0,
+    "triangles": [272, 48],
+    "url": "models/veh_fire_1.2867948894be.glb",
+    "bytes": 8200
+  },
+  {
+    "id": "veh_ambulance_1",
+    "kind": 5,
+    "variant": 0,
+    "triangles": [272, 36],
+    "url": "models/veh_ambulance_1.3296791a5899.glb",
+    "bytes": 8320
+  },
+  {
+    "id": "veh_garbage_1",
+    "kind": 6,
+    "variant": 0,
+    "triangles": [236, 60],
+    "url": "models/veh_garbage_1.7da69c7282e4.glb",
+    "bytes": 7956
+  },
+  {
+    "id": "veh_hearse_1",
+    "kind": 7,
+    "variant": 0,
+    "triangles": [224, 36],
+    "url": "models/veh_hearse_1.30d350f45922.glb",
+    "bytes": 7740
+  },
+  {
+    "id": "veh_metro_1",
+    "kind": 9,
+    "variant": 0,
+    "triangles": [284, 36],
+    "url": "models/veh_metro_1.00f3591b4611.glb",
+    "bytes": 8200
+  }
+]
