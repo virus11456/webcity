@@ -10,6 +10,9 @@ import {
   MeshStandardMaterial,
   Object3D,
 } from 'three';
+import { LightGlows } from './lightGlows';
+import { DAY_NIGHT } from '../data/dayNight';
+import { DAY_NIGHT_PALETTE } from '../data/palette';
 import { Rng } from '../core/rng';
 import { SEA_LEVEL } from '../data/config';
 import { CITY_PREVIEW } from '../data/terrain';
@@ -38,12 +41,23 @@ export class CityPreview {
     roughness: 0.28,
     metalness: 0.2,
   });
+  readonly lamps = new MeshStandardMaterial({
+    color: R.lane_white,
+    emissive: DAY_NIGHT_PALETTE.streetlight,
+    emissiveIntensity: 0,
+  });
+  private readonly lampGlows: LightGlows;
+  setNight(value: number): void {
+    this.lamps.emissiveIntensity = value * DAY_NIGHT.windowIntensity;
+    this.lampGlows.setNight(value);
+  }
   readonly buildingCount: number;
   private readonly meshes: InstancedMesh[] = [];
   constructor(terrain: Terrain) {
     const rng = new Rng(CITY_PREVIEW.seed),
       blocks: Part[] = [],
       windows: Part[] = [],
+      lamps: Part[] = [],
       roofs: Part[] = [],
       crowns: Part[] = [],
       trunks: Part[] = [];
@@ -161,7 +175,7 @@ export class CityPreview {
         tree(x + 17, z + 17);
         tree(x - 17, z - 17);
         box(blocks, x + 12, y, z - 17, 0.5, 8, 0.5, B.RH.accents[0]);
-        box(blocks, x + 11, y + 7.5, z - 17, 3, 0.5, 1, B.RL.accents[0]);
+        box(lamps, x + 11, y + 7.5, z - 17, 3, 0.5, 1, B.RL.accents[0]);
       }
     for (let ix = 0; ix < CITY_PREVIEW.streetX.length - 1; ix++)
       for (let iz = 0; iz < CITY_PREVIEW.streetZ.length - 1; iz++) {
@@ -336,6 +350,23 @@ export class CityPreview {
         );
         box(windows, x, y + 2.1, z + 5, 2.1, 0.6, 1.7, B.office.walls[2]);
       }
+    this.lampGlows = new LightGlows(
+      lamps.length,
+      DAY_NIGHT_PALETTE.streetlight,
+      DAY_NIGHT.lampRadiusM * 2,
+      false,
+      DAY_NIGHT.lampOpacity,
+    );
+    const lampPose = new Object3D();
+    lamps.forEach((p, i) => {
+      lampPose.position.set(p.x, p.y - 7.2, p.z);
+      lampPose.updateMatrix();
+      this.lampGlows.mesh.setMatrixAt(i, lampPose.matrix);
+    });
+    this.lampGlows.mesh.count = lamps.length;
+    this.lampGlows.mesh.instanceMatrix.needsUpdate = true;
+    this.group.add(this.lampGlows.mesh);
+    this.batch(lamps, new BoxGeometry(1, 1, 1), this.lamps);
     this.buildingCount = count;
     this.batch(blocks, new BoxGeometry(1, 1, 1), this.material);
     this.batch(windows, new BoxGeometry(1, 1, 1), this.glass);
@@ -374,6 +405,8 @@ export class CityPreview {
     }
     this.material.dispose();
     this.glass.dispose();
+    this.lamps.dispose();
+    this.lampGlows.dispose();
     this.group.clear();
   }
 }

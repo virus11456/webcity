@@ -9,6 +9,7 @@ import {
 import { CSM } from 'three/examples/jsm/csm/CSM.js';
 import { QUALITY, type QualityLevel } from '../data/config';
 import { LIGHT_PALETTE } from '../data/palette';
+import type { DayNight } from './dayNight';
 import { LIGHTING } from '../data/rendering';
 
 /** Own daylight and tier-specific shadows; dispose before switching tiers. */
@@ -81,6 +82,20 @@ export class Lighting {
       this.sun.shadow.normalBias = LIGHTING.shadowNormalBias;
       scene.add(this.sun, this.sun.target);
     }
+  }
+  /** Apply ART keyframe colors to the active tier without replacing lights. */
+  setEnvironment(day: DayNight): void {
+    this.hemisphere.intensity = day.ambientIntensity;
+    this.hemisphere.color.set(LIGHT_PALETTE.sky);
+    if (this.sun) {
+      this.sun.color.copy(day.sun);
+      this.sun.intensity = day.sunIntensity;
+    }
+    if (this.csm)
+      for (const light of this.csm.lights) {
+        light.color.copy(day.sun);
+        light.intensity = day.sunIntensity;
+      }
   }
   /** Follow the camera focus without allocating vectors per frame. */
   update(focus: Vector3): void {

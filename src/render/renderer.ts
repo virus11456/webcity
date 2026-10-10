@@ -1,4 +1,9 @@
 import type { SimEvent } from '../bridge/protocol';
+import { DayNight } from './dayNight';
+import { installNightWindows } from './nightWindows';
+import { BUILDING_DETAIL_PALETTE } from '../data/palette';
+import { DAY_NIGHT } from '../data/dayNight';
+import type { SimClock } from '../world/snapshot';
 import { WATER_UTILITY } from '../data/waterUtility';
 import {
   ACESFilmicToneMapping,
@@ -39,6 +44,7 @@ export interface RenderStats {
   aspect: number;
   shadows: number;
   fogDensity: number;
+  hour: number;
 }
 export interface RendererOptions {
   seed?: number;
@@ -53,6 +59,7 @@ export interface RendererOptions {
 export class CityRenderer {
   readonly renderer: WebGLRenderer;
   readonly scene = new Scene();
+  readonly dayNight = new DayNight();
   readonly camera = new PerspectiveCamera(
     CAMERA.fovDegrees,
     1,
@@ -129,6 +136,7 @@ export class CityRenderer {
       aspect: 1,
       shadows: 0,
       fogDensity: LIGHTING.fogDensity,
+      hour: 12,
     };
     this.cameraController = new RtsCamera(this.camera, {
       bounds: {
@@ -220,13 +228,21 @@ export class CityRenderer {
     this.stats.shadows =
       level === 'high' ? LIGHTING.cascades : level === 'medium' ? 1 : 0;
     this.canvas.dataset.quality = level;
+    this.town.glass.emissive.set(BUILDING_DETAIL_PALETTE.windowLight);
+    this.town.glass.emissiveIntensity = DAY_NIGHT.windowIntensity;
     const lighting = new Lighting(this.scene, this.camera, level, [
       this.land.material,
       this.town.material,
       this.town.glass,
+      this.town.lamps,
       this.water.material,
       ...this.extraMaterials.keys(),
     ]);
+    installNightWindows(
+      this.town.glass,
+      this.dayNight.hour,
+      lighting.csm ? this.town.glass.onBeforeCompile : undefined,
+    );
     this.land.material.userData.infoRole = 'field';
     this.water.material.userData.infoRole = 'field';
     this.land.installShader(
@@ -291,6 +307,15 @@ export class CityRenderer {
       this.resize();
     }
     const seconds = this.lastFrame === null ? 0 : (now - this.lastFrame) / 1000;
+    this.dayNight.update(seconds);
+    this.stats.hour = this.dayNight.hour.value;
+    this.lighting.setEnvironment(this.dayNight);
+    this.town.setNight(this.dayNight.night);
+    this.sky.material.uniforms.zenith!.value.copy(this.dayNight.zenith);
+    this.sky.material.uniforms.horizon!.value.copy(this.dayNight.horizon);
+    this.sky.material.uniforms.sunColor!.value.copy(this.dayNight.sun);
+    (this.scene.fog as FogExp2).color.copy(this.dayNight.horizon);
+    this.water.setSkyColor(this.dayNight.horizon);
     this.options.onBeforeFrame?.(seconds);
     this.cameraController.update(seconds);
     this.options.onAfterCamera?.();
@@ -320,6 +345,12 @@ export class CityRenderer {
     if (this.canvas.dataset.ready !== 'true')
       this.canvas.dataset.ready = 'true';
   };
+  setDayNight(enabled: boolean): void {
+    this.dayNight.enabled = enabled;
+  }
+  acceptClock(clock: Readonly<SimClock>): void {
+    this.dayNight.accept(clock);
+  }
   /** Forward water-only authoritative data to the visual surface. */
   acceptWater(event: SimEvent): void {
     this.water.accept(event);

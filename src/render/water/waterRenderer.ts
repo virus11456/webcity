@@ -56,6 +56,12 @@ export class WaterRenderer {
     RedFormat,
     FloatType,
   );
+  private readonly skyColor = {
+    value: new Color(ENVIRONMENT_PALETTE.sky_horizon),
+  };
+  setSkyColor(color: Color): void {
+    this.skyColor.value.copy(color);
+  }
   private readonly phase = { value: 0 };
   private revision: number;
 
@@ -97,7 +103,7 @@ export class WaterRenderer {
         waterNormals: { value: this.normals },
         waterPollution: { value: this.pollution },
         waterRiver: { value: this.river },
-        waterSky: { value: new Color(ENVIRONMENT_PALETTE.sky_horizon) },
+        waterSky: this.skyColor,
         waterDirty: { value: new Color(WATER_PALETTE.polluted) },
         waterPhase: this.phase,
         waterShallow: { value: new Color(ENVIRONMENT_PALETTE.water_shallow) },

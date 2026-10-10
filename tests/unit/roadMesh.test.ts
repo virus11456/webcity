@@ -164,7 +164,11 @@ describe('road surfaces', () => {
     renderer.sync(w);
     finish(renderer);
     expect(renderer.readStats().batches).toBeLessThan(30);
-    expect(renderer.group.children.length).toBe(renderer.readStats().batches);
+    expect(renderer.readStats().lamps).toBeGreaterThan(0);
+    expect(renderer.readStats().batches + 3).toBeLessThan(30);
+    expect(renderer.group.children.length).toBe(
+      renderer.readStats().batches + 1,
+    );
     const old = [...renderer.group.children];
     renderer.sync(w);
     finish(renderer);

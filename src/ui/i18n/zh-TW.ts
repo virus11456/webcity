@@ -183,6 +183,7 @@ export const ZH_TW = {
   'menu.mode.sandbox': '沙盒 · 自由建造、全部解鎖',
   'menu.start': '開始建城',
   'menu.scale': '介面字級',
+  'menu.dayNight': '日夜循環',
   'menu.volume': '音量',
   'menu.audioLater': '音效尚未開放。',
   'menu.settingsFailed': '無法儲存設定，請確認瀏覽器允許本機儲存。',

@@ -17,6 +17,8 @@ import {
   type Material,
   type Scene,
 } from 'three';
+import { LightGlows } from './lightGlows';
+import { DAY_NIGHT as D } from '../data/dayNight';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { VEHICLE_APPEARANCE as C } from '../data/vehicleAppearance';
 import { SERVICE_PALETTE, VEHICLE_PALETTE as P } from '../data/palette';
@@ -128,6 +130,24 @@ export class VehicleRenderer {
     vertexColors: true,
     roughness: 0.78,
   });
+  private readonly frontGlow = new LightGlows(
+    C.capacity * 2,
+    P.headlight,
+    D.vehicleGlowM,
+    true,
+  );
+  private readonly rearGlow = new LightGlows(
+    C.capacity * 2,
+    P.taillight,
+    D.vehicleGlowM,
+    true,
+  );
+  private night = 0;
+  setNight(value: number): void {
+    this.night = value;
+    this.frontGlow.setNight(value);
+    this.rearGlow.setNight(value);
+  }
   private readonly meshes: InstancedMesh[] = [];
   private readonly agents = new Map<number, Agent>();
   private sequence = 0;
@@ -162,6 +182,7 @@ export class VehicleRenderer {
         this.meshes.push(mesh);
         this.group.add(mesh);
       }
+    this.group.add(this.frontGlow.mesh, this.rearGlow.mesh);
     scene.add(this.group);
     register?.(this.material);
   }
@@ -242,6 +263,7 @@ export class VehicleRenderer {
   }
   update(seconds: number, camera: Camera): void {
     this.counts.fill(0);
+    let glowCount = 0;
     for (const a of this.agents.values()) {
       a.elapsed += seconds;
       const t = a.duration ? Math.min(1, a.elapsed / a.duration) : 1;
@@ -267,7 +289,41 @@ export class VehicleRenderer {
       mesh.setMatrixAt(index, this.matrix);
       mesh.setColorAt(index, a.color);
       this.counts[meshId] = index + 1;
+      if (
+        this.night > 0 &&
+        a.kind !== TrafficKind.pedestrian &&
+        glowCount < C.capacity * 2
+      ) {
+        const size =
+          a.kind === TrafficKind.bus
+            ? C.bus
+            : a.kind === TrafficKind.truck || a.kind === TrafficKind.garbage
+              ? C.truck
+              : C.car;
+        const sin = Math.sin(a.yaw),
+          cos = Math.cos(a.yaw);
+        for (let side = -1; side <= 1; side += 2) {
+          const dx = side * size[0]! * 0.3,
+            dz = size[2]! / 2;
+          this.matrix.makeTranslation(
+            a.x + dx * cos + dz * sin,
+            a.y + 0.8,
+            a.z + dz * cos - dx * sin,
+          );
+          this.frontGlow.mesh.setMatrixAt(glowCount, this.matrix);
+          this.matrix.makeTranslation(
+            a.x + dx * cos - dz * sin,
+            a.y + 0.8,
+            a.z - dz * cos - dx * sin,
+          );
+          this.rearGlow.mesh.setMatrixAt(glowCount++, this.matrix);
+        }
+      }
     }
+    this.frontGlow.mesh.count = this.rearGlow.mesh.count = glowCount;
+    if (glowCount)
+      this.frontGlow.mesh.instanceMatrix.needsUpdate =
+        this.rearGlow.mesh.instanceMatrix.needsUpdate = true;
     for (let i = 0; i < this.meshes.length; i++) {
       const m = this.meshes[i]!;
       m.count = this.counts[i]!;
@@ -353,6 +409,7 @@ export class VehicleRenderer {
   stats() {
     return {
       agents: this.agents.size,
+      lightPairs: this.frontGlow.mesh.count,
       visible: this.counts.reduce((a, b) => a + b, 0),
       batches: this.meshes.filter((m) => m.count > 0).length,
     };
@@ -362,6 +419,7 @@ export class VehicleRenderer {
     this.tick = -1;
     this.counts.fill(0);
     for (const m of this.meshes) m.count = 0;
+    this.frontGlow.mesh.count = this.rearGlow.mesh.count = 0;
   }
   dispose(): void {
     this.scene.remove(this.group);
@@ -369,6 +427,8 @@ export class VehicleRenderer {
       m.geometry.dispose();
       m.dispose();
     }
+    this.frontGlow.dispose();
+    this.rearGlow.dispose();
     this.unregister?.(this.material);
     this.material.dispose();
     this.clear();

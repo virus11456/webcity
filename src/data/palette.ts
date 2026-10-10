@@ -165,3 +165,40 @@ export const FIRE_PALETTE = {
 } as const;
 
 export const WATER_PALETTE = { polluted: '#6B5A3A' } as const;
+
+export const DAY_NIGHT_PALETTE = {
+  sun: [
+    '#9DB4E0',
+    '#9DB4E0',
+    '#FFB27A',
+    '#FFE6C8',
+    '#FFF1DC',
+    '#FFD1A0',
+    '#FF8A55',
+    '#9DB4E0',
+    '#9DB4E0',
+  ],
+  zenith: [
+    '#0E1630',
+    '#0E1630',
+    '#5A6FA8',
+    '#4A8FD9',
+    '#4A8FD9',
+    '#5C88C8',
+    '#3E4F86',
+    '#0E1630',
+    '#0E1630',
+  ],
+  horizon: [
+    '#26345A',
+    '#26345A',
+    '#F2B38A',
+    '#CFE6F5',
+    '#CFE6F5',
+    '#F0D2B0',
+    '#E8936A',
+    '#26345A',
+    '#26345A',
+  ],
+  streetlight: '#FFC870',
+} as const;

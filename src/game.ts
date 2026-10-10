@@ -199,6 +199,11 @@ if (canvas && status) {
       onStats: debug?.update,
       onBeforeFrame: (seconds) => {
         frameSeconds = seconds;
+        if (city) {
+          buildings?.setHour(city.dayNight.hour.value);
+          roadPreview?.roads.setNight(city.dayNight.night);
+          vehicles?.setNight(city.dayNight.night);
+        }
         input?.update(seconds);
         followCamera?.update();
         roadPreview?.roads.update();
@@ -257,6 +262,8 @@ if (canvas && status) {
       },
     });
     input.setEdgeScrolling(preferences.edgeScrolling);
+    city.setDayNight(preferences.dayNight);
+    if (sim?.mirror.clock) city.acceptClock(sim.mirror.clock);
     if (sim) {
       buildings = new BuildingRenderer(city.scene, {
         heightAt: (x, z) => city!.terrain.heightAt(x, z),
@@ -286,6 +293,8 @@ if (canvas && status) {
       fireRenderer.group.visible = false;
       problemIcons.group.visible = false;
       unsubscribeBuildings = sim.onEvent((event) => {
+        if (event.t === 'clock') city!.acceptClock(event.clock);
+        if (event.t === 'ready') city!.acceptClock(event.snapshot.clock);
         if (event.t === 'clock')
           roadPreview?.roads.setTime(
             (event.clock.ticks * TIME.secondsPerDay[1]) / TIME.ticksPerDay,
@@ -643,6 +652,7 @@ if (canvas && status) {
         (value) => {
           input?.setEdgeScrolling(value.edgeScrolling);
           city?.setQuality(value.quality);
+          city?.setDayNight(value.dayNight);
         },
         () => saveController!.save(SAVE.autoId),
       );

@@ -122,3 +122,21 @@ describe('instanced personal vehicles', () => {
     r.dispose();
   });
 });
+
+it('shows bounded light pairs on actual vehicles at night, hides them by day and clears them', () => {
+  const { r, camera } = fixture();
+  r.accept(frame(1, 0, 0, 3));
+  r.setNight(1);
+  r.update(0.3, camera);
+  expect(r.stats().lightPairs).toBe(6);
+  r.setNight(0);
+  r.update(0, camera);
+  expect(r.stats().lightPairs).toBe(0);
+  r.setNight(1);
+  r.accept(frame(2, 0, 0, 1, 8));
+  r.update(0, camera);
+  expect(r.stats().lightPairs).toBe(0);
+  r.clear();
+  expect(r.stats().lightPairs).toBe(0);
+  r.dispose();
+});

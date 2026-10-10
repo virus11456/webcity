@@ -9,6 +9,8 @@ import {
   type Material,
   type Scene,
 } from 'three';
+import { installNightWindows } from '../nightWindows';
+import { DAY_NIGHT } from '../../data/dayNight';
 import type { SimEvent } from '../../bridge/protocol';
 import { BUILDING_RENDER as R } from '../../data/buildingRendering';
 import {
@@ -111,7 +113,7 @@ export class BuildingRenderer {
   private disposed = false;
   private processed = 0;
   private maxWorkMs = 0;
-  private night = false;
+  private readonly hour = { value: 12 };
   private focusedId: number | undefined;
   /** Keep the building selected by the inspection control inside the existing detail budget. */
   focus(id: number): void {
@@ -126,10 +128,15 @@ export class BuildingRenderer {
     this.fullMaterial = buildingMaterial(this.atlas);
     for (const material of [this.fullMaterial, this.farMaterial]) {
       material.userData.infoRole = 'instance';
-      options.registerMaterial?.(material, (previous) =>
-        installBuildingShader(material, previous),
-      );
+      const install = (previous?: ShaderHook) => {
+        installBuildingShader(material, previous);
+        if (material === this.fullMaterial)
+          installNightWindows(material, this.hour, material.onBeforeCompile);
+      };
+      install();
+      options.registerMaterial?.(material, install);
     }
+    this.fullMaterial.emissiveIntensity = DAY_NIGHT.windowIntensity;
     const box = new BoxGeometry(1, 1, 1);
     box.translate(0, 0.5, 0);
     this.far = new InstancePool(this.group, box, this.farMaterial);
@@ -354,12 +361,20 @@ export class BuildingRenderer {
           for (const material of materials as Material[])
             if (!e.materials!.includes(material)) {
               e.materials!.push(material);
-              this.options.registerMaterial?.(material);
+              this.options.registerMaterial?.(
+                material,
+                material === e.construction!.completed.material
+                  ? (previous) =>
+                      installNightWindows(material, this.hour, previous)
+                  : undefined,
+              );
             }
         }
       });
       this.group.add(e.construction.group);
-      e.construction.setNight(this.night);
+      e.construction.setNight(true);
+      if (!this.options.registerMaterial)
+        installNightWindows(e.construction.completed.material, this.hour);
       return;
     }
     let hash = geometryHash(geometry);
@@ -536,9 +551,10 @@ export class BuildingRenderer {
     }
   }
   setNight(night: boolean): void {
-    this.night = night;
-    this.fullMaterial.emissiveIntensity = night ? 1.4 : 0;
-    for (const e of this.entries.values()) e.construction?.setNight(night);
+    this.hour.value = night ? 20 : 12;
+  }
+  setHour(hour: number): void {
+    this.hour.value = hour;
   }
   readStats() {
     let detail = 0,
