@@ -65,3 +65,18 @@ export const CITY_PREVIEW = {
   },
 } as const;
 export type CityView = keyof typeof CITY_PREVIEW.views;
+
+/** ART §5.1: four packed 512² detail maps and two world-space variation scales. */
+export const TERRAIN_DETAIL = {
+  size: 512,
+  seed: 32002,
+  repeatM: 8,
+  contrast: 0.32,
+  nearFadeM: 100,
+  farFadeM: 850,
+  variationSmallM: 32,
+  variationLargeM: 256,
+  variationSmall: 0.08,
+  variationLarge: 0.16,
+  triplanarSharpness: 4,
+} as const;
