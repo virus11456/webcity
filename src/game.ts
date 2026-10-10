@@ -1,3 +1,5 @@
+import { cityAudio } from './audio/manager';
+import { AUDIO } from './data/soundConfig';
 import { BuildingThumbnails } from './render/buildingThumbnails';
 import { CityEffects } from './render/effects';
 import { FacilityAssets } from './render/facilities/assets';
@@ -13,7 +15,7 @@ import { ServiceRenderer } from './render/services';
 import { ServiceTool } from './tools/serviceTool';
 import { createServiceControls } from './ui/serviceControls';
 import { VehicleRenderer } from './render/vehicles';
-import { TIME, type QualityLevel } from './data/config';
+import { TIME, SEA_LEVEL, type QualityLevel } from './data/config';
 import { readPreferences } from './ui/preferences';
 import { createPauseMenu } from './ui/screens/PauseMenu';
 import { startup } from './bootstrap';
@@ -154,6 +156,9 @@ let effectsQuality: QualityLevel | undefined;
 let problemIcons: ProblemIcons | undefined;
 let vehicles: VehicleRenderer | undefined;
 let frameSeconds = 0;
+let audioElapsed = 0,
+  audioTraffic = 0;
+let unsubscribeAudio: (() => void) | undefined;
 let unsubscribeBuildings: (() => void) | undefined;
 let picking: PickingPreview | undefined;
 let pickingDebug: ReturnType<typeof createPickingDebug> | undefined;
@@ -182,6 +187,10 @@ try {
     new Worker(new URL('./sim/worker.ts', import.meta.url), { type: 'module' }),
   );
   simControls = createSimControls(root, sim);
+  unsubscribeAudio = sim.onEvent((e) => {
+    cityAudio.accept(e);
+    if (e.t === 'vehicles') audioTraffic = Math.min(1, e.count / 40);
+  });
   void sim
     .send(
       startup.data
@@ -216,6 +225,22 @@ if (canvas && status) {
       onStats: debug?.update,
       onBeforeFrame: (seconds) => {
         frameSeconds = seconds;
+        audioElapsed += seconds;
+        if (city && audioElapsed >= AUDIO.sampleSeconds) {
+          audioElapsed = 0;
+          const focus = city.cameraController.readState(),
+            ground = city.terrain.heightAt(focus.x, focus.z);
+          cityAudio.sampleScene(
+            focus.x,
+            focus.z,
+            Math.max(0, city.camera.position.y - ground),
+            Math.max(
+              0,
+              1 - Math.max(0, ground - SEA_LEVEL) / AUDIO.shorelineHeight,
+            ),
+            audioTraffic,
+          );
+        }
         if (city) {
           if (effectsQuality !== city.quality) {
             effectsQuality = city.quality;
@@ -849,6 +874,7 @@ if (import.meta.hot)
     pickingDebug?.dispose();
     input?.dispose();
     unsubscribeBuildings?.();
+    unsubscribeAudio?.();
     problemIcons?.dispose();
     fireRenderer?.dispose();
     cityEffects?.dispose();

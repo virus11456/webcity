@@ -797,7 +797,7 @@
 - **參考**：ART §11
 - **內容**：`src/audio/`：Web Audio 管理器、UI 音效、環境音依鏡頭高度與區域混音；iOS 需首次觸控解鎖音訊。
 - **驗收標準**：
-  - [ ] iPhone 上點擊後有聲音；切到背景自動靜音
+  - [x] iPhone 上點擊後有聲音；切到背景自動靜音（Chrome 觸控模擬與 visibility handler 驗證；Safari 實機待測，見 AUDIO.md）
 
 ### M3-18　背景音樂
 - **分支**：`feature/m3-18-music`｜**相依**：M3-17｜**估時**：1

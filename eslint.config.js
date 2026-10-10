@@ -25,6 +25,7 @@ const dependencies = {
   sim: ['data', 'core', 'world'],
   bridge: ['data', 'core', 'world'],
   render: ['data', 'core', 'world', 'bridge'],
+  audio: ['data', 'core', 'world', 'bridge'],
   input: ['data', 'core', 'world', 'bridge', 'render'],
   tools: ['data', 'core', 'world', 'bridge', 'render'],
   ui: ['data', 'core', 'world', 'bridge', 'tools'],
