@@ -53,6 +53,27 @@ export function Settings({
           ))}
         </select>
       </label>
+      {(['shadows', 'postprocessing', 'tiltShift'] as const).map((key) => (
+        <label class="menu-check" key={key}>
+          <input
+            type="checkbox"
+            checked={value[key]}
+            onChange={(e) =>
+              update({ ...value, [key]: e.currentTarget.checked })
+            }
+          />
+          {t(`menu.${key}`)}
+        </label>
+      ))}
+      <Slider
+        label={t('menu.treeDensity')}
+        min={0}
+        max={100}
+        value={value.treeDensity}
+        unit="%"
+        onInput={(treeDensity) => update({ ...value, treeDensity })}
+      />
+      <p>{t('menu.graphicsHint')}</p>
       <label class="menu-check">
         <input
           type="checkbox"

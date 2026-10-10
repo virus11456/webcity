@@ -1,11 +1,13 @@
+import { GRAPHICS_DEFAULTS, type GraphicsOptions } from '../data/config';
 import { AUDIO, type AudioLevels } from '../data/soundConfig';
-export interface Preferences extends AudioLevels {
+export interface Preferences extends AudioLevels, GraphicsOptions {
   quality: 'auto' | 'low' | 'medium' | 'high';
   edgeScrolling: boolean;
   dayNight: boolean;
   uiScale: number;
 }
 const defaults: Preferences = {
+  ...GRAPHICS_DEFAULTS,
   quality: 'auto',
   edgeScrolling: false,
   dayNight: true,
@@ -26,6 +28,10 @@ export function readPreferences(): Preferences {
         ? Math.max(0, Math.min(100, n))
         : fallback;
     return {
+      shadows: value.shadows !== false,
+      postprocessing: value.postprocessing !== false,
+      tiltShift: value.tiltShift !== false,
+      treeDensity: volume(value.treeDensity, GRAPHICS_DEFAULTS.treeDensity),
       volume: volume(value.volume, AUDIO.volume),
       sfxVolume: volume(value.sfxVolume, AUDIO.sfxVolume),
       ambientVolume: volume(value.ambientVolume, AUDIO.ambientVolume),

@@ -50,7 +50,8 @@ export class StartupQuality {
   private frames = 0;
   private complete = false;
   /** Reset an unfinished startup sample after visibility/context changes. */
-  reset(): void {
+  reset(restart = false): void {
+    if (restart) this.complete = false;
     this.start = null;
     this.frames = 0;
   }
@@ -68,5 +69,43 @@ export class StartupQuality {
     return (this.frames * 1000) / elapsed < QUALITY_DETECTION.lowFpsThreshold
       ? 'low'
       : null;
+  }
+}
+
+/** Require two consecutive slow windows. Hidden/context-lost frames are reset by the owner. */
+export class SustainedQuality {
+  private start: number | null = null;
+  private frames = 0;
+  private slow = 0;
+  reset(): void {
+    this.start = null;
+    this.frames = 0;
+    this.slow = 0;
+  }
+  sample(
+    now: number,
+    forced: boolean,
+    level: QualityLevel,
+  ): 'low' | 'medium' | null {
+    if (forced || level === 'low') {
+      this.reset();
+      return null;
+    }
+    if (this.start === null) {
+      this.start = now;
+      return null;
+    }
+    this.frames++;
+    const elapsed = now - this.start;
+    if (elapsed < QUALITY_DETECTION.sustainedSeconds * 1000) return null;
+    this.slow =
+      (this.frames * 1000) / elapsed < QUALITY_DETECTION.lowFpsThreshold
+        ? this.slow + 1
+        : 0;
+    this.start = now;
+    this.frames = 0;
+    if (this.slow < QUALITY_DETECTION.slowWindows) return null;
+    this.reset();
+    return level === 'high' ? 'medium' : 'low';
   }
 }

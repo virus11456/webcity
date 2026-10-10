@@ -14,5 +14,7 @@ export const NOTICE_CODES = [
   'abandoned',
   'finance',
   'milestone',
+  'qualityLow',
+  'qualityMedium',
 ] as const;
 export type NoticeCode = (typeof NOTICE_CODES)[number];

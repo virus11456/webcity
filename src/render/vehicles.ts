@@ -1,3 +1,4 @@
+import { QUALITY, type QualityLevel } from '../data/config';
 import { VEHICLE_MODELS } from '../data/vehicleModels';
 import { vehicleModelIndex } from '../world/vehicleModels';
 import { formalVehicleGeometry } from './vehicleModels/geometry';
@@ -150,6 +151,10 @@ export class VehicleRenderer {
     D.vehicleGlowM,
     true,
   );
+  private vehicleLimit: number = QUALITY.high.maxVehicles;
+  setQuality(level: QualityLevel): void {
+    this.vehicleLimit = QUALITY[level].maxVehicles;
+  }
   private night = 0;
   setNight(value: number): void {
     this.night = value;
@@ -328,7 +333,8 @@ export class VehicleRenderer {
   }
   update(seconds: number, camera: Camera): void {
     this.counts.fill(0);
-    let glowCount = 0;
+    let glowCount = 0,
+      visibleVehicles = 0;
     for (const a of this.agents.values()) {
       a.elapsed += seconds;
       const t = a.duration ? Math.min(1, a.elapsed / a.duration) : 1;
@@ -343,8 +349,12 @@ export class VehicleRenderer {
         (a.z - camera.position.z) ** 2;
       const limit =
         a.kind === TrafficKind.pedestrian ? C.pedestrianCullM : C.cullM;
-      a.visible = distance < limit * limit;
+      a.visible =
+        distance < limit * limit &&
+        (a.kind === TrafficKind.pedestrian ||
+          visibleVehicles < this.vehicleLimit);
       if (!a.visible) continue;
+      if (a.kind !== TrafficKind.pedestrian) visibleVehicles++;
       const meshId =
           vehicleModelIndex(a.citizenId, a.kind) * 2 +
           (distance > C.lodM * C.lodM ? 1 : 0),
