@@ -31,6 +31,7 @@ const kinds: ProblemIcon[] = [
   'noGoods',
   'crime',
   'fire',
+  'sickness',
 ];
 interface Entry {
   b: Building;
@@ -65,6 +66,25 @@ function createAtlas(): Texture {
     c.fillStyle = P.text;
     c.lineWidth = 5;
     switch (kinds[i]) {
+      case 'sickness':
+        line(
+          [
+            [38, 24],
+            [58, 24],
+            [58, 38],
+            [73, 38],
+            [73, 58],
+            [58, 58],
+            [58, 73],
+            [38, 73],
+            [38, 58],
+            [23, 58],
+            [23, 38],
+            [38, 38],
+          ],
+          true,
+        );
+        break;
       case 'fire':
         line(
           [

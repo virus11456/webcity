@@ -567,3 +567,7 @@ world/ServiceNetwork 共用道路接入、二元堆 Dijkstra、預覽路段裁�
 ### M2-16 消防任務與火勢
 
 FireSystem 保存 WorldSnapshot.fire／Building.fire，日結依確定性 RNG 起火和損毀；TrafficSystem 負數任務以 purpose 7 表示消防，與貨運共用 ID 分配、各自消費到站事件。救援抵達後才滅火，斷路保持實體位置，序列化驗證任務与車流關聯。FireRenderer 消費 Building patches，以單批程序 billboard 表示火焰黑煙。見 FIRE.md。
+
+### M2-17 健康與小數累積
+
+每日服務、火勢結算後執行 updateHealth；CitizenTable 新增 healthFraction Uint8Array 與 lastHealthDay，每人 16 Int32／14 Uint8 共 78 bytes。結構重算只聚合 Building.health／CityStats.health，不治療；每日才更新個別居民。world/fieldSampling 共用 300×300 場取樣，Building.drinkingWaterPollution 為供水污染掛接欄位。舊 v1 表補零小數，驗證欄位、上限與日期。詳見 HEALTH.md。

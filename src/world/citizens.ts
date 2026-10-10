@@ -21,6 +21,7 @@ export const CITIZEN_BYTE_FIELDS = [
   'age',
   'education',
   'health',
+  'healthFraction',
   'happiness',
   'wealth',
   'state',
@@ -38,6 +39,7 @@ export type CitizenTable = {
   nextId: number;
   nextHouseholdId: number;
   lastDay: number;
+  lastHealthDay: number;
   births: number;
   deaths: number;
 } & Record<(typeof CITIZEN_INT_FIELDS)[number], Int32Array> &
@@ -81,6 +83,7 @@ export function createCitizens(capacity = 0): CitizenTable {
     nextId: 1,
     nextHouseholdId: 1,
     lastDay: -1,
+    lastHealthDay: -1,
     births: 0,
     deaths: 0,
     ...arrays,

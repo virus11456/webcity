@@ -1,3 +1,4 @@
+import { updateHealth } from './systems/health';
 import { FireSystem } from './systems/fire';
 import { updateCrime } from './systems/police';
 import { ServiceSystem } from './systems/services';
@@ -129,6 +130,7 @@ export class Simulation {
     );
     this.services = new ServiceSystem(this.state);
     this.services.update();
+    updateHealth(this.state);
     this.fire = new FireSystem(this.state, this.routePlanner, this.traffic);
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
@@ -138,6 +140,7 @@ export class Simulation {
       this.fire.daily();
       const firePatches = this.fire.patches();
       const crimePatches = updateCrime(this.state);
+      const healthPatches = updateHealth(this.state, true);
       const problems = updateProblems(this.state);
       const reconciliation =
         firePatches.length > 0 ||
@@ -148,6 +151,7 @@ export class Simulation {
               ...updateWater(this.state),
               ...updateProblems(this.state),
               ...this.services.update(),
+              ...updateHealth(this.state),
             ]
           : [];
       updateDemand(this.state);
@@ -156,6 +160,7 @@ export class Simulation {
         ...population,
         ...servicePatches,
         ...crimePatches,
+        ...healthPatches,
         ...firePatches,
         ...power,
         ...this.cargo.patches(),
@@ -266,6 +271,7 @@ export class Simulation {
       ...this.cargo.patches(),
       ...updatePower(this.state),
       ...updateWater(this.state),
+      ...updateHealth(this.state),
       ...updateProblems(this.state),
     ];
     if (patches.some((p) => p.state === 'abandoned' && p.stateTimer === 0))
@@ -275,6 +281,7 @@ export class Simulation {
         ...updateWater(this.state),
         ...updateProblems(this.state),
         ...this.services.update(),
+        ...updateHealth(this.state),
       );
     const merged = new Map<number, BuildingPatch>();
     for (const p of patches) merged.set(p.id, { ...merged.get(p.id), ...p });

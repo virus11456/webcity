@@ -81,7 +81,14 @@ export interface PopulationDetails {
   movedIn: number;
   movedOut: number;
 }
+export interface HealthSummary {
+  average: number;
+  sick: number;
+  residents: number;
+}
 export interface Building {
+  health?: HealthSummary;
+  drinkingWaterPollution?: number;
   fire?: import('./fire').BuildingFire;
   crime?: number;
   crimeUpdatedDay?: number;
@@ -133,6 +140,7 @@ export interface Fields {
 
 // ── 全域 ──
 export interface CityStats {
+  health?: HealthSummary;
   day: number;
   money: number;
   population: number;

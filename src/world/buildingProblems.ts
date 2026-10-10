@@ -12,6 +12,7 @@ export const BUILDING_PROBLEMS = [
   'noGoods',
   'crime',
   'fire',
+  'sickness',
 ] as const;
 export type BuildingProblem = (typeof BUILDING_PROBLEMS)[number];
 export type ProblemIcon = BuildingProblem | 'abandoned';
@@ -21,6 +22,11 @@ export function hasBuildingProblem(
   problem: BuildingProblem,
 ): boolean {
   if (b.state !== 'active') return false;
+  if (problem === 'sickness')
+    return (
+      !!b.health?.residents &&
+      b.health.sick / b.health.residents > PROBLEM_THRESHOLDS.sickResidentsAbove
+    );
   if (problem === 'fire') return !!b.fire?.burning;
   if (problem === 'crime')
     return (b.crime ?? 0) >= PROBLEM_THRESHOLDS.crimeAbove;
