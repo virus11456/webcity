@@ -727,7 +727,9 @@
 - **分支**：`feature/m3-07-postfx`｜**相依**：M3-04｜**估時**：3
 - **參考**：ART §4（移軸、SSAO、Bloom、FXAA）
 - **驗收標準**：
-  - [ ] 移軸強度隨鏡頭高度變化；各畫質正確啟用 / 關閉；iPhone viewport 中畫質 ≥ 30 FPS
+  - [x] 移軸強度隨鏡頭高度變化；各畫質正確啟用 / 關閉；iPhone viewport 中畫質 ≥ 30 FPS
+
+驗證紀錄（2026-10-11）：HDR、SSAO、夜間光暈、移軸與 DPR 抗鋸齒完成。895 項單元、lint、typecheck、build、12 項後製／renderer E2E 通過；光暈調整後再驗三裝置。中畫質本機三 viewport 約 60 FPS；截圖与測量見 `screenshots/m3-07/`，實機限制見 POSTFX.md。
 
 ### M3-08　道路貼圖與細節
 - **分支**：`feature/m3-08-road-detail`｜**相依**：M2-05｜**估時**：2

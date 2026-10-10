@@ -621,3 +621,7 @@ CityRenderer 依鏡頭海拔每幀更新既有 FogExp2 密度；80–2000 m smoo
 
 ### M3-06 生活時鐘與日夜
 DayNight 只投影 Worker SimClock 至 ART 關鍵影格，最多一 tick 插值並重用 Color／uniform。game 接合建築／路燈／交通，render 不依賴 UI；窗戶 shader 與 CSM、建築狀態 hooks 組合。道路燈具與車燈使用固定批次 instancing／程序貼花，沒有逐幀配置或 point lights。見 DAY_NIGHT.md。
+
+### M3-07 後製
+
+PostProcessing 管理 HDR targets 與所有 pass，真實深度重建 AO、夜間光暈、相對鏡頭高度移軸、輸出轉色與 DPR 條件 FXAA。Renderer 統一處理 resize／quality／dispose；debug 提供啟用 flags，無逐幀配置。詳見 POSTFX.md。
