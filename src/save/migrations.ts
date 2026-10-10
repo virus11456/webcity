@@ -231,6 +231,28 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
       c.nextHouseholdId > 0 &&
       Number.isSafeInteger(c.lastDay),
   );
+  // M2-07 tables predate journey columns. Add only wholly absent journey schema.
+  if (!Object.hasOwn(c, 'locationId')) {
+    for (const k of [
+      'locationId',
+      'destinationId',
+      'tripOriginId',
+      'tripStartTick',
+      'shiftEndTick',
+      'lastShiftCycle',
+      'activityUntilTick',
+      'lastShoppingCycle',
+      'lastLeisureCycle',
+    ] as const)
+      c[k] = new Int32Array(c.id.length);
+    for (const k of [
+      'tripStatus',
+      'tripPurpose',
+      'travelMode',
+      'restAfterTrip',
+    ] as const)
+      c[k] = new Uint8Array(c.id.length);
+  }
   for (const k of CITIZEN_INT_FIELDS)
     requireValue(
       c[k] instanceof Int32Array &&
@@ -267,7 +289,26 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
         c.requiredEducation[i]! <= c.education[i]! &&
         c.bornDay[i]! > -CITIZENS.daysPerAgeYear &&
         c.bornDay[i]! <= s.clock.day &&
-        c.schoolDays[i]! >= 0,
+        c.schoolDays[i]! >= 0 &&
+        c.tripStatus[i]! <= 3 &&
+        c.tripPurpose[i]! <= 5 &&
+        c.travelMode[i]! <= 1 &&
+        c.restAfterTrip[i]! <= 1 &&
+        c.locationId[i]! >= 0 &&
+        c.destinationId[i]! >= 0 &&
+        c.tripOriginId[i]! >= 0 &&
+        (c.tripStatus[i] === 0 ||
+          (c.tripPurpose[i]! > 0 &&
+            c.destinationId[i]! > 0 &&
+            c.tripOriginId[i]! > 0)) &&
+        c.restAfterTrip[i]! <= 1 &&
+        c.tripStartTick[i]! >= 0 &&
+        c.tripStartTick[i]! <= s.clock.ticks &&
+        c.shiftEndTick[i]! >= 0 &&
+        c.activityUntilTick[i]! >= 0 &&
+        c.lastShiftCycle[i]! >= 0 &&
+        c.lastShoppingCycle[i]! >= 0 &&
+        c.lastLeisureCycle[i]! >= 0,
     );
     citizenIds.add(c.id[i]!);
     const family = families.get(c.householdId[i]!) ?? {

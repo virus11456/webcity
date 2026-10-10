@@ -535,3 +535,7 @@ M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/st
 ### M2-07 市民 SoA
 
 `WorldSnapshot.citizens` 為 `CitizenTable`（7 個 Int32Array、9 個 Uint8Array），Worker `CitizenSystem` 保留穩定個人／家庭 ID，以 swap-remove 壓縮活動列。MessagePack 沿用既有 typed array codec；v1 舊檔的空陣列轉為空表，Simulation 初始化轉換住宅人口。每日生命週期增量更新彙總，就業保留已有職位；結構變更重新驗證容量。見 `CITIZENS.md`。
+
+### M2-08 行程資料
+
+市民 SoA 擴充為 16 個 Int32 與 13 個 Uint8 欄位，含 locationId、destinationId、tripOriginId、tripStartTick、shiftEndTick、班次／活動週期、行程用途／狀態。ScheduleSystem 每 tick 產生個別請求，由尋路／交通系統呼叫 pending → depart → arrive；過期結果依個人 ID、請求 tick、目的地檢查。schema 缺少整組行程欄位時補零，保留 M2-07 及 M1 v1 讀檔。見 `SCHEDULES.md`。
