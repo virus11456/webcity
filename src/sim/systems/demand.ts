@@ -71,7 +71,9 @@ export function updateDemand(s: SimState): void {
     freeJobs = 0,
     highEducationWorkers = 0;
   let commercialBuildings = 0,
-    shortages = 0;
+    shortages = 0,
+    industrialBuildings = 0,
+    blockedExports = 0;
   const jobs = { C: 0, I: 0, O: 0 };
   for (const b of s.buildings) {
     if (b.state !== 'active') continue;
@@ -86,9 +88,14 @@ export function updateDemand(s: SimState): void {
     if (b.kind !== 'zoned' || !Object.hasOwn(ZONES, b.defId)) continue;
     const zone = ZONES[b.defId as ZoneType].demand;
     if (zone !== 'R') jobs[zone] += b.jobs;
+    if (zone === 'I') {
+      industrialBuildings++;
+      if (b.cargo?.exportBlocked || b.problemTimers.noGoods > 0)
+        blockedExports++;
+    }
     if (zone === 'C') {
       commercialBuildings++;
-      if (b.problemTimers.noGoods > 0) shortages++;
+      if (b.cargo?.shortage || b.problemTimers.noGoods > 0) shortages++;
     }
   }
   s.stats.demand = calculateDemand({
@@ -110,7 +117,8 @@ export function updateDemand(s: SimState): void {
     commercialShortageFraction: commercialBuildings
       ? shortages / commercialBuildings
       : 0,
-    // Cargo/export simulation does not exist until M2; do not invent a shortage.
-    industrialExportBlockedFraction: 0,
+    industrialExportBlockedFraction: industrialBuildings
+      ? blockedExports / industrialBuildings
+      : 0,
   });
 }

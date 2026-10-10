@@ -20,17 +20,26 @@ function Content({
 }) {
   if (info.kind === 'vehicle') {
     const v = info.value;
-    const rows: [string, string | number][] = [
-      [t('vehicle.citizen'), v.citizenId],
-      [t('vehicle.home'), v.homeId],
-      [t('vehicle.work'), v.workId || t('inspect.none')],
-      [t('vehicle.destination'), v.destinationId],
-      [
-        t('vehicle.purpose'),
-        t(`vehicle.purpose${v.purpose as 1 | 2 | 3 | 4 | 5}`),
-      ],
-      [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
-    ];
+    const mission = v.citizenId < 0;
+    const rows: [string, string | number][] = mission
+      ? [
+          [t('cargo.origin'), v.originId || t('cargo.outside')],
+          [t('vehicle.destination'), v.destinationId || t('cargo.outside')],
+          [t('cargo.units'), v.cargo?.units.toFixed(0) ?? 0],
+          [t('vehicle.purpose'), t(`cargo.${v.cargo?.kind ?? 'local'}`)],
+          [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
+        ]
+      : [
+          [t('vehicle.citizen'), v.citizenId],
+          [t('vehicle.home'), v.homeId],
+          [t('vehicle.work'), v.workId || t('inspect.none')],
+          [t('vehicle.destination'), v.destinationId],
+          [
+            t('vehicle.purpose'),
+            t(`vehicle.purpose${v.purpose as 1 | 2 | 3 | 4 | 5}`),
+          ],
+          [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
+        ];
     return (
       <div
         class="inspect-data"
@@ -39,8 +48,14 @@ function Content({
         data-citizen={v.citizenId}
       >
         <strong>
-          {t(v.kind === 8 ? 'vehicle.pedestrian' : 'vehicle.car')} #
-          {v.citizenId}
+          {t(
+            mission
+              ? 'cargo.truck'
+              : v.kind === 8
+                ? 'vehicle.pedestrian'
+                : 'vehicle.car',
+          )}{' '}
+          #{Math.abs(v.citizenId)}
         </strong>
         <dl>
           {rows.map(([label, value]) => (
@@ -51,6 +66,11 @@ function Content({
           ))}
         </dl>
         <div class="inspect-locations">
+          {mission && v.originPos && (
+            <Button onClick={() => locate?.(v.originPos!)}>
+              {t('cargo.locateOrigin')}
+            </Button>
+          )}
           {v.homePos && (
             <Button onClick={() => locate?.(v.homePos!)}>
               {t('vehicle.locateHome')}
@@ -104,13 +124,24 @@ function Content({
           .join(' / '),
       ],
     );
+    if (b.cargo)
+      rows.push([
+        t('cargo.stock'),
+        `${b.cargo.stock.toFixed(0)} / ${b.cargo.capacity.toFixed(0)}`,
+      ]);
     const problems = Object.keys(PROBLEMS).filter(
       (key) => (b.problemTimers[key as keyof typeof PROBLEMS] ?? 0) > 0,
     );
     rows.push([
       t('inspect.problems'),
       problems
-        .map((key) => t(`problem.${key as keyof typeof PROBLEMS}`))
+        .map((key) =>
+          t(
+            key === 'noGoods' && b.defId === 'I'
+              ? 'problem.noExport'
+              : `problem.${key as keyof typeof PROBLEMS}`,
+          ),
+        )
         .join('、') || t('inspect.none'),
     ]);
     if (definition)

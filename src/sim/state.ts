@@ -1,3 +1,4 @@
+import { emptyCargo } from '../world/cargo';
 import { emptyTraffic } from '../world/traffic';
 import { createCitizens } from '../world/citizens';
 import { addStarterCity } from './starterCity';
@@ -76,6 +77,7 @@ export function createState(settings: CitySettings): SimState {
     },
     citizens: createCitizens(),
     traffic: emptyTraffic(),
+    cargo: emptyCargo(),
     transitLines: [],
     districts: [],
     policies: [],

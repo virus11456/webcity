@@ -1,3 +1,5 @@
+import { emptyCargo } from '../world/cargo';
+import { CARGO } from '../data/cargo';
 import { emptyTraffic } from '../world/traffic';
 import { TRAFFIC_RUNTIME } from '../data/traffic';
 import {
@@ -320,11 +322,67 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     requireValue(family.home === c.homeId[i] && ++family.count <= 5);
     families.set(c.householdId[i]!, family);
   }
+  if (!Object.hasOwn(s, 'cargo')) s.cargo = emptyCargo();
+  requireValue(
+    s.cargo?.version === 1 &&
+      Number.isSafeInteger(s.cargo.lastDay) &&
+      s.cargo.lastDay >= -1 &&
+      s.cargo.lastDay <= s.clock.day &&
+      [
+        s.cargo.delivered,
+        s.cargo.imported,
+        s.cargo.exported,
+        s.cargo.lost,
+      ].every((n) => typeof n === 'number' && n >= 0) &&
+      Array.isArray(s.cargo.shipments) &&
+      s.cargo.shipments.length <= CARGO.maxShipments,
+  );
+  const shipmentIds = new Map<number, (typeof s.cargo.shipments)[number]>();
+  const buildingIds = new Set(s.buildings.map((b) => b.id));
+  for (const b of s.buildings)
+    if (b.cargo)
+      requireValue(
+        typeof b.cargo.stock === 'number' &&
+          typeof b.cargo.capacity === 'number' &&
+          b.cargo.stock >= 0 &&
+          b.cargo.capacity > 0 &&
+          b.cargo.stock <= b.cargo.capacity &&
+          typeof b.cargo.shortage === 'boolean' &&
+          typeof b.cargo.exportBlocked === 'boolean',
+      );
+  for (const job of s.cargo.shipments) {
+    requireValue(
+      Number.isSafeInteger(job.id) &&
+        job.id > 0 &&
+        !shipmentIds.has(job.id) &&
+        Number.isSafeInteger(job.from) &&
+        Number.isSafeInteger(job.to) &&
+        (job.from === 0 || buildingIds.has(job.from)) &&
+        (job.to === 0 || buildingIds.has(job.to)) &&
+        typeof job.units === 'number' &&
+        job.units > 0 &&
+        job.units <= CARGO.truckCapacity &&
+        ((job.kind === 'local' && job.from > 0 && job.to > 0) ||
+          (job.kind === 'import' && job.from === 0 && job.to > 0) ||
+          (job.kind === 'export' && job.from > 0 && job.to === 0)) &&
+        Number.isSafeInteger(job.requestedTick) &&
+        job.requestedTick >= 0 &&
+        job.requestedTick <= s.clock.ticks &&
+        Number.isSafeInteger(job.retryTick) &&
+        job.retryTick >= 0,
+    );
+    shipmentIds.set(job.id, job);
+  }
   // No traffic collection existed before M2-10.
   if (!Object.hasOwn(s, 'traffic')) s.traffic = emptyTraffic();
   const traffic = s.traffic;
+  if (traffic && !Object.hasOwn(traffic, 'nextMissionId'))
+    traffic.nextMissionId = 1;
   requireValue(
     traffic?.version === 1 &&
+      Number.isSafeInteger(traffic.nextMissionId) &&
+      traffic.nextMissionId > Math.max(0, ...shipmentIds.keys()) &&
+      traffic.nextMissionId <= TRAFFIC_RUNTIME.maxVehicleId &&
       Number.isSafeInteger(traffic.nextId) &&
       traffic.nextId > 0 &&
       traffic.nextId <= TRAFFIC_RUNTIME.maxVehicleId &&
@@ -387,12 +445,17 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
   const journeyValid = (j: (typeof traffic.vehicles)[number]['journey']) =>
     j &&
     Number.isSafeInteger(j.citizenId) &&
-    citizenIds.has(j.citizenId) &&
+    (citizenIds.has(j.citizenId) ||
+      (j.citizenId < 0 &&
+        j.purpose === 6 &&
+        j.mode === 1 &&
+        shipmentIds.get(-j.citizenId)?.from === j.originId &&
+        shipmentIds.get(-j.citizenId)?.to === j.destinationId)) &&
     Number.isSafeInteger(j.originId) &&
-    j.originId > 0 &&
+    (j.originId > 0 || (j.citizenId < 0 && j.originId === 0)) &&
     Number.isSafeInteger(j.destinationId) &&
-    j.destinationId > 0 &&
-    [1, 2, 3, 4, 5].includes(j.purpose) &&
+    (j.destinationId > 0 || (j.citizenId < 0 && j.destinationId === 0)) &&
+    (j.citizenId < 0 ? j.purpose === 6 : [1, 2, 3, 4, 5].includes(j.purpose)) &&
     [0, 1].includes(j.mode) &&
     Number.isSafeInteger(j.requestedTick) &&
     j.requestedTick >= 0 &&

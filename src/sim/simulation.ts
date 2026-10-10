@@ -1,3 +1,4 @@
+import { CargoSystem } from './systems/cargo';
 import { TrafficSystem } from './systems/traffic';
 import { RoutePlanner } from './systems/routePlanner';
 import { ScheduleSystem } from './systems/schedules';
@@ -72,10 +73,12 @@ export class Simulation {
   readonly schedules: ScheduleSystem;
   readonly routePlanner: RoutePlanner;
   readonly traffic: TrafficSystem;
+  readonly cargo: CargoSystem;
   private emit(event: SimEvent): void {
     if (event.t === 'roadsChanged') {
       this.laneGraph.sync(this.state.nodes, this.state.segments);
       this.traffic?.networkChanged();
+      this.cargo?.networkChanged();
     }
     this.sink(event);
   }
@@ -110,9 +113,16 @@ export class Simulation {
       this.schedules,
       this.state.traffic,
     );
+    this.cargo = new CargoSystem(
+      this.state,
+      this.laneGraph,
+      this.routePlanner,
+      this.traffic,
+    );
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
       const power = [...updatePower(this.state), ...updateWater(this.state)];
+      this.cargo.daily();
       const problems = updateProblems(this.state);
       const reconciliation = problems.some(
         (p) => p.state === 'abandoned' && p.stateTimer === 0,
@@ -126,7 +136,13 @@ export class Simulation {
         : [];
       updateDemand(this.state);
       const updates = new Map<number, BuildingPatch>();
-      for (const p of [...population, ...power, ...problems, ...reconciliation])
+      for (const p of [
+        ...population,
+        ...power,
+        ...this.cargo.patches(),
+        ...problems,
+        ...reconciliation,
+      ])
         updates.set(p.id, { ...updates.get(p.id), ...p });
       const updated = [...updates.values()];
       if (updated.length)
@@ -157,10 +173,18 @@ export class Simulation {
         const p = s.buildings.find((b) => b.id === id)?.pos;
         return p ? { ...p } : undefined;
       };
+      const shipment =
+        value.citizenId < 0
+          ? s.cargo.shipments.find((j) => j.id === -value.citizenId)
+          : undefined;
       return {
         kind,
         value: {
           ...value,
+          originPos: position(value.originId ?? 0),
+          cargo: shipment
+            ? { units: shipment.units, kind: shipment.kind }
+            : undefined,
           homePos: position(value.homeId),
           workPos: position(value.workId),
           destinationPos: position(value.destinationId),
@@ -216,7 +240,9 @@ export class Simulation {
     };
   }
   private refreshPower(): void {
+    this.cargo.reconcile();
     const patches = [
+      ...this.cargo.patches(),
       ...updatePower(this.state),
       ...updateWater(this.state),
       ...updateProblems(this.state),
@@ -383,6 +409,7 @@ export class Simulation {
 
   /** Copy all arrays; callers cannot mutate the authoritative city. */
   snapshot(): WorldSnapshot {
+    this.cargo.reconcile();
     return structuredClone({ ...this.state, traffic: this.traffic.snapshot() });
   }
 
@@ -795,6 +822,15 @@ export class Simulation {
     this.schedules.tick();
     this.routePlanner.tick();
     this.traffic.step(tickMs / 1000, (this.state.clock.ticks * tickMs) / 1000);
+    this.cargo.tick();
+    const cargoPatches = this.cargo.patches();
+    if (cargoPatches.length)
+      this.emit({
+        t: 'buildingsChanged',
+        added: [],
+        removed: [],
+        updated: cargoPatches,
+      });
     if (!dayCompleted) return;
     this.state.stats.day = this.state.clock.day;
     this.state.stats.money = this.state.money;

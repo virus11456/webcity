@@ -32,6 +32,7 @@ export interface StrandedJourney {
 export interface TrafficState {
   version: 1;
   nextId: number;
+  nextMissionId: number;
   seconds: number;
   arrived: number;
   removedStuck: number;
@@ -43,6 +44,7 @@ export function emptyTraffic(): TrafficState {
   return {
     version: 1,
     nextId: 1,
+    nextMissionId: 1,
     seconds: 0,
     arrived: 0,
     removedStuck: 0,
@@ -71,6 +73,9 @@ export interface TrafficInfo {
   homeId: number;
   workId: number;
   destinationId: number;
+  originId?: number;
+  originPos?: { x: number; z: number };
+  cargo?: { units: number; kind: 'local' | 'import' | 'export' };
   purpose: number;
   x: number;
   y: number;

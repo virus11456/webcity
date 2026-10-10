@@ -9,6 +9,7 @@ export const BUILDING_PROBLEMS = [
   'noSewage',
   'noRoad',
   'noWorkers',
+  'noGoods',
 ] as const;
 export type BuildingProblem = (typeof BUILDING_PROBLEMS)[number];
 export type ProblemIcon = BuildingProblem | 'abandoned';
@@ -40,6 +41,8 @@ export function hasBuildingProblem(
     }
     case 'noRoad':
       return b.roadDisconnectedDay !== undefined;
+    case 'noGoods':
+      return b.defId === 'I' ? !!b.cargo?.exportBlocked : !!b.cargo?.shortage;
     case 'noWorkers':
       return (
         b.jobs > 0 && b.workers / b.jobs < PROBLEM_THRESHOLDS.workerFillBelow

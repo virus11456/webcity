@@ -43,6 +43,8 @@ export class TrafficSystem {
   private readonly stranded = new Map<number, StrandedJourney>();
   private revision = -1;
   private nextId = 1;
+  private nextMissionId = 1;
+  private readonly missionArrivals: number[] = [];
   private seconds = 0;
   private arrived = 0;
   private removedStuck = 0;
@@ -60,18 +62,20 @@ export class TrafficSystem {
     this.syncRoads();
     if (restored) {
       this.nextId = restored.nextId;
+      this.nextMissionId = restored.nextMissionId ?? 1;
       this.seconds = restored.seconds || this.seconds;
       this.arrived = restored.arrived;
       this.removedStuck = restored.removedStuck;
       const routes = restored.routes.map((r) => planner.paths.restoreRoute(r));
       for (const value of restored.stranded) {
         this.stranded.set(value.journey.citizenId, structuredClone(value));
-        planner.strand(value);
+        if (value.journey.citizenId > 0) planner.strand(value);
       }
       for (const saved of restored.vehicles) {
         const route = routes[saved.route];
         if (!route || !route.legs[saved.leg]) {
-          this.schedules.blocked(saved.journey);
+          if (saved.journey.citizenId > 0)
+            this.schedules.blocked(saved.journey);
           const value: StrandedJourney = {
             journey: { ...saved.journey, requestedTick: state.clock.ticks },
             x: saved.x,
@@ -81,11 +85,11 @@ export class TrafficSystem {
             laneDistance: 0,
           };
           this.stranded.set(saved.journey.citizenId, value);
-          planner.strand(value);
+          if (value.journey.citizenId > 0) planner.strand(value);
           continue;
         }
         const i = citizenSystem(state).indexOf(saved.journey.citizenId);
-        if (i === undefined) continue;
+        if (i === undefined && saved.journey.citizenId > 0) continue;
         const v = this.make({ ...saved, route });
         this.vehicles.set(v.id, v);
         this.byCitizen.set(v.journey.citizenId, v.id);
@@ -117,7 +121,11 @@ export class TrafficSystem {
   private length(v: Vehicle): number {
     return v.kind === TrafficKind.pedestrian
       ? C.pedestrianLengthM
-      : C.carLengthM;
+      : v.kind === TrafficKind.truck || v.kind === TrafficKind.garbage
+        ? C.truckLengthM
+        : v.kind === TrafficKind.bus
+          ? C.busLengthM
+          : C.carLengthM;
   }
   private gap(v: Vehicle, other: Vehicle): number {
     return (
@@ -230,10 +238,10 @@ export class TrafficSystem {
   }
   private strand(v: Vehicle, stuck = false): void {
     const i = citizenSystem(this.state).indexOf(v.journey.citizenId);
-    if (i !== undefined) {
-      if (!this.schedules.hasDestination(v.journey))
+    if (i !== undefined || v.journey.citizenId < 0) {
+      if (v.journey.citizenId > 0 && !this.schedules.hasDestination(v.journey))
         v.journey = this.schedules.returnHome(v.journey);
-      this.schedules.blocked(v.journey);
+      if (v.journey.citizenId > 0) this.schedules.blocked(v.journey);
       const leg = v.route.legs[v.leg]!,
         lane = leg.lane ?? leg.fromLane ?? '',
         value: StrandedJourney = {
@@ -245,7 +253,7 @@ export class TrafficSystem {
           laneDistance: v.slots[0].distance,
         };
       this.stranded.set(v.journey.citizenId, value);
-      this.planner.strand(value);
+      if (v.journey.citizenId > 0) this.planner.strand(value);
     }
     if (stuck) this.removedStuck++;
     this.delete(v);
@@ -303,6 +311,30 @@ export class TrafficSystem {
   }
   /** Return false to leave a queued request pending when its driveway or capacity is occupied. */
   spawn(job: PlannedJourney): boolean {
+    return this.admit(job);
+  }
+  reserveMission(): number {
+    return this.nextMissionId++;
+  }
+  hasMission(id: number): boolean {
+    return this.byCitizen.has(-id);
+  }
+  strandedMission(id: number): StrandedJourney | undefined {
+    return this.stranded.get(-id);
+  }
+  takeMissionArrivals(): number[] {
+    return this.missionArrivals.splice(0);
+  }
+  cancelMission(id: number): void {
+    const v = this.vehicles.get(this.byCitizen.get(-id) ?? 0);
+    if (v) this.delete(v);
+    this.stranded.delete(-id);
+  }
+  spawnMission(job: PlannedJourney, kind: number = TrafficKind.truck): boolean {
+    if (job.journey.citizenId >= 0 || job.journey.purpose !== 6) return false;
+    return this.admit(job, kind);
+  }
+  private admit(job: PlannedJourney, kind?: number): boolean {
     if (
       this.vehicles.size >= C.capacity ||
       this.byCitizen.has(job.journey.citizenId) ||
@@ -317,9 +349,10 @@ export class TrafficSystem {
       journey: job.journey,
       route: job.route,
       kind:
-        job.journey.mode === TravelMode.walk
+        kind ??
+        (job.journey.mode === TravelMode.walk
           ? TrafficKind.pedestrian
-          : TrafficKind.car,
+          : TrafficKind.car),
       leg: 0,
       distance: 0,
       speed: 0,
@@ -345,7 +378,8 @@ export class TrafficSystem {
       )
         return false;
     }
-    if (!this.schedules.depart(job.journey)) return false;
+    if (job.journey.citizenId > 0 && !this.schedules.depart(job.journey))
+      return false;
     this.vehicles.set(v.id, v);
     this.byCitizen.set(v.journey.citizenId, v.id);
     this.updateOccupancy(v);
@@ -462,7 +496,10 @@ export class TrafficSystem {
         this.release(v);
       if (v.distance < leg.length - 1e-6) break;
       if (!next) {
-        if (this.schedules.arrive(v.journey)) {
+        if (v.journey.citizenId < 0) {
+          this.missionArrivals.push(-v.journey.citizenId);
+          this.delete(v);
+        } else if (this.schedules.arrive(v.journey)) {
           this.arrived++;
           this.delete(v);
         } else this.strand(v);
@@ -511,7 +548,7 @@ export class TrafficSystem {
     this.seconds = absoluteSeconds ?? this.seconds + seconds;
     const c = this.state.citizens;
     for (const [id] of this.stranded)
-      if (citizenSystem(this.state).indexOf(id) === undefined) {
+      if (id > 0 && citizenSystem(this.state).indexOf(id) === undefined) {
         this.stranded.delete(id);
         this.planner.clearOrigin(id);
       }
@@ -524,11 +561,17 @@ export class TrafficSystem {
       if (!this.spawn(job)) this.planner.defer(job);
     for (const v of this.vehicles.values()) {
       const i = citizenSystem(this.state).indexOf(v.journey.citizenId);
-      if (i === undefined || c.tripStatus[i] !== JourneyStatus.moving) {
+      if (
+        v.journey.citizenId > 0 &&
+        (i === undefined || c.tripStatus[i] !== JourneyStatus.moving)
+      ) {
         this.delete(v);
         continue;
       }
-      if (!this.schedules.hasDestination(v.journey)) {
+      if (
+        v.journey.citizenId > 0 &&
+        !this.schedules.hasDestination(v.journey)
+      ) {
         this.strand(v);
         continue;
       }
@@ -604,6 +647,7 @@ export class TrafficSystem {
       homeId: i === undefined ? 0 : this.state.citizens.homeId[i]!,
       workId: i === undefined ? 0 : this.state.citizens.workId[i]!,
       destinationId: v.journey.destinationId,
+      originId: v.journey.originId,
       purpose: v.journey.purpose,
       x: v.x,
       y: v.y,
@@ -613,10 +657,13 @@ export class TrafficSystem {
   }
   snapshot(): TrafficState {
     for (const v of this.vehicles.values())
-      if (citizenSystem(this.state).indexOf(v.journey.citizenId) === undefined)
+      if (
+        v.journey.citizenId > 0 &&
+        citizenSystem(this.state).indexOf(v.journey.citizenId) === undefined
+      )
         this.delete(v);
     for (const [id] of this.stranded)
-      if (citizenSystem(this.state).indexOf(id) === undefined) {
+      if (id > 0 && citizenSystem(this.state).indexOf(id) === undefined) {
         this.stranded.delete(id);
         this.planner.clearOrigin(id);
       }
@@ -638,6 +685,7 @@ export class TrafficSystem {
     return {
       version: 1,
       nextId: this.nextId,
+      nextMissionId: this.nextMissionId,
       seconds: this.seconds,
       arrived: this.arrived,
       removedStuck: this.removedStuck,
