@@ -1,0 +1,1504 @@
+{
+  "modelCount": 248,
+  "modelBytes": 5595600,
+  "musicBytes": 19067733,
+  "failures": [],
+  "models": [
+    {
+      "id": "bld_ch_l1_2x2_01",
+      "bytes": 22852,
+      "triangles": [212, 56, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l1_2x2_02",
+      "bytes": 22708,
+      "triangles": [216, 48, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l1_3x3_01",
+      "bytes": 24004,
+      "triangles": [264, 60, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l1_3x3_02",
+      "bytes": 25024,
+      "triangles": [292, 76, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l1_4x4_01",
+      "bytes": 25212,
+      "triangles": [296, 92, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l1_4x4_02",
+      "bytes": 22792,
+      "triangles": [224, 56, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l2_2x2_01",
+      "bytes": 23072,
+      "triangles": [220, 64, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l2_2x2_02",
+      "bytes": 23724,
+      "triangles": [240, 72, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l2_3x3_01",
+      "bytes": 24168,
+      "triangles": [244, 88, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l2_3x3_02",
+      "bytes": 23116,
+      "triangles": [224, 56, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l2_4x4_01",
+      "bytes": 24152,
+      "triangles": [244, 88, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l2_4x4_02",
+      "bytes": 22412,
+      "triangles": [216, 48, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l3_2x2_01",
+      "bytes": 27212,
+      "triangles": [308, 152, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l3_2x2_02",
+      "bytes": 24424,
+      "triangles": [256, 88, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l3_3x3_01",
+      "bytes": 36332,
+      "triangles": [520, 316, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l3_3x3_02",
+      "bytes": 34480,
+      "triangles": [500, 284, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l3_4x4_01",
+      "bytes": 28528,
+      "triangles": [360, 156, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_ch_l3_4x4_02",
+      "bytes": 28800,
+      "triangles": [372, 156, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_cl_l1_1x1_01",
+      "bytes": 20264,
+      "triangles": [180, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l1_1x1_02",
+      "bytes": 20552,
+      "triangles": [192, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l1_1x1_03",
+      "bytes": 20832,
+      "triangles": [204, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l1_1x2_01",
+      "bytes": 20232,
+      "triangles": [180, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l1_1x2_02",
+      "bytes": 20520,
+      "triangles": [192, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l1_1x2_03",
+      "bytes": 20800,
+      "triangles": [204, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l1_2x2_01",
+      "bytes": 20244,
+      "triangles": [180, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l1_2x2_02",
+      "bytes": 20536,
+      "triangles": [192, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l1_2x2_03",
+      "bytes": 20808,
+      "triangles": [204, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l1_2x3_01",
+      "bytes": 20260,
+      "triangles": [180, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l1_2x3_02",
+      "bytes": 20544,
+      "triangles": [192, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l1_2x3_03",
+      "bytes": 20812,
+      "triangles": [204, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_1x1_01",
+      "bytes": 20888,
+      "triangles": [188, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_1x1_02",
+      "bytes": 20556,
+      "triangles": [192, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_1x1_03",
+      "bytes": 21460,
+      "triangles": [212, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_1x2_01",
+      "bytes": 20688,
+      "triangles": [188, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_1x2_02",
+      "bytes": 20960,
+      "triangles": [200, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_1x2_03",
+      "bytes": 21248,
+      "triangles": [212, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_2x2_01",
+      "bytes": 20244,
+      "triangles": [180, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_2x2_02",
+      "bytes": 20968,
+      "triangles": [200, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_2x2_03",
+      "bytes": 21268,
+      "triangles": [212, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_2x3_01",
+      "bytes": 20260,
+      "triangles": [180, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_2x3_02",
+      "bytes": 20992,
+      "triangles": [200, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l2_2x3_03",
+      "bytes": 20816,
+      "triangles": [204, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_1x1_01",
+      "bytes": 21200,
+      "triangles": [196, 28, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_1x1_02",
+      "bytes": 21164,
+      "triangles": [200, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_1x1_03",
+      "bytes": 21768,
+      "triangles": [220, 28, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_1x2_01",
+      "bytes": 21012,
+      "triangles": [196, 28, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_1x2_02",
+      "bytes": 20960,
+      "triangles": [200, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_1x2_03",
+      "bytes": 21576,
+      "triangles": [220, 28, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_2x2_01",
+      "bytes": 20700,
+      "triangles": [188, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_2x2_02",
+      "bytes": 21300,
+      "triangles": [208, 28, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_2x2_03",
+      "bytes": 21572,
+      "triangles": [220, 28, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_2x3_01",
+      "bytes": 20732,
+      "triangles": [188, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_2x3_02",
+      "bytes": 21316,
+      "triangles": [208, 28, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_cl_l3_2x3_03",
+      "bytes": 21284,
+      "triangles": [212, 20, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l1_2x2_01",
+      "bytes": 20936,
+      "triangles": [186, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l1_2x2_02",
+      "bytes": 20972,
+      "triangles": [186, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l1_2x2_03",
+      "bytes": 20984,
+      "triangles": [186, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l1_3x3_01",
+      "bytes": 21020,
+      "triangles": [186, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l1_3x3_02",
+      "bytes": 21020,
+      "triangles": [186, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l1_3x3_03",
+      "bytes": 20972,
+      "triangles": [186, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l1_4x4_01",
+      "bytes": 20888,
+      "triangles": [186, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l1_4x4_02",
+      "bytes": 20940,
+      "triangles": [186, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l1_4x4_03",
+      "bytes": 20944,
+      "triangles": [186, 12, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l2_2x2_01",
+      "bytes": 23924,
+      "triangles": [306, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l2_2x2_02",
+      "bytes": 24016,
+      "triangles": [306, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l2_2x2_03",
+      "bytes": 23944,
+      "triangles": [306, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l2_3x3_01",
+      "bytes": 23896,
+      "triangles": [306, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l2_3x3_02",
+      "bytes": 23856,
+      "triangles": [306, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l2_3x3_03",
+      "bytes": 23920,
+      "triangles": [306, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l2_4x4_01",
+      "bytes": 23768,
+      "triangles": [306, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l2_4x4_02",
+      "bytes": 23880,
+      "triangles": [306, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l2_4x4_03",
+      "bytes": 23872,
+      "triangles": [306, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l3_2x2_01",
+      "bytes": 24444,
+      "triangles": [330, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l3_2x2_02",
+      "bytes": 25044,
+      "triangles": [338, 32, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l3_2x2_03",
+      "bytes": 24876,
+      "triangles": [338, 32, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l3_3x3_01",
+      "bytes": 24504,
+      "triangles": [330, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l3_3x3_02",
+      "bytes": 24564,
+      "triangles": [330, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l3_3x3_03",
+      "bytes": 24824,
+      "triangles": [338, 32, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l3_4x4_01",
+      "bytes": 24864,
+      "triangles": [338, 32, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l3_4x4_02",
+      "bytes": 24432,
+      "triangles": [330, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_i_l3_4x4_03",
+      "bytes": 24488,
+      "triangles": [330, 24, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_o_l1_2x2_01",
+      "bytes": 26852,
+      "triangles": [332, 68, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l1_2x2_02",
+      "bytes": 26488,
+      "triangles": [324, 60, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l1_3x3_01",
+      "bytes": 27992,
+      "triangles": [356, 92, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l1_3x3_02",
+      "bytes": 27980,
+      "triangles": [356, 92, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l1_4x4_01",
+      "bytes": 28432,
+      "triangles": [364, 100, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l1_4x4_02",
+      "bytes": 28444,
+      "triangles": [364, 100, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l2_2x2_01",
+      "bytes": 33236,
+      "triangles": [468, 204, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l2_2x2_02",
+      "bytes": 28796,
+      "triangles": [372, 108, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l2_3x3_01",
+      "bytes": 27980,
+      "triangles": [356, 92, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l2_3x3_02",
+      "bytes": 30096,
+      "triangles": [404, 140, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l2_4x4_01",
+      "bytes": 33308,
+      "triangles": [468, 204, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l2_4x4_02",
+      "bytes": 32980,
+      "triangles": [460, 196, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l3_2x2_01",
+      "bytes": 31700,
+      "triangles": [436, 172, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l3_2x2_02",
+      "bytes": 37624,
+      "triangles": [572, 308, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l3_3x3_01",
+      "bytes": 35664,
+      "triangles": [516, 252, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l3_3x3_02",
+      "bytes": 33912,
+      "triangles": [484, 220, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l3_4x4_01",
+      "bytes": 36412,
+      "triangles": [540, 276, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_o_l3_4x4_02",
+      "bytes": 32656,
+      "triangles": [452, 188, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l1_2x2_01",
+      "bytes": 24004,
+      "triangles": [212, 56, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l1_2x2_02",
+      "bytes": 23068,
+      "triangles": [192, 48, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l1_3x3_01",
+      "bytes": 23772,
+      "triangles": [212, 56, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l1_3x3_02",
+      "bytes": 23764,
+      "triangles": [212, 56, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l1_4x4_01",
+      "bytes": 23708,
+      "triangles": [212, 56, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l1_4x4_02",
+      "bytes": 23060,
+      "triangles": [192, 48, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l2_2x2_01",
+      "bytes": 25724,
+      "triangles": [256, 88, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l2_2x2_02",
+      "bytes": 24664,
+      "triangles": [228, 72, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l2_3x3_01",
+      "bytes": 23764,
+      "triangles": [212, 56, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l2_3x3_02",
+      "bytes": 24096,
+      "triangles": [220, 64, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l2_4x4_01",
+      "bytes": 25400,
+      "triangles": [256, 88, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l2_4x4_02",
+      "bytes": 25052,
+      "triangles": [248, 80, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l3_2x2_01",
+      "bytes": 25156,
+      "triangles": [252, 72, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l3_2x2_02",
+      "bytes": 27960,
+      "triangles": [328, 112, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l3_3x3_01",
+      "bytes": 26232,
+      "triangles": [280, 88, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l3_3x3_02",
+      "bytes": 28304,
+      "triangles": [336, 120, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l3_4x4_01",
+      "bytes": 27356,
+      "triangles": [308, 104, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l3_4x4_02",
+      "bytes": 27044,
+      "triangles": [300, 96, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l4_2x2_01",
+      "bytes": 28160,
+      "triangles": [336, 120, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l4_2x2_02",
+      "bytes": 27244,
+      "triangles": [308, 104, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l4_3x3_01",
+      "bytes": 28296,
+      "triangles": [336, 120, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l4_3x3_02",
+      "bytes": 30696,
+      "triangles": [412, 160, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l4_4x4_01",
+      "bytes": 28372,
+      "triangles": [336, 120, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l4_4x4_02",
+      "bytes": 28016,
+      "triangles": [328, 112, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l5_2x2_01",
+      "bytes": 35368,
+      "triangles": [532, 232, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l5_2x2_02",
+      "bytes": 36076,
+      "triangles": [552, 240, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l5_3x3_01",
+      "bytes": 31968,
+      "triangles": [440, 176, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l5_3x3_02",
+      "bytes": 36460,
+      "triangles": [560, 248, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l5_4x4_01",
+      "bytes": 36172,
+      "triangles": [552, 240, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rh_l5_4x4_02",
+      "bytes": 33100,
+      "triangles": [468, 192, 24],
+      "budget": [4000, 600, 24]
+    },
+    {
+      "id": "bld_rl_l1_1x1_01",
+      "bytes": 21832,
+      "triangles": [234, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l1_1x1_02",
+      "bytes": 21844,
+      "triangles": [234, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l1_1x1_03",
+      "bytes": 21772,
+      "triangles": [234, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l1_1x2_01",
+      "bytes": 21584,
+      "triangles": [234, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l1_1x2_02",
+      "bytes": 21616,
+      "triangles": [234, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l1_1x2_03",
+      "bytes": 21600,
+      "triangles": [234, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l1_2x1_01",
+      "bytes": 22180,
+      "triangles": [258, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l1_2x1_02",
+      "bytes": 22256,
+      "triangles": [258, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l1_2x1_03",
+      "bytes": 22164,
+      "triangles": [258, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l1_2x2_01",
+      "bytes": 22140,
+      "triangles": [258, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l1_2x2_02",
+      "bytes": 22216,
+      "triangles": [258, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l1_2x2_03",
+      "bytes": 22152,
+      "triangles": [258, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_1x1_01",
+      "bytes": 22336,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_1x1_02",
+      "bytes": 21848,
+      "triangles": [234, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_1x1_03",
+      "bytes": 22428,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_1x2_01",
+      "bytes": 21984,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_1x2_02",
+      "bytes": 22028,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_1x2_03",
+      "bytes": 21980,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_2x1_01",
+      "bytes": 22576,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_2x1_02",
+      "bytes": 22628,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_2x1_03",
+      "bytes": 22604,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_2x2_01",
+      "bytes": 22144,
+      "triangles": [258, 18, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_2x2_02",
+      "bytes": 22612,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_2x2_03",
+      "bytes": 22584,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l2_2x2_sample",
+      "bytes": 9068,
+      "triangles": [0, 0, 0],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_1x1_01",
+      "bytes": 22428,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_1x1_02",
+      "bytes": 22384,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_1x1_03",
+      "bytes": 22340,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_1x2_01",
+      "bytes": 21984,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_1x2_02",
+      "bytes": 22000,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_1x2_03",
+      "bytes": 22008,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_2x1_01",
+      "bytes": 22600,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_2x1_02",
+      "bytes": 22652,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_2x1_03",
+      "bytes": 22580,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_2x2_01",
+      "bytes": 22560,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_2x2_02",
+      "bytes": 22632,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l3_2x2_03",
+      "bytes": 22560,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_1x1_01",
+      "bytes": 22724,
+      "triangles": [250, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_1x1_02",
+      "bytes": 22772,
+      "triangles": [250, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_1x1_03",
+      "bytes": 22428,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_1x2_01",
+      "bytes": 22012,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_1x2_02",
+      "bytes": 22432,
+      "triangles": [250, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_1x2_03",
+      "bytes": 21984,
+      "triangles": [242, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_2x1_01",
+      "bytes": 22576,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_2x1_02",
+      "bytes": 23060,
+      "triangles": [274, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_2x1_03",
+      "bytes": 22604,
+      "triangles": [266, 26, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_2x2_01",
+      "bytes": 22988,
+      "triangles": [274, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_2x2_02",
+      "bytes": 23036,
+      "triangles": [274, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l4_2x2_03",
+      "bytes": 22992,
+      "triangles": [274, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_1x1_01",
+      "bytes": 22776,
+      "triangles": [250, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_1x1_02",
+      "bytes": 22772,
+      "triangles": [250, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_1x1_03",
+      "bytes": 22724,
+      "triangles": [250, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_1x2_01",
+      "bytes": 22408,
+      "triangles": [250, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_1x2_02",
+      "bytes": 22412,
+      "triangles": [250, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_1x2_03",
+      "bytes": 22412,
+      "triangles": [250, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_2x1_01",
+      "bytes": 22996,
+      "triangles": [274, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_2x1_02",
+      "bytes": 23040,
+      "triangles": [274, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_2x1_03",
+      "bytes": 22996,
+      "triangles": [274, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_2x2_01",
+      "bytes": 22992,
+      "triangles": [274, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_2x2_02",
+      "bytes": 23020,
+      "triangles": [274, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "bld_rl_l5_2x2_03",
+      "bytes": 22976,
+      "triangles": [274, 34, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_bus_depot",
+      "bytes": 20600,
+      "triangles": [100, 84, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_cemetery",
+      "bytes": 25452,
+      "triangles": [294, 150, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_clinic",
+      "bytes": 20196,
+      "triangles": [88, 72, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_crematorium",
+      "bytes": 19636,
+      "triangles": [74, 66, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_fire_hq",
+      "bytes": 21060,
+      "triangles": [116, 84, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_fire_station",
+      "bytes": 20608,
+      "triangles": [100, 84, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_garbage_incinerator",
+      "bytes": 23276,
+      "triangles": [156, 132, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_garbage_landfill",
+      "bytes": 16276,
+      "triangles": [60, 60, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_garbage_recycling",
+      "bytes": 19656,
+      "triangles": [76, 60, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_hospital",
+      "bytes": 21040,
+      "triangles": [128, 72, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_metro_station",
+      "bytes": 20724,
+      "triangles": [100, 84, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_park_large",
+      "bytes": 27192,
+      "triangles": [396, 84, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_park_playground",
+      "bytes": 26396,
+      "triangles": [372, 60, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_park_plaza",
+      "bytes": 27612,
+      "triangles": [396, 84, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_park_small",
+      "bytes": 25304,
+      "triangles": [348, 36, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_police_hq",
+      "bytes": 21036,
+      "triangles": [116, 84, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_police_station",
+      "bytes": 20640,
+      "triangles": [100, 84, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_power_coal",
+      "bytes": 22976,
+      "triangles": [156, 132, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_power_hydro",
+      "bytes": 18068,
+      "triangles": [132, 132, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_power_oil",
+      "bytes": 25328,
+      "triangles": [204, 180, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_power_solar",
+      "bytes": 29316,
+      "triangles": [396, 204, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_power_wind",
+      "bytes": 19640,
+      "triangles": [48, 48, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_school_elementary",
+      "bytes": 19752,
+      "triangles": [76, 60, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_school_high",
+      "bytes": 19632,
+      "triangles": [76, 60, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_tree",
+      "bytes": 16556,
+      "triangles": [72, 12, 12],
+      "budget": [400, 60, 12]
+    },
+    {
+      "id": "svc_unique_botanical_garden",
+      "bytes": 18876,
+      "triangles": [126, 126, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_unique_city_hall",
+      "bytes": 24408,
+      "triangles": [186, 162, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_unique_clock_tower",
+      "bytes": 16944,
+      "triangles": [84, 84, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_unique_convention_center",
+      "bytes": 24544,
+      "triangles": [192, 168, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_unique_lighthouse",
+      "bytes": 18856,
+      "triangles": [162, 162, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_unique_memorial",
+      "bytes": 16816,
+      "triangles": [78, 78, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_unique_museum",
+      "bytes": 23948,
+      "triangles": [180, 156, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_unique_observatory",
+      "bytes": 21140,
+      "triangles": [104, 96, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_unique_opera_house",
+      "bytes": 15952,
+      "triangles": [42, 42, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_unique_science_center",
+      "bytes": 24416,
+      "triangles": [176, 168, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_unique_sky_tower",
+      "bytes": 16416,
+      "triangles": [60, 60, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_unique_stadium",
+      "bytes": 16532,
+      "triangles": [72, 72, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_university",
+      "bytes": 20316,
+      "triangles": [98, 66, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_water_drain",
+      "bytes": 16320,
+      "triangles": [36, 36, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_water_pump",
+      "bytes": 18304,
+      "triangles": [44, 36, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_water_tower",
+      "bytes": 18580,
+      "triangles": [156, 156, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "svc_water_treatment",
+      "bytes": 23492,
+      "triangles": [152, 144, 12],
+      "budget": [1500, 300, 12]
+    },
+    {
+      "id": "veh_ambulance_1",
+      "bytes": 8320,
+      "triangles": [272, 36, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_bus_1",
+      "bytes": 8152,
+      "triangles": [284, 36, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_car_1",
+      "bytes": 7552,
+      "triangles": [212, 36, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_car_2",
+      "bytes": 7548,
+      "triangles": [212, 36, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_car_3",
+      "bytes": 7740,
+      "triangles": [224, 36, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_car_4",
+      "bytes": 7556,
+      "triangles": [212, 36, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_car_5",
+      "bytes": 7556,
+      "triangles": [212, 36, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_car_6",
+      "bytes": 7732,
+      "triangles": [224, 36, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_fire_1",
+      "bytes": 8200,
+      "triangles": [272, 48, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_garbage_1",
+      "bytes": 7956,
+      "triangles": [236, 60, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_hearse_1",
+      "bytes": 7740,
+      "triangles": [224, 36, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_metro_1",
+      "bytes": 8200,
+      "triangles": [284, 36, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_police_1",
+      "bytes": 7740,
+      "triangles": [224, 36, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_truck_1",
+      "bytes": 7524,
+      "triangles": [224, 48, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_truck_2",
+      "bytes": 7540,
+      "triangles": [224, 48, 0],
+      "budget": [600, 100, 0]
+    },
+    {
+      "id": "veh_truck_3",
+      "bytes": 7928,
+      "triangles": [260, 60, 0],
+      "budget": [600, 100, 0]
+    }
+  ],
+  "audio": [
+    { "name": "blue-hour.m4a", "bytes": 3255933 },
+    { "name": "city-lights.m4a", "bytes": 3172506 },
+    { "name": "garden-walk.m4a", "bytes": 3175615 },
+    { "name": "little-avenue.m4a", "bytes": 3141011 },
+    { "name": "river-morning.m4a", "bytes": 3184979 },
+    { "name": "sunlit-roofs.m4a", "bytes": 3137689 }
+  ]
+}

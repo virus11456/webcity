@@ -1,0 +1,45 @@
+{
+  "calls": 814,
+  "triangles": 624501,
+  "graphics": {
+    "shadows": true,
+    "postprocessing": true,
+    "tiltShift": true,
+    "treeDensity": 100,
+    "quality": "high",
+    "shadowsActive": 3,
+    "postfxActive": 3,
+    "tilt": 1,
+    "density": 1
+  },
+  "buildings": {
+    "buildings": 108,
+    "lods": [27, 81, 0],
+    "triangles": 14628,
+    "lodPending": 0,
+    "transitioning": 0,
+    "effects": true,
+    "pending": 0,
+    "detail": 108,
+    "assets": 108,
+    "construction": 0,
+    "abandoned": 0,
+    "removing": 0,
+    "pools": 90,
+    "farInstances": 0,
+    "scaffolds": 0,
+    "dust": 0,
+    "processed": 118,
+    "maxWorkMs": 2.200000047683716
+  },
+  "vegetation": {
+    "generated": 60000,
+    "rendered": 57958,
+    "excluded": 2042,
+    "lod0": 165,
+    "lod1": 11450,
+    "lod2": 46343,
+    "pending": false
+  },
+  "fps": 60
+}

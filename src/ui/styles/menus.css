@@ -100,7 +100,7 @@
 .pause-dialog {
   width: min(480px, calc(100vw - 24px));
   max-height: calc(100dvh - 40px);
-  background: var(--color-panel);
+  background: var(--color-background);
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);

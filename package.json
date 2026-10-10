@@ -18,7 +18,8 @@
     "test:coverage": "vitest run --coverage",
     "assets:sample": "node scripts/generateAssetSample.ts",
     "assets:compress": "node scripts/compressAsset.ts",
-    "assets:models": "node scripts/runModelBuild.ts"
+    "assets:models": "node scripts/runModelBuild.ts",
+    "assets:audit": "node scripts/auditArt.mjs"
   },
   "dependencies": {
     "@msgpack/msgpack": "3.1.3",

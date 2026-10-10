@@ -1,0 +1,29 @@
+{
+  "startupGzip": 32107,
+  "scripts": [
+    {
+      "name": "index-CZWyP7hl.js",
+      "gzipBytes": 21635
+    },
+    {
+      "name": "MainMenu-eAh0HbTJ.js",
+      "gzipBytes": 1837
+    },
+    {
+      "name": "rolldown-runtime-DK3Fl9T5.js",
+      "gzipBytes": 154
+    },
+    {
+      "name": "terrain-B1av-RvP.js",
+      "gzipBytes": 710
+    },
+    {
+      "name": "ui-kit-gRhAKOwJ.js",
+      "gzipBytes": 5982
+    },
+    {
+      "name": "storage-CEWf2sWG.js",
+      "gzipBytes": 1789
+    }
+  ]
+}

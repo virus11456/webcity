@@ -437,6 +437,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
             !serviceActive,
         ),
       );
+      panel.dataset.exploring = explore.getAttribute('aria-pressed') ?? 'false';
       draw.disabled =
         !state.ready ||
         state.pending ||
