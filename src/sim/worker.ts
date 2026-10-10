@@ -3,7 +3,11 @@ import { SIM_RUNTIME } from '../data/simRuntime';
 import { CommandDispatcher } from './commands';
 
 const dispatcher = new CommandDispatcher(
-  (event) => globalThis.postMessage(event),
+  (event) =>
+    globalThis.postMessage(event, {
+      transfer:
+        event.t === 'vehicles' ? [event.data.buffer as ArrayBuffer] : [],
+    }),
   { serialize, deserialize },
 );
 let last = performance.now();

@@ -9,6 +9,8 @@ export interface RouteLeg {
   toLane?: string;
   length: number;
   startDistance?: number;
+  fromLaneDistance?: number;
+  toLaneDistance?: number;
   speedMps: number;
   points: readonly LanePoint[];
 }

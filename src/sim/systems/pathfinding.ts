@@ -10,6 +10,7 @@ import {
 import type { Lane, LanePoint } from '../../world/roadLanes';
 import { sampleRoad } from '../../world/roadProfile';
 import type { RoadNode, RoadSegment, Vec2 } from '../../world/types';
+import type { SavedRoute } from '../../world/traffic';
 import type { Route, RouteLeg } from '../../world/routes';
 
 /** Reused numeric binary heap; no per-relaxation objects. */
@@ -419,6 +420,86 @@ export class Pathfinder {
     this.cache.set(key, { day, route });
     return route;
   }
+  lane(id: string, mode: 'drive' | 'walk'): Lane | undefined {
+    return this.lanes(mode).get(id);
+  }
+  /** Reattach only to a lane physically at the stranded position, including elevation. */
+  recover(
+    point: { x: number; y: number; z: number },
+    mode: 'drive' | 'walk',
+    preferred = '',
+  ): LaneAccess[] {
+    let best = C.recoveryDistanceM * C.recoveryDistanceM;
+    let result: LaneAccess | undefined;
+    const lanes = this.lanes(mode);
+    const inspect = (lane: Lane) => {
+      for (let i = 1; i < lane.points.length; i++) {
+        const a = lane.points[i - 1]!,
+          b = lane.points[i]!;
+        const dx = b.x - a.x,
+          dy = b.y - a.y,
+          dz = b.z - a.z;
+        const t = Math.max(
+          0,
+          Math.min(
+            1,
+            ((point.x - a.x) * dx +
+              (point.y - a.y) * dy +
+              (point.z - a.z) * dz) /
+              (dx * dx + dy * dy + dz * dz || 1),
+          ),
+        );
+        const d =
+          (a.x + dx * t - point.x) ** 2 +
+          (a.y + dy * t - point.y) ** 2 +
+          (a.z + dz * t - point.z) ** 2;
+        if (d <= best) {
+          best = d;
+          result = {
+            lane: lane.id,
+            distance: a.distance + (b.distance - a.distance) * t,
+          };
+        }
+      }
+    };
+    const first = lanes.get(preferred);
+    if (first) {
+      inspect(first);
+      if (result) return [result];
+    }
+    for (const lane of lanes.values()) inspect(lane);
+    return result ? [result] : [];
+  }
+  restoreRoute(saved: SavedRoute): Route | null {
+    const legs: RouteLeg[] = [];
+    for (const leg of saved.legs) {
+      if (leg.kind === 'access' || leg.kind === 'laneChange') {
+        if (!leg.points?.length) return null;
+        legs.push({ ...leg, points: leg.points });
+        continue;
+      }
+      if (leg.lane) {
+        const lane = this.lanes(saved.mode).get(leg.lane);
+        if (!lane || (leg.startDistance ?? 0) + leg.length > lane.length + 1e-4)
+          return null;
+        legs.push({ ...leg, points: lane.points });
+        continue;
+      }
+      if (!leg.fromLane || !leg.toLane) return null;
+      const connection = this.edges(leg.fromLane, saved.mode).find(
+        (e) => e.to === leg.toLane,
+      )?.connection;
+      if (!connection) return null;
+      legs.push({ ...leg, points: connection.points });
+    }
+    return {
+      mode: saved.mode,
+      revision: this.revision,
+      legs,
+      length: legs.reduce((n, l) => n + l.length, 0),
+      costSeconds: legs.reduce((n, l) => n + this.edgeTime(l, saved.mode), 0),
+    };
+  }
   private rememberLeg(key: string, leg: RouteLeg): void {
     // Graph edges retain their own references; only reusable partial-leg lookup needs eviction.
     if (this.legCache.size >= C.cacheEntries)
@@ -477,6 +558,8 @@ export class Pathfinder {
     leg = {
       id: key,
       kind: 'laneChange',
+      fromLaneDistance: from,
+      toLaneDistance: (to / a.length) * b.length,
       segment: a.segment,
       fromLane: a.id,
       toLane: b.id,

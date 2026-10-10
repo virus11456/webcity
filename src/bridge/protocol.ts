@@ -123,7 +123,13 @@ export type SimEvent =
     }
   | { t: 'stats'; stats: CityStats; transient?: boolean }
   | { t: 'fields'; which: FieldName; data: Float32Array }
-  | { t: 'vehicles'; data: Float32Array; count: number }
+  | {
+      t: 'vehicles';
+      data: Float32Array;
+      count: number;
+      tick?: number;
+      speed?: SimSpeed;
+    }
   | {
       t: 'notify';
       kind: 'info' | 'warning' | 'danger';

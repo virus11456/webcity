@@ -543,3 +543,7 @@ M1-20：`ui/hud/TopBar` 與事件訂閱模型取代原速度 DOM 面板；`ui/st
 ### M2-09 路徑規劃
 
 Pathfinder 重用數值化車道相位圖、TypedArray 搜索工作區、二元堆積與 ALT 下界；一般道路另建雙向行人路網。RoutePlanner 在 Worker 每 tick 處理有上限的個人 Journey，输出带 revision 的 RouteLeg 陣列。一般車道腿共用取樣 points，加上 startDistance 偏移，路口／換道腿保留所屬節點及車道。衍生圖與路徑不寫入存檔。完整界面、快取及驗證見 `PATHFINDING.md`。
+
+### M2-10 權威交通
+
+TrafficSystem 於 ScheduleSystem／RoutePlanner 之後更新，車道排序占用表供跟车與雙車道換道檢查，路口 mutex 管理號誌／讓行。`vehicles` 每 50 ms 傳送十欄 Float32Array，附 tick/speed，Worker 移交 buffer。WorldSnapshot 增加可遷移的 traffic 集合；路徑去重並保存腿／進度與少量獨立幾何，載入後重建道路引用。詳見 `TRAFFIC.md`。
