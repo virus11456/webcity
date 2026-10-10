@@ -1,3 +1,4 @@
+import { VegetationRenderer } from './vegetation/vegetation';
 import type { SimEvent } from '../bridge/protocol';
 import { PostProcessing } from './postfx/pipeline';
 import { DayNight } from './dayNight';
@@ -77,6 +78,7 @@ export class CityRenderer {
     ((previous?: ShaderHook) => void) | undefined
   >();
   readonly terrain: Terrain;
+  readonly vegetation: VegetationRenderer;
   private readonly land: TerrainRenderer;
   private readonly town: CityPreview;
   private readonly water: WaterRenderer;
@@ -103,6 +105,8 @@ export class CityRenderer {
       MAP_PRESETS.find((p) => p.id === options.mapId) ?? MAP_PRESETS[0],
     );
     this.land = new TerrainRenderer(this.terrain);
+    this.vegetation = new VegetationRenderer(this.terrain);
+    this.vegetation.group.visible = false;
     this.town = new CityPreview(this.terrain);
     this.water = new WaterRenderer(this.terrain);
     this.renderer = new WebGLRenderer({
@@ -161,7 +165,13 @@ export class CityRenderer {
       },
     });
     this.cameraController.copyFocus(this.focus);
-    this.scene.add(this.land.group, this.town.group, this.water.mesh, this.sky);
+    this.scene.add(
+      this.land.group,
+      this.town.group,
+      this.water.mesh,
+      this.sky,
+      this.vegetation.group,
+    );
     this.canvas.dataset.buildings = String(this.town.buildingCount);
     this.canvas.dataset.chunks = String(this.land.group.children.length - 1);
     this.scene.fog = new FogExp2(
@@ -192,6 +202,7 @@ export class CityRenderer {
   /** Separate decorative city assets from the authoritative construction world. */
   setConstructionMode(enabled: boolean): void {
     this.town.group.visible = !enabled;
+    this.vegetation.group.visible = enabled;
     this.canvas.dataset.construction = String(enabled);
   }
   /** Copy worker-owned heights into rendering/picking terrain and refresh changed terrain chunks. */
@@ -240,6 +251,7 @@ export class CityRenderer {
         : new PostProcessing(this.renderer, this.scene, this.camera, level);
   }
   private createLighting(level: QualityLevel): Lighting {
+    this.vegetation.setQuality(level);
     this.renderer.shadowMap.enabled = level !== 'low';
     this.stats.shadows =
       level === 'high' ? LIGHTING.cascades : level === 'medium' ? 1 : 0;
@@ -252,12 +264,19 @@ export class CityRenderer {
       this.town.glass,
       this.town.lamps,
       this.water.material,
+      this.vegetation.material,
+      this.vegetation.billboard.material,
       ...this.extraMaterials.keys(),
     ]);
     installNightWindows(
       this.town.glass,
       this.dayNight.hour,
       lighting.csm ? this.town.glass.onBeforeCompile : undefined,
+    );
+    this.vegetation.installBillboard(
+      lighting.csm
+        ? this.vegetation.billboard.material.onBeforeCompile
+        : undefined,
     );
     this.land.material.userData.infoRole = 'field';
     this.water.material.userData.infoRole = 'field';
@@ -338,6 +357,7 @@ export class CityRenderer {
     this.cameraController.update(seconds);
     this.options.onAfterCamera?.();
     this.water.update(seconds);
+    this.vegetation.update(this.camera);
     this.lastFrame = now;
     this.cameraController.copyFocus(this.focus);
     this.sky.position.copy(this.camera.position);
@@ -403,6 +423,7 @@ export class CityRenderer {
     this.lighting.dispose();
     this.postfx?.dispose();
     this.land.dispose();
+    this.vegetation.dispose();
     this.town.dispose();
     this.water.dispose();
     for (const mesh of [this.sky]) {

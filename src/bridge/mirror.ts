@@ -1,3 +1,4 @@
+import type { VegetationWorld } from '../world/vegetation';
 import type { SimSpeed } from '../data/config';
 import type { PowerWorld } from '../world/power';
 import type { CityStats } from '../world/types';
@@ -119,6 +120,25 @@ export class WorldMirror {
   /** Copy road-owned zoning blocks without cloning unrelated world arrays. */
   readZoneBlocks(): ZoneBlock[] {
     return this.state ? structuredClone(this.state.zoneBlocks) : [];
+  }
+
+  /** Minimal defensive visual occupancy snapshot; no terrain or simulation fields copied. */
+  readVegetationWorld(): VegetationWorld | undefined {
+    const s = this.state;
+    return (
+      s &&
+      structuredClone({
+        nodes: s.nodes,
+        segments: s.segments,
+        buildings: s.buildings.map((b) => ({
+          pos: b.pos,
+          rotation: b.rotation,
+          lotW: b.lotW,
+          lotD: b.lotD,
+          defId: b.defId,
+        })),
+      })
+    );
   }
 
   /** Building render initialization without copying terrain and simulation fields. */
