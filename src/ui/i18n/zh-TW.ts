@@ -187,7 +187,9 @@ export const ZH_TW = {
   'menu.scale': '介面字級',
   'menu.dayNight': '日夜循環',
   'menu.volume': '音量',
-  'menu.audioLater': '音效尚未開放。',
+  'menu.audioHint': '首次點擊畫面後啟用音訊；切到背景會自動靜音。',
+  'menu.sfxVolume': '操作音效',
+  'menu.ambientVolume': '城市環境音',
   'menu.settingsFailed': '無法儲存設定，請確認瀏覽器允許本機儲存。',
   'menu.install':
     '在 Safari 點「分享」→「加入主畫面」，即可像 App 一樣開啟城市。',

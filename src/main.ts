@@ -1,3 +1,6 @@
+import { cityAudio } from './audio/manager';
+import { attachAudioControls } from './audio/controls';
+import { readPreferences, type Preferences } from './ui/preferences';
 import { decorateControls } from './ui/icons';
 import './ui/styles/art.css';
 import { t } from './ui/i18n/t';
@@ -8,6 +11,14 @@ import './ui/styles/toolbar.css';
 
 const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('Missing #app element');
+cityAudio.setLevels(readPreferences());
+const stopAudio = attachAudioControls(root);
+window.addEventListener('webcity-preferences-change', (e) =>
+  cityAudio.setLevels((e as CustomEvent<Preferences>).detail),
+);
+window.addEventListener('pagehide', stopAudio, { once: true });
+if (new URLSearchParams(location.search).get('debug') === '1')
+  window.__webcityAudio = () => cityAudio.readStats();
 const stopIcons = decorateControls(root);
 window.addEventListener('pagehide', stopIcons, { once: true });
 if (new URLSearchParams(location.search).get('asset-gallery') === '1')
@@ -66,3 +77,9 @@ else
     );
   });
 if (import.meta.env.PROD) void registerPwa();
+
+declare global {
+  interface Window {
+    __webcityAudio?: () => ReturnType<typeof cityAudio.readStats>;
+  }
+}

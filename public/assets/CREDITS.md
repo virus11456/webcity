@@ -38,3 +38,7 @@ Original six tree and two shrub geometries, plus a procedurally authored silhoue
 ## M3-16 UI 圖示
 
 `src/data/icons.ts` 為本專案原創 SVG 路徑，工具、設施、圖層及問題圖示皆由此繪製。沒有使用或描摹商業遊戲圖示；建築縮圖由本專案原創模型來源離屏渲染。
+
+## M3-17 原創音效
+
+`public/assets/audio/{click,place,demolish,road,milestone,error,wind,traffic,birds,voices,industry,water}.{ogg,mp3}` 由 `scripts/generateSfx.py` 為本專案原創合成，允許本專案商用與再發布。沒有採樣外部錄音或商業歌曲；voices 為非語言合成音。ffmpeg 僅為離線編碼工具，不隨遊戲發佈。

@@ -657,3 +657,6 @@ CityEffects 消費 ready／buildingsChanged，以兩個預配 InstancedBufferGeo
 
 ### M3-16 UI 美術與縮圖
 純資料 SVG paths 同時服務 Preact／DOM 控制與城市問題圖集。game 注入 BuildingThumbnails callback，render 在現有 WebGLRenderer 的離屏 target 渲染正式模型來源幾何，還原全部 renderer 狀態並限制快取；UI 只持有 PNG 字串，不跨層存取 Three。詳見 UI_ART.md。
+
+### M3-17 Audio
+主執行緒 audio 模組只依賴 data／core／world／bridge，管理 Web Audio 與已確認事件；game 提供鏡頭、地形與實際車數，UI 透過 preferences-change 傳遞純音量設定。音源數量有上限、背景 suspend、頁面卸載清理。詳見 AUDIO.md。

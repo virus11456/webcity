@@ -81,15 +81,18 @@ export function Settings({
         unit="%"
         onInput={(uiScale) => update({ ...value, uiScale })}
       />
-      <Slider
-        label={t('menu.volume')}
-        min={0}
-        max={100}
-        value={0}
-        disabled
-        onInput={() => {}}
-      />
-      <p>{t('menu.audioLater')}</p>
+      {(['volume', 'sfxVolume', 'ambientVolume'] as const).map((key) => (
+        <Slider
+          key={key}
+          label={t(`menu.${key}`)}
+          min={0}
+          max={100}
+          value={value[key]}
+          unit="%"
+          onInput={(n) => update({ ...value, [key]: n })}
+        />
+      ))}
+      <p>{t('menu.audioHint')}</p>
       {failed && <p role="alert">{t('menu.settingsFailed')}</p>}
     </div>
   );
