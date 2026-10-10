@@ -1,9 +1,14 @@
+import {
+  CITIZEN_INT_FIELDS,
+  CITIZEN_BYTE_FIELDS,
+  createCitizens,
+} from '../world/citizens';
 import { WORLD } from '../data/config';
 import { SERVICE_TYPES } from '../data/buildings';
 import { BUDGET_DEPARTMENTS } from '../data/economy';
 import { ROADS } from '../data/roads';
 import { ZONES } from '../data/zones';
-import { PROBLEMS } from '../data/simulation';
+import { CITIZENS, PROBLEMS } from '../data/simulation';
 import { SAVE } from '../data/persistence';
 import type { WorldSnapshot } from '../world/snapshot';
 
@@ -101,7 +106,6 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     s.loans,
     s.policies,
     s.statsHistory,
-    s.citizens,
     s.transitLines,
     s.districts,
     s.networks?.power,
@@ -209,5 +213,69 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     requireValue(
       Array.isArray(n.points) && n.points.length > 1 && n.points.every(point),
     );
+  // v1 M1 files used an empty reserved array; the Worker deterministically expands households.
+  if (Array.isArray(s.citizens)) {
+    requireValue(s.citizens.length === 0);
+    s.citizens = createCitizens();
+  }
+  const c = s.citizens;
+  requireValue(
+    c &&
+      c.version === 1 &&
+      Number.isSafeInteger(c.count) &&
+      c.count >= 0 &&
+      c.count <= 1000000 &&
+      Number.isSafeInteger(c.nextId) &&
+      c.nextId > 0 &&
+      Number.isSafeInteger(c.nextHouseholdId) &&
+      c.nextHouseholdId > 0 &&
+      Number.isSafeInteger(c.lastDay),
+  );
+  for (const k of CITIZEN_INT_FIELDS)
+    requireValue(
+      c[k] instanceof Int32Array &&
+        c[k].length >= c.count &&
+        c[k].length === c.id.length,
+    );
+  for (const k of CITIZEN_BYTE_FIELDS)
+    requireValue(c[k] instanceof Uint8Array && c[k].length === c.id.length);
+  const homes = new Set(
+    s.buildings
+      .filter((b) => b.kind === 'zoned' && ['RL', 'RH'].includes(b.defId))
+      .map((b) => b.id),
+  );
+  const citizenIds = new Set<number>(),
+    families = new Map<number, { home: number; count: number }>();
+  for (let i = 0; i < c.count; i++) {
+    requireValue(
+      c.id[i]! > 0 &&
+        c.id[i]! < c.nextId &&
+        !citizenIds.has(c.id[i]!) &&
+        homes.has(c.homeId[i]!) &&
+        (!c.workId[i] || buildings.has(c.workId[i]!)) &&
+        (!c.schoolId[i] || buildings.has(c.schoolId[i]!)) &&
+        c.householdId[i]! > 0 &&
+        c.householdId[i]! < c.nextHouseholdId &&
+        c.age[i]! <= 100 &&
+        c.education[i]! <= 3 &&
+        c.health[i]! <= 100 &&
+        c.happiness[i]! <= 100 &&
+        c.wealth[i]! <= 2 &&
+        c.state[i]! <= 7 &&
+        c.jobType[i]! <= 12 &&
+        c.shiftId[i]! <= 2 &&
+        c.requiredEducation[i]! <= c.education[i]! &&
+        c.bornDay[i]! > -CITIZENS.daysPerAgeYear &&
+        c.bornDay[i]! <= s.clock.day &&
+        c.schoolDays[i]! >= 0,
+    );
+    citizenIds.add(c.id[i]!);
+    const family = families.get(c.householdId[i]!) ?? {
+      home: c.homeId[i]!,
+      count: 0,
+    };
+    requireValue(family.home === c.homeId[i] && ++family.count <= 5);
+    families.set(c.householdId[i]!, family);
+  }
   return s;
 }

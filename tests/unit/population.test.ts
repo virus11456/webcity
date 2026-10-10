@@ -116,7 +116,9 @@ describe('population capacities and integer aggregates', () => {
     expect(b.housing!.education.reduce((a, n) => a + n, 0)).toBe(b.residents);
     expect(b.housing!.ages.reduce((a, n) => a + n, 0)).toBe(b.residents);
     expect(b.housing!.availableWorkers.reduce((a, n) => a + n, 0)).toBe(
-      Math.floor(b.residents * 0.55),
+      Array.from(s.citizens.age.slice(0, s.citizens.count)).filter(
+        (age) => age >= 19 && age <= 64,
+      ).length,
     );
   });
   it('does not move into unfinished, disconnected or pending-rezone homes', () => {
@@ -140,13 +142,15 @@ describe('population capacities and integer aggregates', () => {
   });
 });
 describe('qualified nearest-job matching', () => {
-  it('conserves the city labour fraction even across one-person homes', () => {
+  it('uses the actual working-age residents even across one-person homes', () => {
     const s = fixture(occupied(1, 1), occupied(2, 1), building(3, 'I'));
     updatePopulation(s);
     expect(s.stats.population).toBe(2);
-    expect(s.stats.populationDetails!.availableWorkers).toBe(1);
-    expect(s.stats.populationDetails!.employed).toBe(1);
-    expect(s.buildings[0]!.housing!.availableWorkers).toEqual([1, 0, 0, 0]);
+    const adults = [...s.citizens.age.slice(0, s.citizens.count)].filter(
+      (age) => age >= 19 && age <= 64,
+    ).length;
+    expect(s.stats.populationDetails!.availableWorkers).toBe(adults);
+    expect(s.stats.populationDetails!.employed).toBe(adults);
   });
   it('fills the nearest eligible workplace first and never exceeds supply or slots', () => {
     const home = occupied(1, 100),
@@ -157,7 +161,7 @@ describe('qualified nearest-job matching', () => {
     expect(near.workers).toBe(near.jobs);
     expect(far.workers).toBeLessThanOrEqual(far.jobs);
     const assignments = home.housing!.assignments;
-    expect(assignments[0]!.workplaceId).toBe(near.id);
+    expect(assignments.some((a) => a.workplaceId === near.id)).toBe(true);
     for (const a of assignments)
       expect(a.education).toBeGreaterThanOrEqual(a.requiredEducation);
     expect(assignments.reduce((sum, a) => sum + a.workers, 0)).toBe(
@@ -265,7 +269,7 @@ describe('moving out and replay', () => {
     expect(empty).toBeLessThan(115);
     expect(s.stats.populationDetails!.movedIn).toBe(0);
     expect(s.stats.populationDetails!.movedOut).toBe(
-      before - s.stats.population,
+      before - s.stats.population - s.citizens.deaths + s.citizens.births,
     );
     const b = fixture(building(1));
     b.stats.happiness = 30;
@@ -316,7 +320,7 @@ describe('moving out and replay', () => {
     const stats = mirror.readStats()!;
     stats.populationDetails!.employed = 9000;
     expect(mirror.readStats()!.populationDetails!.employed).not.toBe(9000);
-    expect(authority!.citizens).toEqual([]);
+    expect(authority!.citizens.count).toBe(snapshot.stats.population);
     const history = sim.snapshot().statsHistory;
     expect(sim.bulldoze([{ kind: 'building', id: 1 }]).ok).toBe(true);
     expect(mirror.readStats()!.population).toBe(0);

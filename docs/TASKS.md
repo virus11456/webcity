@@ -525,8 +525,8 @@
 - **參考**：GDD §7.2
 - **內容**：`sim/systems/citizens.ts`：Struct-of-Arrays（TypedArray）存市民資料；從 M1 統計模型遷移（存檔遷移）；年齡、出生、死亡、教育升級。
 - **驗收標準**：
-  - [ ] 10 萬市民記憶體 < 20 MB；每天更新 < 10 ms
-  - [ ] 每位居民保留 homeId、workId／schoolId、職務與班表；工作分配依教育及實際職缺，存檔後仍保留
+  - [x] 10 萬市民記憶體 < 20 MB；每天更新 < 10 ms
+  - [x] 每位居民保留 homeId、workId／schoolId、職務與班表；工作分配依教育及實際職缺，存檔後仍保留
 
 ### M2-08　每日行程
 - **分支**：`feature/m2-08-schedules`｜**相依**：M2-07｜**估時**：2

@@ -87,6 +87,7 @@ export class Simulation {
       Object.assign(terrain, copy.terrain);
       Object.assign(this.state, copy, { terrain });
     }
+    updatePopulation(this.state);
     this.laneGraph.sync(this.state.nodes, this.state.segments);
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);

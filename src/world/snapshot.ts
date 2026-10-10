@@ -1,3 +1,4 @@
+import type { CitizenTable } from './citizens';
 import type { GameMode, SimSpeed } from '../data/config';
 import type { BudgetDepartment } from '../data/economy';
 import type { PolicyId } from '../data/policies';
@@ -91,7 +92,7 @@ export interface WorldSnapshot {
   networks: Record<NetworkKind, NetworkSegment[]>;
   fields: Fields;
   // Reserved empty collections; concrete schemas belong to M2 / M4.
-  citizens: never[];
+  citizens: CitizenTable;
   transitLines: never[];
   districts: never[];
   policies: PolicyId[];
