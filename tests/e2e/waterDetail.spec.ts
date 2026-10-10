@@ -6,6 +6,13 @@ import { waterSurfaceCity } from '../fixtures/waterSurfaceCity';
 test('water has animated normals, shore foam, and authoritative downstream pollution', async ({
   page,
 }, info) => {
+  // Color comparison controls lighting; nighttime moonlight intentionally changes hue.
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      'webcity-preferences',
+      JSON.stringify({ dayNight: false }),
+    ),
+  );
   const fixture = await waterSurfaceCity(),
     errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));

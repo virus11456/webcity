@@ -617,3 +617,7 @@ CityRenderer 依鏡頭海拔每幀更新既有 FogExp2 密度；80–2000 m smoo
 
 ### M3-05 陰影穩定性
 高畫質 CSM 開啟 fade，更新 frustums 後才安裝材質 hooks。中畫質以 light-space texel 對齊追蹤中心，重用方向與暫存向量；保留 bias／normalBias 與完整資源清理。見 SHADOWS.md。
+
+
+### M3-06 生活時鐘與日夜
+DayNight 只投影 Worker SimClock 至 ART 關鍵影格，最多一 tick 插值並重用 Color／uniform。game 接合建築／路燈／交通，render 不依賴 UI；窗戶 shader 與 CSM、建築狀態 hooks 組合。道路燈具與車燈使用固定批次 instancing／程序貼花，沒有逐幀配置或 point lights。見 DAY_NIGHT.md。

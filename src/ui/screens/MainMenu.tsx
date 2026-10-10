@@ -63,6 +63,16 @@ export function Settings({
         />
         {t('input.edge')}
       </label>
+      <label class="menu-check">
+        <input
+          type="checkbox"
+          checked={value.dayNight}
+          onChange={(e) =>
+            update({ ...value, dayNight: e.currentTarget.checked })
+          }
+        />
+        {t('menu.dayNight')}
+      </label>
       <Slider
         label={t('menu.scale')}
         min={90}

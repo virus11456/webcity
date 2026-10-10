@@ -1,11 +1,13 @@
 export interface Preferences {
   quality: 'auto' | 'low' | 'medium' | 'high';
   edgeScrolling: boolean;
+  dayNight: boolean;
   uiScale: number;
 }
 const defaults: Preferences = {
   quality: 'auto',
   edgeScrolling: false,
+  dayNight: true,
   uiScale: 100,
 };
 /** Validate persisted preferences and safely fall back when browser storage is unavailable. */
@@ -19,6 +21,7 @@ export function readPreferences(): Preferences {
         ? value.quality!
         : 'auto',
       edgeScrolling: value.edgeScrolling === true,
+      dayNight: value.dayNight !== false,
       uiScale:
         typeof value.uiScale === 'number' &&
         value.uiScale >= 90 &&

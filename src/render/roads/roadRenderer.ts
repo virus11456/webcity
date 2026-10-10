@@ -1,3 +1,4 @@
+import { Streetlights } from './streetlights';
 import { IntersectionProps } from './signals';
 import { bridgeMesh } from './structures';
 import { roadTrees } from './trees';
@@ -33,6 +34,13 @@ export class RoadRenderer {
     roughness: 0.95,
     side: DoubleSide,
   });
+  private lamps: Streetlights | undefined;
+  private lampKey = '';
+  private night = 0;
+  setNight(value: number): void {
+    this.night = value;
+    this.lamps?.setNight(value);
+  }
   private signals: IntersectionProps | undefined;
   private seconds = 0;
   setTime(seconds: number): void {
@@ -74,11 +82,13 @@ export class RoadRenderer {
     generation: number;
     trees: number;
     signals: number;
+    lamps: number;
   } {
     return {
       batches: this.batches.size,
       trees: this.trees?.count ?? 0,
       signals: this.signals?.count ?? 0,
+      lamps: this.lamps?.count ?? 0,
       pending: Boolean(this.job),
       generation: this.generation,
     };
@@ -229,6 +239,14 @@ export class RoadRenderer {
       this.group.remove(this.signals.group);
       this.signals.dispose();
     }
+    const lampKey = JSON.stringify([world.nodes, world.segments]);
+    if (lampKey !== this.lampKey) {
+      this.lamps?.dispose();
+      this.lamps = new Streetlights(arms);
+      this.lamps.setNight(this.night);
+      if (this.lamps.count) this.group.add(this.lamps.group);
+      this.lampKey = lampKey;
+    }
     this.signals = new IntersectionProps(world, arms);
     this.signals.update(this.seconds);
     if (this.signals.count) this.group.add(this.signals.group);
@@ -254,6 +272,7 @@ export class RoadRenderer {
       this.trees = null;
     }
     this.signals?.dispose();
+    this.lamps?.dispose();
     this.material.dispose();
     this.group.clear();
   }
