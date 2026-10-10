@@ -1,3 +1,5 @@
+import { emptyTraffic } from '../world/traffic';
+import { TRAFFIC_RUNTIME } from '../data/traffic';
 import {
   CITIZEN_INT_FIELDS,
   CITIZEN_BYTE_FIELDS,
@@ -317,6 +319,125 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     };
     requireValue(family.home === c.homeId[i] && ++family.count <= 5);
     families.set(c.householdId[i]!, family);
+  }
+  // No traffic collection existed before M2-10.
+  if (!Object.hasOwn(s, 'traffic')) s.traffic = emptyTraffic();
+  const traffic = s.traffic;
+  requireValue(
+    traffic?.version === 1 &&
+      Number.isSafeInteger(traffic.nextId) &&
+      traffic.nextId > 0 &&
+      traffic.nextId <= TRAFFIC_RUNTIME.maxVehicleId &&
+      typeof traffic.seconds === 'number' &&
+      traffic.seconds >= 0 &&
+      Number.isSafeInteger(traffic.arrived) &&
+      traffic.arrived >= 0 &&
+      Number.isSafeInteger(traffic.removedStuck) &&
+      traffic.removedStuck >= 0 &&
+      Array.isArray(traffic.routes) &&
+      Array.isArray(traffic.vehicles) &&
+      traffic.vehicles.length <= TRAFFIC_RUNTIME.capacity &&
+      traffic.routes.length <= traffic.vehicles.length &&
+      Array.isArray(traffic.stranded),
+  );
+  for (const route of traffic.routes) {
+    requireValue(
+      ['drive', 'walk'].includes(route.mode) &&
+        Array.isArray(route.legs) &&
+        route.legs.length > 0 &&
+        route.legs.length <= 20000,
+    );
+    for (const leg of route.legs) {
+      requireValue(
+        ['lane', 'junction', 'laneChange', 'walk', 'access'].includes(
+          leg.kind,
+        ) &&
+          typeof leg.id === 'string' &&
+          typeof leg.length === 'number' &&
+          leg.length >= 0 &&
+          typeof leg.speedMps === 'number' &&
+          leg.speedMps > 0 &&
+          Number.isSafeInteger(leg.segment) &&
+          (leg.startDistance === undefined || leg.startDistance >= 0),
+      );
+      if (leg.kind === 'access' || leg.kind === 'laneChange')
+        requireValue(
+          Array.isArray(leg.points) &&
+            leg.points.length >= 2 &&
+            leg.points.length <= 10000 &&
+            leg.points.every(
+              (p, i) =>
+                point(p) &&
+                typeof p.y === 'number' &&
+                typeof p.distance === 'number' &&
+                p.distance >= 0 &&
+                (!i || p.distance >= leg.points![i - 1]!.distance),
+            ),
+        );
+      else
+        requireValue(
+          typeof leg.lane === 'string' ||
+            (typeof leg.fromLane === 'string' &&
+              typeof leg.toLane === 'string'),
+        );
+    }
+  }
+  const vehicleIds = new Set<number>(),
+    travelling = new Set<number>();
+  const journeyValid = (j: (typeof traffic.vehicles)[number]['journey']) =>
+    j &&
+    Number.isSafeInteger(j.citizenId) &&
+    citizenIds.has(j.citizenId) &&
+    Number.isSafeInteger(j.originId) &&
+    j.originId > 0 &&
+    Number.isSafeInteger(j.destinationId) &&
+    j.destinationId > 0 &&
+    [1, 2, 3, 4, 5].includes(j.purpose) &&
+    [0, 1].includes(j.mode) &&
+    Number.isSafeInteger(j.requestedTick) &&
+    j.requestedTick >= 0 &&
+    j.requestedTick <= s.clock.ticks;
+  for (const v of traffic.vehicles) {
+    requireValue(
+      Number.isSafeInteger(v.id) &&
+        v.id > 0 &&
+        v.id <= TRAFFIC_RUNTIME.maxVehicleId &&
+        !vehicleIds.has(v.id) &&
+        journeyValid(v.journey) &&
+        !travelling.has(v.journey.citizenId) &&
+        Number.isSafeInteger(v.kind) &&
+        v.kind >= 0 &&
+        v.kind <= 8 &&
+        Number.isSafeInteger(v.route) &&
+        v.route >= 0 &&
+        v.route < traffic.routes.length &&
+        Number.isSafeInteger(v.leg) &&
+        v.leg >= 0 &&
+        v.leg < traffic.routes[v.route]!.legs.length &&
+        [v.distance, v.speed, v.stopped, v.stopWait].every(
+          (n) => typeof n === 'number',
+        ) &&
+        v.distance >= 0 &&
+        v.distance <= traffic.routes[v.route]!.legs[v.leg]!.length + 1e-4 &&
+        v.speed >= 0 &&
+        v.stopped >= 0 &&
+        v.stopWait >= 0 &&
+        Number.isSafeInteger(v.reservedNode) &&
+        v.reservedNode >= 0 &&
+        [v.x, v.y, v.z, v.yaw].every((x) => typeof x === 'number'),
+    );
+    vehicleIds.add(v.id);
+    travelling.add(v.journey.citizenId);
+  }
+  for (const v of traffic.stranded) {
+    requireValue(
+      journeyValid(v.journey) &&
+        !travelling.has(v.journey.citizenId) &&
+        [v.x, v.y, v.z, v.laneDistance].every((x) => typeof x === 'number') &&
+        v.laneDistance >= 0 &&
+        typeof v.lane === 'string',
+    );
+    travelling.add(v.journey.citizenId);
   }
   return s;
 }

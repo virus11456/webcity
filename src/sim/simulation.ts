@@ -1,3 +1,4 @@
+import { TrafficSystem } from './systems/traffic';
 import { RoutePlanner } from './systems/routePlanner';
 import { ScheduleSystem } from './systems/schedules';
 import { LaneGraph } from '../world/laneGraph';
@@ -70,9 +71,12 @@ export class Simulation {
   readonly laneGraph = new LaneGraph();
   readonly schedules: ScheduleSystem;
   readonly routePlanner: RoutePlanner;
+  readonly traffic: TrafficSystem;
   private emit(event: SimEvent): void {
-    if (event.t === 'roadsChanged')
+    if (event.t === 'roadsChanged') {
       this.laneGraph.sync(this.state.nodes, this.state.segments);
+      this.traffic?.networkChanged();
+    }
     this.sink(event);
   }
   private accumulatedMs = 0;
@@ -99,6 +103,13 @@ export class Simulation {
       this.schedules,
     );
     this.laneGraph.sync(this.state.nodes, this.state.segments);
+    this.traffic = new TrafficSystem(
+      this.state,
+      this.laneGraph,
+      this.routePlanner,
+      this.schedules,
+      this.state.traffic,
+    );
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
       const power = [...updatePower(this.state), ...updateWater(this.state)];
@@ -355,7 +366,7 @@ export class Simulation {
 
   /** Copy all arrays; callers cannot mutate the authoritative city. */
   snapshot(): WorldSnapshot {
-    return structuredClone(this.state);
+    return structuredClone({ ...this.state, traffic: this.traffic.snapshot() });
   }
 
   /** Validate and atomically commit a ground road, also while paused; clients cannot supply prices. */
@@ -766,6 +777,7 @@ export class Simulation {
       this.refreshPopulation();
     this.schedules.tick();
     this.routePlanner.tick();
+    this.traffic.step(tickMs / 1000, (this.state.clock.ticks * tickMs) / 1000);
     if (!dayCompleted) return;
     this.state.stats.day = this.state.clock.day;
     this.state.stats.money = this.state.money;

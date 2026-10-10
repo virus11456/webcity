@@ -1,3 +1,5 @@
+import { TRAFFIC_RUNTIME } from '../data/traffic';
+import { SIM_RUNTIME } from '../data/simRuntime';
 import type { BudgetDepartment } from '../data/economy';
 import { finitePoint } from '../world/power';
 import { isBulldozeTargets } from '../world/bulldoze';
@@ -30,6 +32,8 @@ const futureCommands = new Set([
 export class CommandDispatcher {
   private simulation: Simulation | undefined;
   private loading = false;
+  private streamElapsed = 0;
+  private streamedVehicles = false;
   constructor(
     private readonly emit: (event: SimEvent) => void,
     private readonly persistence?: {
@@ -77,6 +81,8 @@ export class CommandDispatcher {
           const next = new Simulation(snapshot.settings, this.emit, snapshot);
           const restored = next.snapshot();
           this.simulation = next;
+          this.streamElapsed = 0;
+          this.streamedVehicles = false;
           this.emit({ t: 'ready', reqId, snapshot: restored });
         })
         .catch(() => fail('err.invalidCommand'))
@@ -134,6 +140,8 @@ export class CommandDispatcher {
         );
         const snapshot = next.snapshot();
         this.simulation = next;
+        this.streamElapsed = 0;
+        this.streamedVehicles = false;
         this.emit({ t: 'ready', reqId, snapshot });
       } catch {
         fail('err.invalidCommand');
@@ -378,5 +386,20 @@ export class CommandDispatcher {
     if (this.loading) return;
     if (this.simulation?.advance(elapsedMs))
       this.emit({ t: 'clock', clock: this.simulation.readClock() });
+    this.streamElapsed += Math.min(elapsedMs, SIM_RUNTIME.maxElapsedMs);
+    if (this.simulation && this.streamElapsed >= TRAFFIC_RUNTIME.streamMs) {
+      this.streamElapsed %= TRAFFIC_RUNTIME.streamMs;
+      if (this.simulation.traffic.count || this.streamedVehicles) {
+        const frame = this.simulation.traffic.frame(),
+          clock = this.simulation.readClock();
+        this.emit({
+          t: 'vehicles',
+          ...frame,
+          tick: clock.ticks,
+          speed: clock.speed,
+        });
+        this.streamedVehicles = frame.count > 0;
+      }
+    }
   }
 }

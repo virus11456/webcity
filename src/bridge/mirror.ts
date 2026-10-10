@@ -1,3 +1,4 @@
+import type { SimSpeed } from '../data/config';
 import type { PowerWorld } from '../world/power';
 import type { CityStats } from '../world/types';
 import type { BulldozeWorld } from '../world/bulldoze';
@@ -20,7 +21,12 @@ function upsert<T extends { id: number }>(
 /** Read-only public view; all snapshots and incoming mutable data are copied. */
 export class WorldMirror {
   private state: WorldSnapshot | undefined;
-  private vehicles = { data: new Float32Array(), count: 0 };
+  private vehicles: {
+    data: Float32Array;
+    count: number;
+    tick?: number;
+    speed?: SimSpeed;
+  } = { data: new Float32Array(), count: 0 };
 
   /** Return an inexpensive frozen clock; undefined until ready. */
   get clock(): Readonly<SimClock> | undefined {
@@ -121,7 +127,12 @@ export class WorldMirror {
   }
 
   /** Return the latest copied vehicle stream (M2). */
-  readVehicles(): { data: Float32Array; count: number } {
+  readVehicles(): {
+    data: Float32Array;
+    count: number;
+    tick?: number;
+    speed?: SimSpeed;
+  } {
     return structuredClone(this.vehicles);
   }
 
@@ -221,7 +232,12 @@ export class WorldMirror {
           ] = event.data.slice();
         break;
       case 'vehicles':
-        this.vehicles = { data: event.data.slice(), count: event.count };
+        this.vehicles = {
+          data: event.data.slice(),
+          count: event.count,
+          tick: event.tick,
+          speed: event.speed,
+        };
         break;
       case 'milestone':
         if (!state.unlocked.includes(event.index))

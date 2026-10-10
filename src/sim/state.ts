@@ -1,3 +1,4 @@
+import { emptyTraffic } from '../world/traffic';
 import { createCitizens } from '../world/citizens';
 import { addStarterCity } from './starterCity';
 import { updateDemand } from './systems/demand';
@@ -74,6 +75,7 @@ export function createState(settings: CitySettings): SimState {
       ) as Fields['coverage'],
     },
     citizens: createCitizens(),
+    traffic: emptyTraffic(),
     transitLines: [],
     districts: [],
     policies: [],

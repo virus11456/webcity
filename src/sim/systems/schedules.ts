@@ -195,6 +195,26 @@ export class ScheduleSystem {
       ? i
       : undefined;
   }
+  hasDestination(j: Journey): boolean {
+    return this.buildings.get(j.destinationId)?.state === 'active';
+  }
+  /** Change intent, never location: the traffic system retains the actual stranded position. */
+  returnHome(j: Journey): Journey {
+    const i = this.row(j),
+      c = this.s.citizens;
+    if (i === undefined) return j;
+    c.destinationId[i] = c.homeId[i]!;
+    c.tripPurpose[i] = Purpose.home;
+    c.restAfterTrip[i] = 1;
+    c.tripStatus[i] = Status.blocked;
+    c.tripStartTick[i] = this.s.clock.ticks;
+    return {
+      ...j,
+      destinationId: c.homeId[i]!,
+      purpose: Purpose.home,
+      requestedTick: this.s.clock.ticks,
+    };
+  }
   depart(j: Journey): boolean {
     const i = this.row(j);
     if (i === undefined || this.s.citizens.tripStatus[i] === Status.moving)

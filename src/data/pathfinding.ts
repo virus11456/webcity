@@ -1,5 +1,6 @@
 export const PATHFINDING = {
   requestsPerTick: 24,
+  recoveryDistanceM: 2,
   maximumVisited: 20000,
   costEpsilonSeconds: 1e-8,
   landmarkMinimumVertices: 128,
