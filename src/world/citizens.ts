@@ -7,6 +7,15 @@ export const CITIZEN_INT_FIELDS = [
   'householdId',
   'bornDay',
   'schoolDays',
+  'locationId',
+  'destinationId',
+  'tripOriginId',
+  'tripStartTick',
+  'shiftEndTick',
+  'lastShiftCycle',
+  'activityUntilTick',
+  'lastShoppingCycle',
+  'lastLeisureCycle',
 ] as const;
 export const CITIZEN_BYTE_FIELDS = [
   'age',
@@ -18,6 +27,10 @@ export const CITIZEN_BYTE_FIELDS = [
   'jobType',
   'shiftId',
   'requiredEducation',
+  'tripStatus',
+  'tripPurpose',
+  'travelMode',
+  'restAfterTrip',
 ] as const;
 export type CitizenTable = {
   version: 1;

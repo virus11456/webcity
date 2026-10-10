@@ -1,3 +1,4 @@
+import { ScheduleSystem } from './systems/schedules';
 import { LaneGraph } from '../world/laneGraph';
 import { INTERSECTIONS } from '../data/intersections';
 import { previewRoadUpgrade, upgradedPayment } from '../world/roadUpgrade';
@@ -66,6 +67,7 @@ const tickMs = (TIME.secondsPerDay[1] * 1000) / TIME.ticksPerDay;
 export class Simulation {
   private readonly state: SimState;
   readonly laneGraph = new LaneGraph();
+  readonly schedules: ScheduleSystem;
   private emit(event: SimEvent): void {
     if (event.t === 'roadsChanged')
       this.laneGraph.sync(this.state.nodes, this.state.segments);
@@ -88,6 +90,7 @@ export class Simulation {
       Object.assign(this.state, copy, { terrain });
     }
     updatePopulation(this.state);
+    this.schedules = new ScheduleSystem(this.state);
     this.laneGraph.sync(this.state.nodes, this.state.segments);
     this.time.onDay(() => {
       const population = updatePopulation(this.state, true);
@@ -754,6 +757,7 @@ export class Simulation {
       growth.updated.some((b) => b.state === 'active')
     )
       this.refreshPopulation();
+    this.schedules.tick();
     if (!dayCompleted) return;
     this.state.stats.day = this.state.clock.day;
     this.state.stats.money = this.state.money;

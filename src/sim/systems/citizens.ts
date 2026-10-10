@@ -86,6 +86,9 @@ export class CitizenSystem {
       f.members.push(c.id[i]!);
     }
   }
+  indexOf(id: number): number | undefined {
+    return this.indices.get(id);
+  }
   private addFamily(f: Family): void {
     this.families.set(f.id, f);
     const list = this.homes.get(f.home) ?? [];
