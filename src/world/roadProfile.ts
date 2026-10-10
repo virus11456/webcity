@@ -1,4 +1,5 @@
-import { closestPointOnSegment, cubicBezier, distance } from '../core/math';
+import { projectCurve } from '../world/roadCurves';
+import { cubicBezier, distance } from '../core/math';
 import { meshHeightAt } from './heightField';
 import { ROAD_GRAPH_PRECISION } from '../data/roadGraph';
 import { ROAD_MESH } from '../data/roadMesh';
@@ -50,7 +51,7 @@ export function roadHeightAt(
     if (s.elevated) continue;
     const a = byId.get(s.start)!,
       b = byId.get(s.end)!;
-    const hit = closestPointOnSegment(point, a.pos, b.pos);
+    const hit = projectCurve(point, [a.pos, s.c1, s.c2, b.pos]);
     if (hit.distance <= ROAD_GRAPH_PRECISION.positionM)
       return a.height + (b.height - a.height) * hit.t;
   }

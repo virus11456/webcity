@@ -5,4 +5,5 @@ export const ZONE_GRID = {
   slopeEpsilon: 1e-5,
   spatialBucketM: 64,
   junctionSides: 24,
+  curveBlockWidth: 4,
 } as const;

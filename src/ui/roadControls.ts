@@ -1,5 +1,5 @@
 import { ROADS, type RoadTypeId } from '../data/roads';
-import type { RoadToolState } from '../tools/roadTool';
+import type { RoadMode, RoadToolState } from '../tools/roadTool';
 import { t } from './i18n/t';
 import { catalogIcon, createBuildCatalog } from './buildCatalog';
 import { layout, observeLayout } from './store';
@@ -15,6 +15,7 @@ interface RoadActions {
   confirm(): void;
   cancel(): void;
   type(type: RoadTypeId): void;
+  mode(mode: RoadMode): void;
   angle(enabled: boolean): void;
 }
 /** Accessible construction controls; geometry and worker authority stay outside the UI layer. */
@@ -112,9 +113,17 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   angleLabel.append(angle, t('road.angle'));
   options.append(typeLabel, angleLabel);
   const catalog = createBuildCatalog(select, 'road');
-  const roadMode = document.createElement('span');
-  roadMode.className = 'tool-mode';
-  roadMode.textContent = t('toolbar.straight');
+  const roadMode = document.createElement('select');
+  roadMode.setAttribute('aria-label', t('road.mode'));
+  for (const mode of ['straight', 'curve', 'free'] as const) {
+    const option = document.createElement('option');
+    option.value = mode;
+    option.textContent = t(`road.mode.${mode}`);
+    roadMode.append(option);
+  }
+  roadMode.addEventListener('change', () =>
+    actions.mode(roadMode.value as RoadMode),
+  );
   options.append(roadMode);
   const metrics = document.createElement('output');
   metrics.className = 'road-metrics';
@@ -288,6 +297,9 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         waterPending;
       panel.dataset.ready = String(state.ready);
       panel.dataset.phase = state.phase;
+      panel.dataset.mode = state.mode;
+      roadMode.value = state.mode;
+      roadMode.disabled = state.pending;
       panel.dataset.pending = String(state.pending);
       panel.dataset.money = String(state.money);
       money.dataset.negative = String(state.money < 0);
@@ -352,11 +364,15 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
             ? t('sim.loading')
             : !state.active
               ? t('road.exploreHint')
-              : state.phase === 'start'
-                ? t('road.start')
-                : state.phase === 'end'
-                  ? t('road.end')
-                  : t('road.confirmHint');
+              : state.mode === 'free'
+                ? t('road.freeHint')
+                : state.phase === 'control'
+                  ? t('road.control')
+                  : state.phase === 'start'
+                    ? t('road.start')
+                    : state.phase === 'end'
+                      ? t('road.end')
+                      : t('road.confirmHint');
       if (!construction) body.hidden = true;
     },
     dispose() {

@@ -206,12 +206,13 @@ describe('road-owned zoning grid', () => {
       rebuildZoneGrid(road(empty(), p(0, 0), p(80, 0), 'gravel')).blocks,
     ).toHaveLength(2);
   });
-  it('creates independently rotated columns along a cubic curve and rejects cell overlaps', () => {
+  it('creates independently rotated buildable blocks along a cubic curve and rejects cell overlaps', () => {
     const w = road(empty(), p(-80, 0), p(80, 0));
     w.segments[0]!.c1.z = w.segments[0]!.c2.z = 60;
     const r = rebuildZoneGrid(w);
     expect(r.blocks.length).toBeGreaterThan(2);
-    expect(r.blocks.every((b) => b.width === 1)).toBe(true);
+    expect(r.blocks.every((b) => b.width >= 1 && b.width <= 4)).toBe(true);
+    expect(r.blocks.some((b) => b.width === 4)).toBe(true);
     expect(
       new Set(r.blocks.map((b) => b.dir.z.toFixed(2))).size,
     ).toBeGreaterThan(4);

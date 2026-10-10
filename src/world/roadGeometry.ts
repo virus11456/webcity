@@ -1,4 +1,13 @@
 import {
+  curveSamples,
+  curveLength,
+  curveTangent,
+  projectCurve,
+  isLinearCurve,
+  type Cubic,
+} from '../world/roadCurves';
+import { ROAD_CURVES } from '../data/roadCurves';
+import {
   CELL_SIZE,
   MAP_SIZE,
   MAP_TILES,
@@ -9,7 +18,7 @@ import {
 import { ROAD_GRAPH_PRECISION as EPS } from '../data/roadGraph';
 import { ROAD_GEOMETRY_PRECISION } from '../data/roadGeometry';
 import { ROADS, ROAD_RULES, type RoadTypeId } from '../data/roads';
-import { closestPointOnSegment, distance, lerp } from '../core/math';
+import { distance, lerp } from '../core/math';
 import { roadHeightAt } from './roadProfile';
 import { meshHeightAt } from './heightField';
 import { RoadGraph, RoadGraphError, type RoadGraphSnapshot } from './roadGraph';
@@ -46,6 +55,8 @@ export interface StraightRoadRequest {
   start: Vec2;
   end: Vec2;
   type: RoadTypeId;
+  c1?: Vec2;
+  c2?: Vec2;
   snap?: RoadSnapOptions;
 }
 export interface RoadPreview {
@@ -53,6 +64,7 @@ export interface RoadPreview {
   start: RoadSnap;
   end: RoadSnap;
   length: number;
+  width: number;
   cost: number;
   /** Maximum absolute longitudinal rise/run, including terrain between endpoints. */
   slope: number;
@@ -110,7 +122,7 @@ export function snapRoadPoint(
     if (segment.elevated) continue;
     const a = nodes.get(segment.start)!,
       b = nodes.get(segment.end)!;
-    const hit = closestPointOnSegment(point, a.pos, b.pos);
+    const hit = projectCurve(point, [a.pos, segment.c1, segment.c2, b.pos]);
     if (hit.distance < nearest) {
       nearest = hit.distance;
       best = {
@@ -158,7 +170,7 @@ export function roadConstructionCost(type: RoadTypeId, length: number): number {
   );
 }
 
-function referenceAngle(
+export function roadReferenceAngle(
   start: RoadSnap,
   end: Vec2,
   world: RoadGeometryWorld,
@@ -176,7 +188,14 @@ function referenceAngle(
   for (const segment of candidates) {
     const a = nodes.get(segment.start)!.pos,
       b = nodes.get(segment.end)!.pos;
-    const candidate = Math.atan2(b.z - a.z, b.x - a.x);
+    const t =
+      start.kind === 'node'
+        ? segment.start === start.id
+          ? 0
+          : 1
+        : projectCurve(start.pos, [a, segment.c1, segment.c2, b]).t;
+    const tangent = curveTangent([a, segment.c1, segment.c2, b], t);
+    const candidate = Math.atan2(tangent.z, tangent.x);
     const snapped = snapRoadVector(start.pos, end, candidate, {
       length: false,
     });
@@ -356,7 +375,7 @@ function terrainProfile(
   return { minHeight, slope, valid: Number.isFinite(minHeight) };
 }
 
-/** Shared pure MVP ground-road preview and validation; never changes terrain, money or topology. */
+/** Shared ground-road cubic preview; omitted controls retain straight-road snapping. */
 export function previewStraightRoad(
   request: StraightRoadRequest,
   world: RoadGeometryWorld,
@@ -385,53 +404,87 @@ export function previewStraightRoad(
     request.snap?.connections ?? true,
   );
   // An exact connection wins over angle/length rounding; never round a T junction off its road.
-  if (end.kind === 'none') {
+  if (end.kind === 'none' && !request.c1) {
     const pos = snapRoadVector(
       start.pos,
       request.end,
-      referenceAngle(start, request.end, world),
+      roadReferenceAngle(start, request.end, world),
       request.snap,
     );
     end = snapRoadPoint(pos, world, request.snap?.connections ?? true);
   }
   // Ground roads follow the sampled surface, including the interior of existing roads.
-  const length = distance(start.pos, end.pos);
+  const curve: Cubic = [
+    start.pos,
+    request.c1 ?? lerp(start.pos, end.pos, 1 / 3),
+    request.c2 ?? lerp(start.pos, end.pos, 2 / 3),
+    end.pos,
+  ];
+  if (!curve.every((p) => finitePoint(p) && inMap(p)))
+    return reject('err.invalidCommand');
+  const controlLength =
+    distance(curve[0], curve[1]) +
+    distance(curve[1], curve[2]) +
+    distance(curve[2], curve[3]);
+  if (controlLength > ROAD_CURVES.maxControlLengthM)
+    return reject('err.invalidCommand');
+  const length = curveLength(curve);
   if (![start.height, end.height, length].every(Number.isFinite))
     return reject('err.invalidCommand');
-  const ux = length ? (end.pos.x - start.pos.x) / length : 0,
-    uz = length ? (end.pos.z - start.pos.z) / length : 0;
   const halfWidth = ROADS[request.type].widthM / 2;
-  const offset = (p: Vec2, side: number) => ({
-    x: p.x - uz * halfWidth * side,
-    z: p.z + ux * halfWidth * side,
+  const samples = isLinearCurve(curve)
+    ? [
+        { point: start.pos, t: 0 },
+        { point: end.pos, t: 1 },
+      ]
+    : curveSamples(curve);
+  const pieces = samples.slice(1).map((sample, i) => {
+    const a = samples[i]!.point,
+      b = sample.point,
+      l = distance(a, b),
+      ux = l ? (b.x - a.x) / l : 0,
+      uz = l ? (b.z - a.z) / l : 0;
+    const offset = (p: Vec2, side: number) => ({
+      x: p.x - uz * halfWidth * side,
+      z: p.z + ux * halfWidth * side,
+    });
+    return {
+      footprint: [offset(a, -1), offset(b, -1), offset(b, 1), offset(a, 1)],
+      ux,
+      uz,
+    };
   });
-  const footprint = [
-    offset(start.pos, -1),
-    offset(end.pos, -1),
-    offset(end.pos, 1),
-    offset(start.pos, 1),
-  ];
+  const footprint = pieces[0]!.footprint;
   const preview: RoadPreview = {
     draft: {
       start: { ...start.pos },
       end: { ...end.pos },
-      c1: lerp(start.pos, end.pos, 1 / 3),
-      c2: lerp(start.pos, end.pos, 2 / 3),
+      c1: curve[1],
+      c2: curve[2],
       elevated: false,
     },
     start,
     end,
     length,
+    width: halfWidth * 2,
     cost: roadConstructionCost(request.type, length),
     slope: length ? Math.abs(end.height - start.height) / length : 0,
     footprint,
   };
   if (length + EPS.positionM < ROAD_RULES.minSegmentM)
     return reject('err.roadTooShort', preview);
-  if (!footprint.every(inMap)) return reject('err.outsideMap', preview);
-  if (!owned(footprint, world.ownedTiles))
+  if (!pieces.every((p) => p.footprint.every(inMap)))
+    return reject('err.outsideMap', preview);
+  if (!pieces.every((p) => owned(p.footprint, world.ownedTiles)))
     return reject('err.landNotOwned', preview);
-  const profile = terrainProfile(footprint, world, ux, uz);
+  const profiles = pieces.map((p) =>
+    terrainProfile(p.footprint, world, p.ux, p.uz),
+  );
+  const profile = {
+    valid: profiles.every((p) => p.valid),
+    minHeight: Math.min(...profiles.map((p) => p.minHeight)),
+    slope: Math.max(...profiles.map((p) => p.slope)),
+  };
   if (!profile.valid) return reject('err.invalidCommand', preview);
   preview.slope = Math.max(preview.slope, profile.slope);
   if (profile.minHeight < SEA_LEVEL - EPS.heightM)
@@ -444,7 +497,7 @@ export function previewStraightRoad(
     return reject('err.slopeTooSteep', preview);
   if (
     world.buildings.some((building) =>
-      overlaps(footprint, buildingFootprint(building)),
+      pieces.some((p) => overlaps(p.footprint, buildingFootprint(building))),
     )
   )
     return reject('err.buildingConflict', preview);
@@ -454,6 +507,8 @@ export function previewStraightRoad(
       {
         start: start.pos,
         end: end.pos,
+        c1: curve[1],
+        c2: curve[2],
         startHeight: start.height,
         endHeight: end.height,
         type: request.type,

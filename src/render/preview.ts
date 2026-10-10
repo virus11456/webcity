@@ -11,7 +11,12 @@ import {
 import { RoadRenderer } from './roads/roadRenderer';
 import { ROAD_TOOL_RENDER as CONFIG } from '../data/roadTool';
 import { UI_PALETTE } from '../data/palette';
-import { distance, lerp } from '../core/math';
+import {
+  curvePoint,
+  curveTangent,
+  curveLength,
+  type Cubic,
+} from '../world/roadCurves';
 import { meshHeightAt } from '../world/heightField';
 import type {
   ConstructionPreview,
@@ -20,22 +25,23 @@ import type {
 import type { Vec2 } from '../world/types';
 
 function ribbon(
-  start: Vec2,
-  end: Vec2,
+  curve: Cubic,
   width: number,
   heights: Float32Array,
   lift: number,
 ): BufferGeometry {
-  const length = distance(start, end),
+  const length = curveLength(curve),
     steps = Math.max(1, Math.ceil(length / CONFIG.sampleM)),
     across = Math.max(1, Math.ceil(width / CONFIG.sampleM));
-  const ux = length ? (end.x - start.x) / length : 0,
-    uz = length ? (end.z - start.z) / length : 0;
   const positions: number[] = [],
     indices: number[] = [];
   for (let i = 0; i <= steps; i++)
     for (let j = 0; j <= across; j++) {
-      const center = lerp(start, end, i / steps),
+      const center = curvePoint(curve, i / steps),
+        tangent = curveTangent(curve, i / steps),
+        l = Math.hypot(tangent.x, tangent.z),
+        ux = tangent.x / l,
+        uz = tangent.z / l,
         side = width * (j / across - 0.5);
       const x = center.x - uz * side,
         z = center.z + ux * side;
@@ -102,9 +108,8 @@ export class RoadPreviewRenderer {
     const p = result.preview;
     this.ghost.geometry.dispose();
     this.ghost.geometry = ribbon(
-      p.draft.start,
-      p.draft.end,
-      distance(p.footprint[0]!, p.footprint[3]!),
+      [p.draft.start, p.draft.c1, p.draft.c2, p.draft.end],
+      p.width,
       heights,
       CONFIG.previewLiftM,
     );

@@ -41,7 +41,7 @@ export function checkRoadBudget(
     return { ...result, canBuild: false, reason: 'err.notEnoughMoney' };
   return result;
 }
-/** Recheck an already positioned straight draft, retaining exact connections without resnapping its geometry. */
+/** Recheck an already positioned cubic draft, retaining exact connections without resnapping its geometry. */
 export function validateRoadDraft(
   type: RoadTypeId,
   points: RoadDraft,
@@ -53,6 +53,8 @@ export function validateRoadDraft(
         type,
         start: points.start,
         end: points.end,
+        c1: points.c1,
+        c2: points.c2,
         snap: { angle: false, length: false, connections: 'exact' },
       },
       world,
@@ -95,5 +97,18 @@ export function isStraightRoadDraft(value: unknown): value is RoadDraft {
       ROAD_GRAPH_PRECISION.positionM &&
     distance(value.c2, lerp(value.start, value.end, 2 / 3)) <=
       ROAD_GRAPH_PRECISION.positionM
+  );
+}
+
+/** All finite ground-road cubic payloads; detailed geometry is revalidated by Worker. */
+export function isRoadDraft(value: unknown): value is RoadDraft {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  return (
+    point(v.start) &&
+    point(v.end) &&
+    point(v.c1) &&
+    point(v.c2) &&
+    v.elevated === false
   );
 }

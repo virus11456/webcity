@@ -167,7 +167,7 @@ describe('authoritative road construction', () => {
     expect(sim.snapshot().nextId).toBe(before.nextId);
     expect(sim.snapshot().terrain.revision).toBe(before.terrain.revision);
   });
-  it('guards malformed, curved and elevated payloads at the worker boundary', () => {
+  it('guards malformed and elevated payloads at the worker boundary', () => {
     const events: SimEvent[] = [],
       commands = new CommandDispatcher((e) => events.push(e));
     commands.handle({
@@ -183,7 +183,7 @@ describe('authoritative road construction', () => {
       {},
       { ...draft(), elevated: true },
       { ...draft(), start: p(NaN, 0) },
-      { ...draft(), c1: p(0, 0) },
+      { ...draft(), c1: p(Infinity, 0) },
     ]) {
       expect(isStraightRoadDraft(points)).toBe(false);
       commands.handle({ reqId: 3, t: 'buildRoad', type: 'road_small', points });

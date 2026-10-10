@@ -1,12 +1,16 @@
+import {
+  curveLength,
+  curveTangent,
+  curveIntersections,
+  projectCurve,
+  subCurve,
+  isLinearCurve,
+  type Cubic,
+} from '../world/roadCurves';
 import { MAP_SIZE } from '../data/config';
 import { ROAD_GRAPH_PRECISION as PRECISION } from '../data/roadGraph';
 import { ROADS, ROAD_RULES, type RoadTypeId } from '../data/roads';
-import {
-  closestPointOnSegment,
-  distance,
-  lerp,
-  segmentIntersection,
-} from '../core/math';
+import { distance, lerp } from '../core/math';
 import type { Id, RoadNode, RoadSegment, Vec2 } from './types';
 
 export type RoadGraphErrorCode =
@@ -30,6 +34,8 @@ export interface RoadOptions {
   elevated?: boolean;
 }
 export interface StraightRoad extends RoadOptions {
+  c1?: Vec2;
+  c2?: Vec2;
   start: Vec2;
   end: Vec2;
   startHeight?: number;
@@ -97,10 +103,11 @@ function makeSegment(
   start: Id,
   end: Id,
   options: RoadOptions,
+  curve?: Cubic,
 ): Id {
   const a = data.nodes.get(start)!,
     b = data.nodes.get(end)!;
-  const length = distance(a.pos, b.pos);
+  const length = curve ? curveLength(curve) : distance(a.pos, b.pos);
   if (length + PRECISION.positionM < ROAD_RULES.minSegmentM) fail('tooShort');
   const id = allocate(data);
   data.segments.set(id, {
@@ -108,8 +115,12 @@ function makeSegment(
     type: options.type,
     start,
     end,
-    c1: lerp(a.pos, b.pos, 1 / 3),
-    c2: lerp(a.pos, b.pos, 2 / 3),
+    c1:
+      (curve && !isLinearCurve(curve) ? curve[1] : undefined) ??
+      lerp(a.pos, b.pos, 1 / 3),
+    c2:
+      (curve && !isLinearCurve(curve) ? curve[2] : undefined) ??
+      lerp(a.pos, b.pos, 2 / 3),
     length,
     elevated: options.elevated ?? false,
     builtDay: options.builtDay,
@@ -149,16 +160,14 @@ function detach(data: GraphData, id: Id): void {
   }
   data.segments.delete(id);
 }
-function sortedNodes(
-  data: GraphData,
-  ids: Iterable<Id>,
-  a: Vec2,
-  b: Vec2,
-): Id[] {
+function segmentCurve(data: GraphData, s: RoadSegment): Cubic {
+  return [data.nodes.get(s.start)!.pos, s.c1, s.c2, data.nodes.get(s.end)!.pos];
+}
+function sortedNodes(data: GraphData, ids: Iterable<Id>, curve: Cubic): Id[] {
   return [...new Set(ids)].sort(
-    (left, right) =>
-      closestPointOnSegment(data.nodes.get(left)!.pos, a, b).t -
-      closestPointOnSegment(data.nodes.get(right)!.pos, a, b).t,
+    (a, b) =>
+      projectCurve(data.nodes.get(a)!.pos, curve).t -
+      projectCurve(data.nodes.get(b)!.pos, curve).t,
   );
 }
 function split(
@@ -166,33 +175,38 @@ function split(
   segment: RoadSegment,
   cuts: Iterable<Id>,
 ): void {
-  const a = data.nodes.get(segment.start)!,
-    b = data.nodes.get(segment.end)!;
-  const ids = sortedNodes(
-    data,
-    [segment.start, ...cuts, segment.end],
-    a.pos,
-    b.pos,
-  );
+  const curve = segmentCurve(data, segment),
+    ids = sortedNodes(data, [segment.start, ...cuts, segment.end], curve);
   if (ids.length === 2) return;
   detach(data, segment.id);
   const children: Id[] = [];
-  for (let i = 1; i < ids.length; i++)
-    children.push(makeSegment(data, ids[i - 1]!, ids[i]!, segment));
+  for (let i = 1; i < ids.length; i++) {
+    const from = projectCurve(data.nodes.get(ids[i - 1]!)!.pos, curve).t,
+      to = projectCurve(data.nodes.get(ids[i]!)!.pos, curve).t;
+    const id = makeSegment(
+      data,
+      ids[i - 1]!,
+      ids[i]!,
+      segment,
+      subCurve(curve, from, to),
+    );
+    if (segment.regional) data.segments.get(id)!.regional = true;
+    children.push(id);
+  }
   allocateCost(data, children, segment.paidCost);
 }
 function checkJunctions(data: GraphData): void {
   for (const node of data.nodes.values()) {
     const directions = node.segments.map((id) => {
       const segment = data.segments.get(id)!;
-      const other = data.nodes.get(
-        segment.start === node.id ? segment.end : segment.start,
-      )!;
-      const length = distance(node.pos, other.pos);
-      return {
-        x: (other.pos.x - node.pos.x) / length,
-        z: (other.pos.z - node.pos.z) / length,
-      };
+      const forward = segment.start === node.id;
+      const tangent = curveTangent(
+        segmentCurve(data, segment),
+        forward ? 0 : 1,
+      );
+      const length = Math.hypot(tangent.x, tangent.z),
+        sign = forward ? 1 : -1;
+      return { x: (sign * tangent.x) / length, z: (sign * tangent.z) / length };
     });
     for (let i = 0; i < directions.length; i++)
       for (let j = i + 1; j < directions.length; j++) {
@@ -257,7 +271,7 @@ function overlaps(
   );
 }
 
-/** Transactional straight-road topology. Returned values never expose mutable authority. */
+/** Transactional cubic-road topology. Returned values never expose mutable authority. */
 export class RoadGraph {
   private data: GraphData;
   private groundHeight?: (point: Vec2) => number;
@@ -340,7 +354,7 @@ export class RoadGraph {
     });
   }
 
-  /** Add / reuse a node, splitting any same-height straight road under it atomically. */
+  /** Add / reuse a node, splitting any same-height road under it atomically. */
   addNode(pos: Vec2, height = 0): RoadGraphChange & { nodeId: Id } {
     checkPoint(pos, height);
     let nodeId = 0;
@@ -350,7 +364,7 @@ export class RoadGraph {
       for (const segment of [...data.segments.values()]) {
         const a = data.nodes.get(segment.start)!,
           b = data.nodes.get(segment.end)!;
-        const hit = closestPointOnSegment(node.pos, a.pos, b.pos);
+        const hit = projectCurve(node.pos, segmentCurve(data, segment));
         if (
           hit.distance <= PRECISION.positionM &&
           sameHeight(node.height, heightAt(a, b, hit.t))
@@ -367,7 +381,7 @@ export class RoadGraph {
     const segment = this.data.segments.get(id) ?? fail('missingSegment');
     const a = this.data.nodes.get(segment.start)!,
       b = this.data.nodes.get(segment.end)!;
-    const hit = closestPointOnSegment(pos, a.pos, b.pos);
+    const hit = projectCurve(pos, segmentCurve(this.data, segment));
     if (hit.distance > PRECISION.positionM) fail('invalidInput');
     return this.addNode(hit.point, heightAt(a, b, hit.t));
   }
@@ -385,12 +399,20 @@ export class RoadGraph {
     });
   }
 
-  /** Build one straight road, splitting it and every same-height intersected road. */
+  /** Build one cubic road, splitting it and every same-height intersected road. */
   addRoad(road: StraightRoad): RoadGraphChange {
     const startHeight = road.startHeight ?? 0,
       endHeight = road.endHeight ?? 0;
     checkPoint(road.start, startHeight);
     checkPoint(road.end, endHeight);
+    const curve: Cubic = [
+      road.start,
+      road.c1 ?? lerp(road.start, road.end, 1 / 3),
+      road.c2 ?? lerp(road.start, road.end, 2 / 3),
+      road.end,
+    ];
+    checkPoint(curve[1], 0);
+    checkPoint(curve[2], 0);
     if (
       !Object.hasOwn(ROADS, road.type) ||
       !Number.isSafeInteger(road.builtDay) ||
@@ -400,10 +422,7 @@ export class RoadGraph {
       (road.elevated !== undefined && typeof road.elevated !== 'boolean')
     )
       fail('invalidInput');
-    if (
-      distance(road.start, road.end) + PRECISION.positionM <
-      ROAD_RULES.minSegmentM
-    )
+    if (curveLength(curve) + PRECISION.positionM < ROAD_RULES.minSegmentM)
       fail('tooShort');
     return this.transact((data) => {
       const start = ensureNode(data, road.start, startHeight),
@@ -413,7 +432,7 @@ export class RoadGraph {
       const cuts = new Set<Id>([start, end]);
       // Isolated nodes and existing junctions on the new path must also become connections.
       for (const node of data.nodes.values()) {
-        const hit = closestPointOnSegment(node.pos, a.pos, b.pos);
+        const hit = projectCurve(node.pos, curve);
         if (
           hit.distance <= PRECISION.positionM &&
           (sameHeight(node.height, heightAt(a, b, hit.t)) ||
@@ -430,24 +449,56 @@ export class RoadGraph {
         const ground = Boolean(
           this.groundHeight && !road.elevated && !segment.elevated,
         );
-        if (overlaps(a, b, c, d, ground)) fail('overlap');
-        const hit = segmentIntersection(a.pos, b.pos, c.pos, d.pos);
-        if (!hit) continue;
-        const t = closestPointOnSegment(hit, a.pos, b.pos).t;
-        const u = closestPointOnSegment(hit, c.pos, d.pos).t;
-        const height = ground ? this.groundHeight!(hit) : heightAt(a, b, t);
-        if (!ground && !sameHeight(height, heightAt(c, d, u))) continue;
-        const id = ensureNode(data, hit, height);
-        cuts.add(id);
-        const ids = oldCuts.get(segment.id) ?? new Set<Id>();
-        ids.add(id);
-        oldCuts.set(segment.id, ids);
+        const other = segmentCurve(data, segment);
+        if (
+          isLinearCurve(curve) &&
+          isLinearCurve(other) &&
+          overlaps(a, b, c, d, ground)
+        )
+          fail('overlap');
+        if (
+          (ground ||
+            (sameHeight(a.height, c.height) &&
+              sameHeight(b.height, d.height))) &&
+          ((distance(curve[0], other[0]) < PRECISION.positionM &&
+            distance(curve[1], other[1]) < PRECISION.positionM &&
+            distance(curve[2], other[2]) < PRECISION.positionM &&
+            distance(curve[3], other[3]) < PRECISION.positionM) ||
+            (distance(curve[0], other[3]) < PRECISION.positionM &&
+              distance(curve[1], other[2]) < PRECISION.positionM &&
+              distance(curve[2], other[1]) < PRECISION.positionM &&
+              distance(curve[3], other[0]) < PRECISION.positionM))
+        )
+          fail('overlap');
+        for (const hit of curveIntersections(curve, other)) {
+          const height = ground
+            ? this.groundHeight!(hit.point)
+            : heightAt(a, b, hit.t);
+          if (!ground && !sameHeight(height, heightAt(c, d, hit.u))) continue;
+          const id = ensureNode(data, hit.point, height);
+          cuts.add(id);
+          const ids = oldCuts.get(segment.id) ?? new Set<Id>();
+          ids.add(id);
+          oldCuts.set(segment.id, ids);
+        }
       }
       for (const [id, ids] of oldCuts) split(data, data.segments.get(id)!, ids);
-      const ids = sortedNodes(data, cuts, a.pos, b.pos);
+      const ids = sortedNodes(data, cuts, curve);
       const added: Id[] = [];
       for (let i = 1; i < ids.length; i++)
-        added.push(makeSegment(data, ids[i - 1]!, ids[i]!, road));
+        added.push(
+          makeSegment(
+            data,
+            ids[i - 1]!,
+            ids[i]!,
+            road,
+            subCurve(
+              curve,
+              projectCurve(data.nodes.get(ids[i - 1]!)!.pos, curve).t,
+              projectCurve(data.nodes.get(ids[i]!)!.pos, curve).t,
+            ),
+          ),
+        );
       allocateCost(data, added, road.paidCost);
     });
   }
