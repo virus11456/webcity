@@ -4,4 +4,5 @@ export const PERFORMANCE = {
   reportMs: 1000,
   serviceRasterMaxBytes: 8 * 1024 * 1024,
   serviceRasterMaxRoads: 1024,
+  serviceAccessBlockSegments: 16,
 } as const;

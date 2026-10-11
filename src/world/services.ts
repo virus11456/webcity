@@ -23,10 +23,16 @@ export interface ServiceStatus {
   efficiency: number;
   connected: boolean;
 }
+interface AccessBlock {
+  start: number;
+  end: number;
+  bounds: ReturnType<typeof polygonBounds>;
+}
 interface Link {
   segment: RoadSegment;
   points: RoadSample[];
   length: number;
+  accessBlocks: AccessBlock[];
   bounds: ReturnType<typeof polygonBounds>;
 }
 interface RasterSamples {
@@ -72,10 +78,27 @@ export class ServiceNetwork {
       if (!a || !b) continue;
       const points = sampleRoad(segment, a, b),
         length = points.at(-1)!.distance;
+      const accessBlocks: AccessBlock[] = [];
+      for (
+        let start = 1;
+        start < points.length;
+        start += PERFORMANCE.serviceAccessBlockSegments
+      ) {
+        const end = Math.min(
+          points.length,
+          start + PERFORMANCE.serviceAccessBlockSegments,
+        );
+        accessBlocks.push({
+          start,
+          end,
+          bounds: polygonBounds(points.slice(start - 1, end)),
+        });
+      }
       this.links.set(segment.id, {
         segment,
         points,
         length,
+        accessBlocks,
         bounds: polygonBounds(points),
       });
       for (const [from, to] of [
@@ -106,24 +129,35 @@ export class ServiceNetwork {
         pos.z > box.maxZ + limit
       )
         continue;
-      for (let i = 1; i < link.points.length; i++) {
-        const a = link.points[i - 1]!,
-          b = link.points[i]!;
-        // Preserve nearest-road and equal-distance ordering; only reject impossible access.
+      // Ordered contiguous blocks preserve tie-breaking and along-road interpolation exactly.
+      for (const block of link.accessBlocks) {
+        const box = block.bounds;
         if (
-          pos.x < Math.min(a.x, b.x) - limit ||
-          pos.x > Math.max(a.x, b.x) + limit ||
-          pos.z < Math.min(a.z, b.z) - limit ||
-          pos.z > Math.max(a.z, b.z) + limit
+          pos.x < box.minX - limit ||
+          pos.x > box.maxX + limit ||
+          pos.z < box.minZ - limit ||
+          pos.z > box.maxZ + limit
         )
           continue;
-        const p = closestPointOnSegment(pos, a, b);
-        if (p.distance <= limit && p.distance < best) {
-          best = p.distance;
-          result = {
-            road: id,
-            distance: a.distance + p.t * (b.distance - a.distance),
-          };
+        for (let i = block.start; i < block.end; i++) {
+          const a = link.points[i - 1]!,
+            b = link.points[i]!;
+          // Preserve nearest-road and equal-distance ordering; only reject impossible access.
+          if (
+            pos.x < Math.min(a.x, b.x) - limit ||
+            pos.x > Math.max(a.x, b.x) + limit ||
+            pos.z < Math.min(a.z, b.z) - limit ||
+            pos.z > Math.max(a.z, b.z) + limit
+          )
+            continue;
+          const p = closestPointOnSegment(pos, a, b);
+          if (p.distance <= limit && p.distance < best) {
+            best = p.distance;
+            result = {
+              road: id,
+              distance: a.distance + p.t * (b.distance - a.distance),
+            };
+          }
         }
       }
     }
