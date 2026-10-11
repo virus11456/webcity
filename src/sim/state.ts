@@ -1,3 +1,4 @@
+import { emptyDisasters } from '../world/disasters';
 import { emptyDeathcare } from '../world/deathcare';
 import { emptyGarbage } from '../world/garbage';
 import { emptyFire } from '../world/fire';
@@ -85,6 +86,7 @@ export function createState(settings: CitySettings): SimState {
     garbage: emptyGarbage(),
     cargo: emptyCargo(),
     fire: emptyFire(),
+    disasters: emptyDisasters(),
     transitLines: [],
     districts: [],
     policies: [],

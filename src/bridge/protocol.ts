@@ -32,6 +32,8 @@ import type {
 } from '../world/snapshot';
 
 export type CommandInput =
+  | { t: 'setDisasters'; enabled: boolean }
+  | { t: 'rebuild'; id: number }
   | ({ t: 'district' } & import('../world/districts').DistrictAction)
   | ({ t: 'init'; tileLimit?: 4 | 9 } & CitySettings)
   | { t: 'load'; data: ArrayBuffer; tileLimit?: 4 | 9 }
@@ -117,6 +119,7 @@ export type Response =
     }
   | { t: 'inspectResult'; reqId: number; info: InspectInfo };
 export type SimEvent =
+  | { t: 'disasters'; state: import('../world/disasters').DisasterState }
   | { t: 'policies'; policies: import('../data/policies').PolicyId[] }
   | { t: 'districts'; districts: import('../world/districts').DistrictView[] }
   | { t: 'transit'; lines: import('../world/transit').BusLineView[] }

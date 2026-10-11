@@ -8,6 +8,8 @@ export const NOTIFICATIONS = {
   focusDistanceM: 160,
 } as const;
 export const NOTICE_CODES = [
+  'disasterWarning',
+  'disasterFire',
   'noPower',
   'noWater',
   'garbage',

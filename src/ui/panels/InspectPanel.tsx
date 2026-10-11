@@ -1,3 +1,4 @@
+import { rebuildCost } from '../../world/disasters';
 import { uniqueDefinition } from '../../world/unique';
 import { deathcareCapacity } from '../../world/deathcare';
 import { Icon } from '../components/Icon';
@@ -32,7 +33,11 @@ function Content({
   pending,
   failure,
   thumbnail,
+  rebuild,
+  sandbox,
 }: {
+  rebuild?: (id: number) => void;
+  sandbox?: boolean;
   info: InspectInfo;
   thumbnail?: string;
   locate?: (p: Vec2) => void;
@@ -226,14 +231,30 @@ function Content({
     )
       rows.push([
         t('service.status'),
-        t(b.enabled === false ? 'service.off' : 'service.on'),
+        t(
+          b.state !== 'active'
+            ? `inspect.${b.state}`
+            : b.fire?.burning
+              ? 'fire.burning'
+              : b.enabled === false
+                ? 'service.off'
+                : 'service.on',
+        ),
       ]);
     if (b.serviceStatus) {
       const q = b.serviceStatus;
       rows.push(
         [
           t('service.status'),
-          t(b.enabled === false ? 'service.off' : 'service.on'),
+          t(
+            b.state !== 'active'
+              ? `inspect.${b.state}`
+              : b.fire?.burning
+                ? 'fire.burning'
+                : b.enabled === false
+                  ? 'service.off'
+                  : 'service.on',
+          ),
         ],
         [t('service.radius'), `${q.radius.toFixed(0)} m`],
         [
@@ -323,6 +344,11 @@ function Content({
         [t('health.average'), `${b.health.average.toFixed(1)}%`],
         [t('health.sick'), `${b.health.sick} / ${b.health.residents}`],
       );
+    if (b.state === 'burned')
+      rows.push([
+        t('disaster.rebuildCost'),
+        `$${sandbox ? 0 : rebuildCost(b)}`,
+      ]);
     if (b.fire)
       rows.push(
         [
@@ -454,6 +480,17 @@ function Content({
             max={1}
           />
         )}
+      {info.kind === 'building' && info.value.state === 'burned' && (
+        <div>
+          <p>{t('disaster.rebuildHint')}</p>
+          <Button
+            disabled={pending || info.value.rezoneAtTick !== undefined}
+            onClick={() => rebuild?.(info.value.id)}
+          >
+            {t('disaster.rebuild')}
+          </Button>
+        </div>
+      )}
       {failure && <p role="alert">{failure}</p>}
       {info.kind === 'building' &&
         info.value.defId !== 'tree' &&
@@ -482,6 +519,8 @@ export function createInspectPanel(
   toggle?: (id: number, enabled: boolean) => Promise<boolean>,
   follow?: (id: number) => void,
   thumbnail?: (building: Building) => string | undefined,
+  rebuild?: (id: number) => Promise<Parameters<typeof t>[0] | null>,
+  sandbox = false,
 ) {
   const host = document.createElement('div');
   host.className = 'inspect-host';
@@ -505,6 +544,22 @@ export function createInspectPanel(
         }
         locate={locate}
         follow={follow}
+        sandbox={sandbox}
+        rebuild={async (id) => {
+          if (pending || !rebuild) return;
+          pending = true;
+          failure = null;
+          paint();
+          try {
+            const key = await rebuild(id);
+            if (key) failure = t(key);
+          } catch {
+            failure = t('sim.failed');
+          } finally {
+            pending = false;
+            paint();
+          }
+        }}
         pending={pending}
         failure={failure}
         toggle={async (id, enabled) => {

@@ -19,6 +19,8 @@ import type { CitySettings } from '../world/snapshot';
 import { Simulation } from './simulation';
 
 const futureCommands = new Set([
+  'setDisasters',
+  'rebuild',
   'load',
   'createBusLine',
   'setBusVehicles',
@@ -231,6 +233,28 @@ export class CommandDispatcher {
     }
     if (this.simulation.gameOver) {
       fail('err.gameOver');
+      return;
+    }
+    if (value.t === 'setDisasters') {
+      if (!('enabled' in value) || typeof value.enabled !== 'boolean')
+        fail('err.invalidCommand');
+      else
+        this.emit({
+          t: 'result',
+          reqId,
+          ...this.simulation.setDisasters(value.enabled),
+        });
+      return;
+    }
+    if (value.t === 'rebuild') {
+      if (!('id' in value) || !Number.isSafeInteger(value.id))
+        fail('err.invalidCommand');
+      else
+        this.emit({
+          t: 'result',
+          reqId,
+          ...this.simulation.rebuild(value.id as number),
+        });
       return;
     }
     if (value.t === 'terraform') {

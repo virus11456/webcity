@@ -100,6 +100,10 @@ export class WorldMirror {
   }
 
   /** Request a defensive full snapshot, outside the render loop. */
+  readDisasters() {
+    return structuredClone(this.state?.disasters);
+  }
+
   readSnapshot(): WorldSnapshot | undefined {
     return this.state && structuredClone(this.state);
   }
@@ -207,6 +211,9 @@ export class WorldMirror {
     const state = this.state;
     if (!state) return;
     switch (event.t) {
+      case 'disasters':
+        state.disasters = structuredClone(event.state);
+        break;
       case 'policies':
         state.policies = [...event.policies];
         break;

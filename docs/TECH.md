@@ -709,3 +709,6 @@ WorldSnapshot.tileLimit 是 4／9；SimClient 的當前裝置限制隨每次 ini
 
 ### M4-13 天氣渲染
 `world/weather` 以 seed 與 clock.ticks 純計算 WeatherSample；`render/weather` 僅使用只讀時鐘，插值最多一個 tick。雨批次、霧與雲影無每幀物件配置。偏好 weather 儲存於本機，無新增 Worker 命令或存檔欄位。詳見 WEATHER.md。
+
+### M4-14 災害與復建權威
+WorldSnapshot.disasters 保存開關、下一次預警日或待發生預警；舊檔補 disabled。FireSystem 每日防重後執行 updateDisasters，批次點火交由既有消防派遣／損毀處理，disasters 事件更新 Mirror。rebuild 原子檢查／扣款後重啟 constructionStartedTick，保留 ID、占地及庫存並刷新人口服務；UI 只發命令。見 DISASTERS.md。
