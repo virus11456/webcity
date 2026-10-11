@@ -9,6 +9,7 @@ export const TRANSIT = {
   catchmentM: 200,
   minTripM: 300,
   fare: 2,
+  baseChoiceProbability: 0.7,
   maxPassengers: 600,
   missionPurpose: 8,
   refreshTicks: 8,

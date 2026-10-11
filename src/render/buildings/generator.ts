@@ -22,6 +22,7 @@ export function generateBuilding(
   d: number,
   seed: number,
   detail = true,
+  maxFloors = Infinity,
 ): BufferGeometry {
   const rules = ZONES[zone];
   if (
@@ -40,7 +41,7 @@ export function generateBuilding(
     width = w * CELL_SIZE,
     depth = d * CELL_SIZE;
   const range = F.floors[zone][level - 1]!,
-    floors = rng.int(range[0], range[1]);
+    floors = Math.min(maxFloors, rng.int(range[0], range[1]));
   const floorHeight = zone === 'I' && level > 1 ? 10 : F.floorHeight[zone],
     height = floors * floorHeight;
   const palette =

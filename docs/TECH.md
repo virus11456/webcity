@@ -681,3 +681,9 @@ TransitSystem 的 tram mode 使用既有道路 RouteLeg 與 TrafficKind.tram；�
 `world/districts.ts` 定義 District／DistrictView 與 16 m 格網純函式。Worker 的 district 指令集中處理建立、命名、刪除、塗抹及所有權轉移，成功後以 districts 事件通知 Mirror；人口和建築事件補送統計。區界以不可變集合替換，衍生格網索引使用 WeakMap 快取。SimClient 只發送命令，districtTool 管理手勢草稿，UI 只讀統計。存檔驗證 ID、名稱及全市互斥格子。
 
 Renderer 依地形建立頂點色格網，每幀最多建立 1,024 格，區名用 CanvasTexture／Sprite，無新增依賴。筆刷預覽僅顯示目前觸點並限制已購地塊，完整連續筆劃於放開時交 Worker 套用。`__webcityDistricts` 僅為 debug 唯讀副本。
+
+## M4-05 政策資料與路由
+
+全市政策仍為 PolicyId 陣列，District 的可選 policies 字典表示明確 boolean 覆寫（缺項繼承）。setPolicy 指令 on=null 僅用於取消單區覆寫。world/policies 統一解析作用位置、費用與效果；Worker 發出 policies／districts 事件，UI 不持有權威修改。垃圾產量／庫存及 policyExpenses 可選欄位相容舊存檔，載入驗證其有限值與政策鍵。
+
+Pathfinder.between 支援可選 forbidden 道路集合，只由貨運傳入。CargoSystem 在政策、區界或道路改變時重算禁行道路並透過 TrafficSystem 保留違規行程的實際停留位置；貨物與待送需求不消失。禁止高樓 floorLimit 由 Worker 計算，catalogModel 回退至樓層受限的程序模型。

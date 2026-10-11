@@ -234,7 +234,7 @@ export class BuildingRenderer {
       this.entries.delete(id);
       return;
     }
-    const recipe = `${b.defId}:${b.level}:${b.lotW}:${b.lotD}:${b.seed}`;
+    const recipe = `${b.defId}:${b.level}:${b.lotW}:${b.lotD}:${b.seed}:${b.floorLimit ?? 0}`;
     const target =
       b.state === 'construction'
         ? Math.min(1, Math.max(0, b.stateTimer / GROWTH.constructionDays))
@@ -261,6 +261,7 @@ export class BuildingRenderer {
       b.lotD,
       this.options.assets ? visualSeed(b) : b.seed,
       false,
+      b.floorLimit,
     );
     const massing = geometry.userData.massing as BuildingVolume[];
     const shape: Shape = {
@@ -498,6 +499,8 @@ export class BuildingRenderer {
             b.lotW,
             b.lotD,
             this.options.assets ? visualSeed(b) : b.seed,
+            true,
+            b.floorLimit,
           ));
     e.asset = Boolean(asset);
     if (asset && !this.catalogMaterials.has(asset.material)) {

@@ -1,3 +1,4 @@
+import { policyValue, type PolicyWorld } from '../../world/policies';
 import {
   GROWTH,
   UPGRADE_REQUIREMENTS,
@@ -11,11 +12,26 @@ import type { Building } from '../../world/types';
 import type { BuildingPatch } from '../../world/snapshot';
 import type { SimState } from '../state';
 import { garbageCollected } from './happiness';
-export function upgradeStatus(b: Building): NonNullable<Building['upgrade']> {
-  const max = ZONES[b.defId as ZoneType].maxLevel;
+export function upgradeStatus(
+  b: Building,
+  s?: PolicyWorld,
+): NonNullable<Building['upgrade']> {
+  const max = Math.min(
+    ZONES[b.defId as ZoneType].maxLevel,
+    s ? policyValue(s, b.pos, 'maxLevel', Infinity) : Infinity,
+  );
   const goal = UPGRADE_REQUIREMENTS.find(
     (r) => r.level === b.level + 1 && r.level <= max,
   );
+  const landRequired = goal
+    ? Math.max(
+        0,
+        goal.landValue +
+          (s && residential(b)
+            ? policyValue(s, b.pos, 'residentialLandThresholdDelta', 0)
+            : 0),
+      )
+    : 0;
   const employees = b.workerEducation ?? [0, 0, 0, 0];
   const count = employees.reduce((a, n) => a + n, 0);
   const education = residential(b)
@@ -34,7 +50,7 @@ export function upgradeStatus(b: Building): NonNullable<Building['upgrade']> {
     garbageCollected(b);
   return {
     target: goal?.level ?? b.level,
-    landRequired: goal?.landValue ?? 0,
+    landRequired,
     education,
     educationRequired: required,
     utilities,
@@ -43,7 +59,7 @@ export function upgradeStatus(b: Building): NonNullable<Building['upgrade']> {
       : utilities
         ? Math.min(
             1,
-            (b.landValue ?? 0) / goal.landValue,
+            landRequired ? (b.landValue ?? 0) / landRequired : 1,
             required ? education / required : 1,
           )
         : 0,
@@ -54,7 +70,15 @@ export function updateLevels(s: SimState, daily = false): BuildingPatch[] {
   const patches: BuildingPatch[] = [];
   for (const b of s.buildings) {
     if (b.kind !== 'zoned' || !Object.hasOwn(ZONES, b.defId)) continue;
-    const before = JSON.stringify([b.level, b.development, b.upgrade]);
+    const before = JSON.stringify([
+      b.level,
+      b.floorLimit,
+      b.development,
+      b.upgrade,
+    ]);
+    const limit = policyValue(s, b.pos, 'maxFloors', Infinity);
+    b.floorLimit = Number.isFinite(limit) ? limit : undefined;
+    b.level = Math.min(b.level, policyValue(s, b.pos, 'maxLevel', Infinity));
     const d = (b.development ??= {
       lastDay: -1,
       lastCheckDay: b.builtDay ?? s.clock.day,
@@ -85,7 +109,7 @@ export function updateLevels(s: SimState, daily = false): BuildingPatch[] {
           delete d.lowValueSinceDay;
         } else if (s.clock.day - d.lastCheckDay >= GROWTH.upgradeCheckDays) {
           d.lastCheckDay = s.clock.day;
-          const q = upgradeStatus(b);
+          const q = upgradeStatus(b, s);
           if (q.target > b.level && q.progress >= 1) {
             b.level++;
             d.changedDay = s.clock.day;
@@ -97,11 +121,15 @@ export function updateLevels(s: SimState, daily = false): BuildingPatch[] {
         d.lastCheckDay = s.clock.day;
       }
     }
-    b.upgrade = upgradeStatus(b);
-    if (JSON.stringify([b.level, b.development, b.upgrade]) !== before)
+    b.upgrade = upgradeStatus(b, s);
+    if (
+      JSON.stringify([b.level, b.floorLimit, b.development, b.upgrade]) !==
+      before
+    )
       patches.push({
         id: b.id,
         level: b.level,
+        floorLimit: b.floorLimit,
         development: { ...d },
         upgrade: { ...b.upgrade },
       });

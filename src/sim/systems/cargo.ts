@@ -1,3 +1,4 @@
+import { truckBannedRoads } from '../../world/policies';
 import { MAP_SIZE } from '../../data/config';
 import { CARGO as C } from '../../data/cargo';
 import { TrafficKind } from '../../data/traffic';
@@ -15,6 +16,24 @@ const commercial = (b: Building) =>
 const industrial = (b: Building) => b.kind === 'zoned' && b.defId === 'I';
 /** Inventory changes at dispatch/arrival, never merely because a path exists. */
 export class CargoSystem {
+  private policyDistricts?: SimState['districts'];
+  private policyGlobals?: SimState['policies'];
+  private policyRoads?: SimState['segments'];
+  private forbidden = new Set<number>();
+  policiesChanged() {
+    if (
+      this.policyDistricts === this.s.districts &&
+      this.policyGlobals === this.s.policies &&
+      this.policyRoads === this.s.segments
+    )
+      return;
+    this.policyDistricts = this.s.districts;
+    this.policyGlobals = this.s.policies;
+    this.policyRoads = this.s.segments;
+    this.forbidden = truckBannedRoads(this.s, this.s.nodes, this.s.segments);
+    for (const job of this.s.cargo.shipments)
+      this.traffic.restrictMission(job.id, this.forbidden);
+  }
   private revision = -1;
   private cursor = 0;
   private budget = 0;
@@ -59,6 +78,7 @@ export class CargoSystem {
     }
   }
   networkChanged(): void {
+    this.policiesChanged();
     if (this.revision === this.lanes.revision) return;
     this.revision = this.lanes.revision;
     this.planner.paths.sync(this.s.nodes, this.s.segments);
@@ -124,7 +144,7 @@ export class CargoSystem {
     const goals = to
       ? this.planner.paths.access(b!.pos, 'drive', b!.frontageSetbackM)
       : this.outbound;
-    return this.planner.paths.between(starts, goals, 'drive');
+    return this.planner.paths.between(starts, goals, 'drive', this.forbidden);
   }
   private incoming(id: number): number {
     let total = 0;
@@ -228,6 +248,7 @@ export class CargoSystem {
   }
   /** At most eight path requests per tick, with a rotating business cursor. */
   tick(): void {
+    this.policiesChanged();
     this.reconcile();
     this.networkChanged();
     this.deliver();

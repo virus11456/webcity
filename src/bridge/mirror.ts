@@ -25,6 +25,17 @@ function upsert<T extends { id: number }>(
 export class WorldMirror {
   private state: WorldSnapshot | undefined;
   private districts: DistrictView[] = [];
+  readPolicies() {
+    return (
+      this.state &&
+      structuredClone({
+        policies: this.state.policies,
+        districts: this.state.districts,
+        unlocked: this.state.unlocked,
+        sandbox: this.state.settings.mode === 'sandbox',
+      })
+    );
+  }
   readOwnedTiles(): number[] {
     return [...(this.state?.ownedTiles ?? [])];
   }
@@ -184,13 +195,19 @@ export class WorldMirror {
     const state = this.state;
     if (!state) return;
     switch (event.t) {
+      case 'policies':
+        state.policies = [...event.policies];
+        break;
       case 'districts':
         this.districts = structuredClone(event.districts);
-        state.districts = this.districts.map(({ id, name, cells }) => ({
-          id,
-          name,
-          cells,
-        }));
+        state.districts = this.districts.map(
+          ({ id, name, cells, policies }) => ({
+            ...(policies ? { policies } : {}),
+            id,
+            name,
+            cells,
+          }),
+        );
         break;
       case 'economy': {
         const finance = structuredClone(event.finance);

@@ -348,6 +348,11 @@ export class TrafficSystem {
     this.missionArrivals.splice(0, this.missionArrivals.length, ...rest);
     return selected;
   }
+  restrictMission(id: number, forbidden: ReadonlySet<number>): void {
+    const v = this.vehicles.get(this.byCitizen.get(-id) ?? 0);
+    if (v && v.route.legs.slice(v.leg).some((l) => forbidden.has(l.segment)))
+      this.strand(v);
+  }
   cancelMission(id: number): void {
     const v = this.vehicles.get(this.byCitizen.get(-id) ?? 0);
     if (v) this.delete(v);

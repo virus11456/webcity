@@ -717,6 +717,7 @@ export class Pathfinder {
     starts: readonly LaneAccess[],
     goals: readonly LaneAccess[],
     mode: 'drive' | 'walk' = 'drive',
+    forbidden?: ReadonlySet<number>,
   ): Route | null {
     this.computations++;
     const graph = mode === 'drive' ? this.driving : this.walking;
@@ -743,7 +744,8 @@ export class Pathfinder {
       goalPoints: LanePoint[] = [];
     for (const g of goals) {
       const base = graph.base.get(g.lane);
-      if (base === undefined) continue;
+      if (base === undefined || forbidden?.has(positions[base]!.lane.segment))
+        continue;
       const p = positions[base]!;
       target[p.laneNumber] = g.distance;
       targetStamp[p.laneNumber] = generation;
@@ -802,7 +804,8 @@ export class Pathfinder {
     for (let i = 0; i < starts.length; i++) {
       const start = starts[i]!,
         base = graph.base.get(start.lane);
-      if (base === undefined) continue;
+      if (base === undefined || forbidden?.has(positions[base]!.lane.segment))
+        continue;
       const lane = positions[base]!.lane,
         distance = Math.max(0, Math.min(lane.length, start.distance)),
         point = lanePointAt(lane.points, distance),
@@ -869,6 +872,11 @@ export class Pathfinder {
         }
       }
       for (const edge of edges[id]!) {
+        if (
+          forbidden?.has(edge.leg.segment) ||
+          forbidden?.has(positions[edge.to]!.lane.segment)
+        )
+          continue;
         const to = edge.to,
           candidate = cost + edge.cost;
         if (stamp[to] === generation && candidate >= score[to]!) continue;

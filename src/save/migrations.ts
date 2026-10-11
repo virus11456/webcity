@@ -1,3 +1,4 @@
+import { POLICIES } from '../data/policies';
 import { DISTRICTS } from '../data/districts';
 import { validateTransit } from './transitValidation';
 import { HEALTH } from '../data/health';
@@ -154,9 +155,27 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     );
     ids.add(item.id);
   }
+  requireValue(
+    s.policies.every((id) => POLICIES.some((p) => p.id === id)) &&
+      new Set(s.policies).size === s.policies.length,
+  );
+  if (s.economy.policyExpenses !== undefined)
+    requireValue(
+      Number.isFinite(s.economy.policyExpenses) &&
+        s.economy.policyExpenses >= 0,
+    );
   requireValue(s.districts.length <= DISTRICTS.maxCount);
   const districtCells = new Set<number>();
   for (const d of s.districts) {
+    if (d.policies !== undefined)
+      requireValue(
+        d.policies &&
+          typeof d.policies === 'object' &&
+          Object.entries(d.policies).every(
+            ([id, v]) =>
+              POLICIES.some((p) => p.id === id) && typeof v === 'boolean',
+          ),
+      );
     requireValue(
       typeof d.name === 'string' &&
         d.name.trim().length > 0 &&
@@ -247,6 +266,16 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
             b.crimeUpdatedDay >= 0 &&
             b.crimeUpdatedDay <= s.clock.day)),
     );
+    if (b.floorLimit !== undefined) requireValue(b.floorLimit === 4);
+    if (b.garbage !== undefined)
+      requireValue(
+        b.garbage &&
+          Number.isFinite(b.garbage.stock) &&
+          b.garbage.stock >= 0 &&
+          Number.isFinite(b.garbage.generated) &&
+          b.garbage.generated >= 0 &&
+          Number.isSafeInteger(b.garbage.lastDay),
+      );
     if (b.happiness !== undefined)
       requireValue(
         Number.isFinite(b.happiness) && b.happiness >= 0 && b.happiness <= 100,

@@ -1,3 +1,4 @@
+import { createPolicyControls } from './ui/policyControls';
 import { DistrictTool } from './tools/districtTool';
 import { DistrictRenderer } from './render/districts';
 import { createDistrictControls } from './ui/districtControls';
@@ -133,6 +134,7 @@ let inspectPanel: ReturnType<typeof createInspectPanel> | undefined;
 let inspectPreview: BulldozePreview | undefined;
 let facilityAssets: FacilityAssets | undefined;
 let serviceRenderer: ServiceRenderer | undefined;
+let policyControls: ReturnType<typeof createPolicyControls> | undefined;
 let districtTool: DistrictTool | undefined;
 let districtRenderer: DistrictRenderer | undefined;
 let districtControls: ReturnType<typeof createDistrictControls> | undefined;
@@ -700,7 +702,11 @@ if (canvas && status) {
             ROAD_TOOL_RENDER.focus.distance,
           );
       };
+      policyControls = createPolicyControls(root, sim!);
       roadControls = createRoadControls(root, {
+        policy() {
+          policyControls?.open();
+        },
         enter() {
           mode(true);
           tools!.select(roadTool!);
@@ -989,6 +995,7 @@ if (import.meta.hot)
     buildingThumbnails?.dispose();
     inspectPreview?.dispose();
     unsubscribeServices?.();
+    policyControls?.dispose();
     districtTool?.dispose();
     districtControls?.dispose();
     districtRenderer?.dispose();

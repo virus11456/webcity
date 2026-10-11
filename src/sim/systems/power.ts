@@ -1,3 +1,4 @@
+import { policyValue } from '../../world/policies';
 import { POWER } from '../../data/power';
 import { UTILITY_RULES } from '../../data/buildings';
 import { distance } from '../../core/math';
@@ -36,7 +37,7 @@ export function updatePower(s: SimState): BuildingPatch[] {
       points: zoneBuildingFootprint(b),
       closed: true,
       output: plantOutput(s.seed, b.defId, b.pos) * s.budgets.power,
-      load: consumption(b),
+      load: consumption(b) * policyValue(s, b.pos, 'powerMultiplier', 1),
     }));
   for (const n of s.networks.power)
     nodes.push({ points: n.points, closed: false, output: 0, load: 0 });
