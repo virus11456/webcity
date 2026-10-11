@@ -1,3 +1,4 @@
+import { DISTRICTS } from '../data/districts';
 import { validateTransit } from './transitValidation';
 import { HEALTH } from '../data/health';
 import { emptyFire } from '../world/fire';
@@ -141,6 +142,7 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     ...s.networks.power,
     ...s.networks.water,
     ...s.transitLines,
+    ...s.districts,
     ...s.transitLines.flatMap((l) => l.buses ?? []),
   ]) {
     requireValue(
@@ -151,6 +153,25 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
         !ids.has(item.id),
     );
     ids.add(item.id);
+  }
+  requireValue(s.districts.length <= DISTRICTS.maxCount);
+  const districtCells = new Set<number>();
+  for (const d of s.districts) {
+    requireValue(
+      typeof d.name === 'string' &&
+        d.name.trim().length > 0 &&
+        d.name.length <= DISTRICTS.maxName &&
+        Array.isArray(d.cells),
+    );
+    for (const cell of d.cells) {
+      requireValue(
+        Number.isSafeInteger(cell) &&
+          cell >= 0 &&
+          cell < DISTRICTS.gridSize ** 2 &&
+          !districtCells.has(cell),
+      );
+      districtCells.add(cell);
+    }
   }
   const nodes = new Set(s.nodes.map((n) => n.id)),
     roads = new Set(s.segments.map((n) => n.id)),

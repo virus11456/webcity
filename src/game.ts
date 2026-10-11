@@ -1,3 +1,6 @@
+import { DistrictTool } from './tools/districtTool';
+import { DistrictRenderer } from './render/districts';
+import { createDistrictControls } from './ui/districtControls';
 import { cityAudio } from './audio/manager';
 import { AUDIO } from './data/soundConfig';
 import { BuildingThumbnails } from './render/buildingThumbnails';
@@ -72,6 +75,7 @@ import { App } from './ui/App';
 
 declare global {
   interface Window {
+    __webcityDistricts?: () => ReturnType<SimClient['mirror']['readDistricts']>;
     __webcityTransit?: () => ReturnType<SimClient['mirror']['readTransit']>;
     __webcityGraphics?: () => ReturnType<CityRenderer['readGraphics']>;
     __webcityStats?: () => ReturnType<SimClient['mirror']['readStats']>;
@@ -129,6 +133,9 @@ let inspectPanel: ReturnType<typeof createInspectPanel> | undefined;
 let inspectPreview: BulldozePreview | undefined;
 let facilityAssets: FacilityAssets | undefined;
 let serviceRenderer: ServiceRenderer | undefined;
+let districtTool: DistrictTool | undefined;
+let districtRenderer: DistrictRenderer | undefined;
+let districtControls: ReturnType<typeof createDistrictControls> | undefined;
 let tramTool: BusTool | undefined;
 let tramStops: BusStops | undefined;
 let tramTracks: TramTracks | undefined;
@@ -277,6 +284,8 @@ if (canvas && status) {
           roadPreview?.roads.setNight(city.dayNight.night);
           vehicles?.setNight(city.dayNight.night);
         }
+        if (city)
+          districtRenderer?.frame(city.cameraController.readState().distance);
         input?.update(seconds);
         followCamera?.update();
         roadPreview?.roads.update();
@@ -579,6 +588,20 @@ if (canvas && status) {
         busControls?.update(s);
         busStops?.update(s.active, s.stops, s.lines);
       });
+      districtRenderer = new DistrictRenderer(city.scene, (x, z) =>
+        city!.terrain.heightAt(x, z),
+      );
+      districtTool = new DistrictTool(sim!, powerContext.pick, (s) => {
+        roadControls?.updateDistrict(s.active, s.pending);
+        districtControls?.update(s);
+        districtRenderer?.update(
+          s.active,
+          s.districts,
+          s.points,
+          s.radius,
+          s.ownedTiles,
+        );
+      });
       tramStops = new BusStops(city.scene, (x, z) =>
         city!.terrain.heightAt(x, z),
       );
@@ -688,6 +711,11 @@ if (canvas && status) {
           tools!.select(zoneTool!);
           canvas.focus({ preventScroll: true });
         },
+        district() {
+          mode(true);
+          tools!.select(districtTool!);
+          canvas.focus({ preventScroll: true });
+        },
         tram() {
           mode(true);
           tools!.select(tramTool!);
@@ -773,6 +801,11 @@ if (canvas && status) {
         },
       );
       metroControls.update(metroTool.readState());
+      districtControls = createDistrictControls(
+        roadControls.districtHost,
+        districtTool,
+      );
+      districtControls.update(districtTool.readState());
       tramControls = createBusControls(roadControls.tramHost, tramTool, () => {
         tools!.select(serviceTool!);
         serviceTool!.setDefinition('bus_depot');
@@ -900,6 +933,7 @@ if (canvas && status) {
           ...zoneRenderer!.readStats(),
         };
       };
+      window.__webcityDistricts = () => sim!.mirror.readDistricts();
       window.__webcityTransit = () => sim!.mirror.readTransit();
       window.__webcityStats = () => sim!.mirror.readStats();
       window.__webcityBuildings = () => sim!.mirror.readBuildings();
@@ -928,6 +962,7 @@ if (import.meta.hot)
     delete window.__webcityBuildingStats;
     delete window.__webcityEffects;
     delete window.__webcityBuildings;
+    delete window.__webcityDistricts;
     delete window.__webcityTransit;
     delete window.__webcityStats;
     delete window.__webcityGraphics;
@@ -954,6 +989,9 @@ if (import.meta.hot)
     buildingThumbnails?.dispose();
     inspectPreview?.dispose();
     unsubscribeServices?.();
+    districtTool?.dispose();
+    districtControls?.dispose();
+    districtRenderer?.dispose();
     tramTool?.dispose();
     tramControls?.dispose();
     tramTracks?.dispose();

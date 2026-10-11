@@ -229,3 +229,22 @@
   padding-left: 8px;
   color: var(--color-text);
 }
+
+.district-controls button,
+.district-controls select,
+.district-controls input {
+  min-height: 44px;
+  min-width: 44px;
+  font-size: 14px;
+}
+.district-controls input,
+.district-controls select {
+  flex: 1;
+  max-width: 100%;
+  width: 120px;
+}
+.district-stats {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 8px 0;
+}

@@ -32,6 +32,7 @@ import type {
 } from '../world/snapshot';
 
 export type CommandInput =
+  | ({ t: 'district' } & import('../world/districts').DistrictAction)
   | ({ t: 'init' } & CitySettings)
   | { t: 'load'; data: ArrayBuffer }
   | { t: 'save' }
@@ -77,6 +78,8 @@ export type FailureReason =
   | ConstructionReason
   | ZoningReason
   | BulldozeReason
+  | 'err.districtName'
+  | 'err.districtLimit'
   | 'err.tramRoute'
   | 'err.metroStations'
   | 'err.busDepot'
@@ -106,6 +109,7 @@ export type Response =
     }
   | { t: 'inspectResult'; reqId: number; info: InspectInfo };
 export type SimEvent =
+  | { t: 'districts'; districts: import('../world/districts').DistrictView[] }
   | { t: 'transit'; lines: import('../world/transit').BusLineView[] }
   | Response
   | { t: 'clock'; clock: SimClock }
