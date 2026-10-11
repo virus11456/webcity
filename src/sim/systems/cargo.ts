@@ -1,3 +1,4 @@
+import { industryResource } from '../../world/industry';
 import { truckBannedRoads } from '../../world/policies';
 import { MAP_SIZE } from '../../data/config';
 import { CARGO as C } from '../../data/cargo';
@@ -116,7 +117,12 @@ export class CargoSystem {
         if (industrial(b))
           b.cargo.stock = Math.min(
             b.cargo.capacity,
-            b.cargo.stock + b.workers * C.productionPerWorkerDay,
+            b.cargo.stock +
+              (b.enabled === false || b.fire?.burning
+                ? 0
+                : b.workers *
+                  C.productionPerWorkerDay *
+                  industryResource(b, this.s.terrain.resources)),
           );
         else if (commercial(b)) {
           b.cargo.stock = Math.max(
@@ -173,6 +179,9 @@ export class CargoSystem {
     const id = this.traffic.reserveMission(),
       job: Shipment = {
         id,
+        ...(this.buildings.get(from)?.industry
+          ? { commodity: this.buildings.get(from)!.industry }
+          : {}),
         from,
         to,
         units,
@@ -293,7 +302,10 @@ export class CargoSystem {
           continue;
         }
         const candidates = businesses
-          .filter((c) => commercial(c) && this.need(c) >= C.minimumShipment)
+          .filter(
+            (c) =>
+              !b.industry && commercial(c) && this.need(c) >= C.minimumShipment,
+          )
           .sort(
             (a, c) =>
               Math.hypot(a.pos.x - b.pos.x, a.pos.z - b.pos.z) -
@@ -340,6 +352,7 @@ export class CargoSystem {
         const local = businesses.find(
           (c) =>
             industrial(c) &&
+            !c.industry &&
             c.cargo!.stock >= C.minimumShipment &&
             !this.s.cargo.shipments.some((j) => j.from === c.id),
         );

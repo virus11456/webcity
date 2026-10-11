@@ -164,6 +164,7 @@ export class CitizenSystem {
       compare(b.fire?.burning ? 1 : 0);
       compare(b.state);
       compare(b.defId);
+      compare(b.industry);
       compare(b.level);
       compare(b.lotW);
       compare(b.lotD);

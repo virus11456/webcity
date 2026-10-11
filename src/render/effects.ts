@@ -109,7 +109,7 @@ export class CityEffects {
       b.enabled !== false &&
       b.state === 'active' &&
       !b.fire?.burning &&
-      (b.defId === 'I' ||
+      ((b.defId === 'I' && !b.industry) ||
         ['power_coal', 'power_oil', 'garbage_incinerator'].includes(b.defId))
     )
       this.emitters.set(b.id, b);

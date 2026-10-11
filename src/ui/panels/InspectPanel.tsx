@@ -294,9 +294,11 @@ function Content({
         ],
         [t('fire.damage'), `${Math.round(b.fire.damage * 100)}%`],
       );
+    if (b.industry)
+      rows.push([t('industry.product'), t(`industry.${b.industry}`)]);
     if (b.cargo)
       rows.push([
-        t('cargo.stock'),
+        t(b.industry ? 'industry.rawStock' : 'cargo.stock'),
         `${b.cargo.stock.toFixed(0)} / ${b.cargo.capacity.toFixed(0)}`,
       ]);
     const problems = Object.keys(PROBLEMS).filter(

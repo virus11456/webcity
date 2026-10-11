@@ -1,3 +1,4 @@
+import { updateIndustry } from './systems/industry';
 import { setPolicy, updateGarbageProduction } from './systems/policies';
 import type { PolicyId } from '../data/policies';
 import { districtCommand } from './systems/districts';
@@ -143,6 +144,7 @@ export class Simulation {
       Object.assign(terrain, copy.terrain);
       Object.assign(this.state, copy, { terrain });
     }
+    updateIndustry(this.state);
     updatePopulation(this.state);
     this.schedules = new ScheduleSystem(this.state);
     this.routePlanner = new RoutePlanner(
@@ -185,6 +187,7 @@ export class Simulation {
     updateLevels(this.state);
     this.fire = new FireSystem(this.state, this.routePlanner, this.traffic);
     this.time.onDay(() => {
+      const industries = updateIndustry(this.state);
       const priorHappiness = updateHappiness(this.state);
       const population = updatePopulation(this.state, true);
       const power = [...updatePower(this.state), ...updateWater(this.state)];
@@ -228,6 +231,7 @@ export class Simulation {
       updateDemand(this.state);
       const updates = new Map<number, BuildingPatch>();
       for (const p of [
+        ...industries,
         ...garbage,
         ...priorHappiness,
         ...population,
@@ -382,6 +386,7 @@ export class Simulation {
     this.cargo.reconcile();
     this.fire?.reconcile();
     const patches = [
+      ...updateIndustry(this.state),
       ...this.services.update(),
       ...this.cargo.patches(),
       ...updatePower(this.state),
@@ -700,7 +705,10 @@ export class Simulation {
   ): Omit<Result, 't' | 'reqId'> {
     const r = setPolicy(this.state, policy, district, on);
     if (r.ok) {
-      const patches = updateLevels(this.state);
+      const patches = [
+        ...updateIndustry(this.state),
+        ...updateLevels(this.state),
+      ];
       if (patches.length)
         this.emit({
           t: 'buildingsChanged',
@@ -721,7 +729,10 @@ export class Simulation {
   districtCommand(command: DistrictAction): Omit<Result, 't' | 'reqId'> {
     const r = districtCommand(this.state, command);
     if (r.ok) {
-      const patches = updateLevels(this.state);
+      const patches = [
+        ...updateIndustry(this.state),
+        ...updateLevels(this.state),
+      ];
       if (patches.length)
         this.emit({
           t: 'buildingsChanged',
@@ -1117,7 +1128,10 @@ export class Simulation {
   }
 
   private refreshPopulation(): void {
-    const updated = updatePopulation(this.state);
+    const updated = [
+      ...updateIndustry(this.state),
+      ...updatePopulation(this.state),
+    ];
     if (updated.length)
       this.emit({
         t: 'buildingsChanged',

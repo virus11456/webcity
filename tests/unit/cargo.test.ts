@@ -103,6 +103,54 @@ function fixture(outside = false) {
   };
 }
 describe('actual goods shipments', () => {
+  it('exports specialized raw material only after a real truck reaches the boundary, never supplies shops', () => {
+    const f = fixture(true);
+    f.factory.industry = 'industry_forestry';
+    f.cargo.tick();
+    expect(
+      f.s.cargo.shipments.find((j) => j.from === f.factory.id),
+    ).toMatchObject({ kind: 'export', to: 0, commodity: 'industry_forestry' });
+    expect(f.s.cargo.exported).toBe(0);
+    expect(f.shop.cargo!.stock).toBe(0);
+    f.step(500);
+    expect(f.s.cargo.exported).toBe(120);
+    expect(f.s.cargo.delivered).toBe(0);
+  });
+  it('produces raw material in proportion to local resources once per day, and stops without workers or while disabled', () => {
+    const f = fixture();
+    f.factory.industry = 'industry_oil';
+    f.factory.cargo!.stock = 0;
+    f.s.terrain.resources.oil.fill(128);
+    f.cargo.daily();
+    f.cargo.daily();
+    expect(f.factory.cargo!.stock).toBeCloseTo(
+      (32 * CARGO.productionPerWorkerDay * 128) / 255,
+    );
+    const initial = f.factory.cargo!.stock;
+    f.s.clock.day++;
+    f.s.terrain.resources.oil.fill(0);
+    f.cargo.daily();
+    expect(f.factory.cargo!.stock).toBe(initial);
+    f.s.clock.day++;
+    f.s.terrain.resources.oil.fill(255);
+    f.factory.enabled = false;
+    f.cargo.daily();
+    expect(f.factory.cargo!.stock).toBe(initial);
+    f.s.clock.day++;
+    f.factory.enabled = true;
+    f.factory.workers = 0;
+    f.cargo.daily();
+    expect(f.factory.cargo!.stock).toBe(initial);
+  });
+  it('retains specialized stock and signals a blocked export when there is no outside highway', () => {
+    const f = fixture();
+    f.factory.industry = 'industry_ore';
+    f.cargo.tick();
+    expect(f.factory.cargo!.exportBlocked).toBe(true);
+    expect(f.factory.cargo!.stock).toBe(120);
+    expect(f.s.cargo.shipments).toHaveLength(0);
+  });
+
   it('loads industrial stock and supplies commerce only after a truck arrives', () => {
     const f = fixture();
     f.cargo.tick();

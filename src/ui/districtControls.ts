@@ -1,3 +1,7 @@
+import {
+  INDUSTRY_SPECIALIZATIONS,
+  type IndustrySpecializationId,
+} from '../data/policies';
 import { DISTRICTS as D } from '../data/districts';
 import type { DistrictTool, DistrictToolState } from '../tools/districtTool';
 import { t } from './i18n/t';
@@ -53,6 +57,32 @@ export function createDistrictControls(
       tool.brush(tool.readState().radius, true),
     );
   brushes.append(small, large, erase);
+  const specialization = document.createElement('select');
+  specialization.setAttribute('aria-label', t('industry.select'));
+  for (const id of [
+    'general',
+    ...INDUSTRY_SPECIALIZATIONS.map((d) => d.id),
+  ] as const) {
+    const o = document.createElement('option');
+    o.value = id;
+    o.textContent = t(`industry.${id}`);
+    specialization.append(o);
+  }
+  specialization.onchange = () => {
+    const id = tool.readState().selected;
+    if (id !== null)
+      void tool.command({
+        action: 'specialize',
+        id,
+        industry:
+          specialization.value === 'general'
+            ? null
+            : (specialization.value as IndustrySpecializationId),
+      });
+  };
+  const industryHint = document.createElement('p');
+  industryHint.className = 'power-hint';
+  industryHint.textContent = t('industry.hint');
   const hint = document.createElement('p');
   hint.className = 'power-hint';
   hint.textContent = t('district.hint');
@@ -60,7 +90,16 @@ export function createDistrictControls(
   stats.className = 'district-stats';
   const status = document.createElement('output');
   status.setAttribute('role', 'status');
-  host.append(row, nameRow, brushes, hint, stats, status);
+  host.append(
+    row,
+    nameRow,
+    brushes,
+    specialization,
+    industryHint,
+    hint,
+    stats,
+    status,
+  );
   parent.append(host);
   let signature = '',
     selected: number | null = null;
@@ -86,7 +125,17 @@ export function createDistrictControls(
       if (selected !== s.selected || document.activeElement !== name)
         name.value = d?.name ?? '';
       selected = s.selected;
-      for (const b of [select, name, rename, remove, small, large, erase])
+      specialization.value = d?.industry ?? 'general';
+      for (const b of [
+        select,
+        name,
+        rename,
+        remove,
+        small,
+        large,
+        erase,
+        specialization,
+      ])
         b.disabled = s.pending || !d;
       create.disabled = s.pending || s.districts.length >= D.maxCount;
       small.setAttribute(

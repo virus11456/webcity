@@ -1,3 +1,4 @@
+import { industryDefinition } from './industry';
 import { DEMAND, POPULATION_PROFILE } from '../data/simulation';
 import {
   GROWTH,
@@ -49,7 +50,8 @@ export function jobPlaces(b: Building): EducationCounts {
     JOB_EDUCATION_PERCENT[b.defId as keyof typeof JOB_EDUCATION_PERCENT];
   return distribute(
     buildingCapacity(b),
-    profiles[Math.max(0, Math.min(profiles.length - 1, b.level - 1))]!,
+    industryDefinition(b.industry)?.educationDistribution ??
+      profiles[Math.max(0, Math.min(profiles.length - 1, b.level - 1))]!,
   ) as EducationCounts;
 }
 /** Aggregate household size counts, not citizens or a collection of household agents. */

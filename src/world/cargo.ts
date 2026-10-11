@@ -5,6 +5,7 @@ export interface CargoInventory {
   exportBlocked: boolean;
 }
 export interface Shipment {
+  commodity?: import('../data/policies').IndustrySpecializationId;
   id: number;
   from: number;
   to: number;

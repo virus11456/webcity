@@ -1,4 +1,15 @@
 export const ZH_TW = {
+  'industry.select': '工業特化',
+  'industry.general': '一般工業',
+  'industry.industry_forestry': '林業・木材',
+  'industry.industry_farming': '農業・農產',
+  'industry.industry_ore': '礦業・礦石',
+  'industry.industry_oil': '石油・原油',
+  'industry.hint':
+    'MS6 解鎖。依資訊圖層的當地資源生產原料，貨車由高速公路出口；沒有資源就不生產。轉型會清空廠內舊貨。',
+  'industry.product': '生產種類',
+  'industry.rawStock': '原料庫存',
+
   'policy.title': '政策',
   'policy.close': '關閉政策',
   'policy.scope': '政策適用範圍',
