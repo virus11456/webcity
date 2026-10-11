@@ -706,3 +706,6 @@ WorldSnapshot.tileLimit 是 4／9；SimClient 的當前裝置限制隨每次 ini
 
 ### M4-12 地形指令
 `terraform` 接收有限長 TerraformDraft，由 world/terraform 同時供預覽與 Worker 驗證。Simulation 只接受沙盒，產生稀疏 TerrainPatch，重用 roadsChanged.terrain 同步鏡像與渲染；重建 zone grid 及 utility fields。建築／道路支撐三角形在任何寫入前受保護。自然植被重分批時重新取地面高度並略過水下位置；水面沿 revision 更新 texture。詳見 TERRAFORM.md。
+
+### M4-13 天氣渲染
+`world/weather` 以 seed 與 clock.ticks 純計算 WeatherSample；`render/weather` 僅使用只讀時鐘，插值最多一個 tick。雨批次、霧與雲影無每幀物件配置。偏好 weather 儲存於本機，無新增 Worker 命令或存檔欄位。詳見 WEATHER.md。

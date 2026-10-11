@@ -94,6 +94,16 @@ export function Settings({
         />
         {t('menu.dayNight')}
       </label>
+      <label class="menu-check">
+        <input
+          type="checkbox"
+          checked={value.weather}
+          onChange={(e) =>
+            update({ ...value, weather: e.currentTarget.checked })
+          }
+        />
+        {t('menu.weather')}
+      </label>
       <Slider
         label={t('menu.scale')}
         min={90}

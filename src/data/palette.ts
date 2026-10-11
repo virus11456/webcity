@@ -205,3 +205,6 @@ export const DAY_NIGHT_PALETTE = {
 } as const;
 
 export const EFFECT_PALETTE = { smoke: '#D1D0CA', upgrade: '#8EDCFF' } as const;
+
+// M4-13 original rain streak color.
+export const WEATHER_PALETTE = { rain: '#BDCFDB' } as const;

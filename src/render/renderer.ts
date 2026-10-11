@@ -1,3 +1,5 @@
+import { Weather } from './weather';
+import { WEATHER } from '../data/weather';
 import {
   GRAPHICS_DEFAULTS,
   QUALITY,
@@ -71,6 +73,7 @@ export class CityRenderer {
   readonly renderer: WebGLRenderer;
   readonly scene = new Scene();
   readonly dayNight = new DayNight();
+  readonly weather: Weather;
   readonly camera = new PerspectiveCamera(
     CAMERA.fovDegrees,
     1,
@@ -113,6 +116,8 @@ export class CityRenderer {
       options.seed ?? MAP_PRESETS[0].seed,
       MAP_PRESETS.find((p) => p.id === options.mapId) ?? MAP_PRESETS[0],
     );
+    this.weather = new Weather(this.terrain.seed);
+    this.scene.add(this.weather.rain);
     this.land = new TerrainRenderer(this.terrain);
     this.vegetation = new VegetationRenderer(this.terrain);
     this.vegetation.group.visible = false;
@@ -348,6 +353,8 @@ export class CityRenderer {
     this.land.installShader(
       lighting.csm ? this.land.material.onBeforeCompile : undefined,
     );
+    this.weather.installShadow(this.land.material);
+    this.weather.setQuality(level);
     this.water.installShader(
       lighting.csm ? this.water.material.onBeforeCompile : undefined,
     );
@@ -414,6 +421,11 @@ export class CityRenderer {
     }
     const seconds = this.lastFrame === null ? 0 : (now - this.lastFrame) / 1000;
     this.dayNight.update(seconds);
+    this.weather.update(seconds, this.camera);
+    this.dayNight.sunIntensity *=
+      1 - this.weather.sample.cloud * WEATHER.sunDim;
+    this.dayNight.ambientIntensity *=
+      1 - this.weather.sample.cloud * WEATHER.ambientDim;
     this.stats.hour = this.dayNight.hour.value;
     this.lighting.setEnvironment(this.dayNight);
     this.town.setNight(this.dayNight.night);
@@ -430,7 +442,9 @@ export class CityRenderer {
     this.lastFrame = now;
     this.cameraController.copyFocus(this.focus);
     this.sky.position.copy(this.camera.position);
-    this.stats.fogDensity = fogDensityAtHeight(this.camera.position.y);
+    this.stats.fogDensity =
+      fogDensityAtHeight(this.camera.position.y) +
+      this.weather.sample.fog * WEATHER.maxFogDensity;
     (this.scene.fog as FogExp2).density = this.stats.fogDensity;
     this.camera.updateMatrixWorld();
     this.lighting.update(this.focus);
@@ -465,6 +479,7 @@ export class CityRenderer {
   }
   acceptClock(clock: Readonly<SimClock>): void {
     this.dayNight.accept(clock);
+    this.weather.accept(clock);
   }
   /** Forward water-only authoritative data to the visual surface. */
   acceptWater(event: SimEvent): void {
@@ -494,6 +509,7 @@ export class CityRenderer {
     this.postfx?.dispose();
     this.land.dispose();
     this.vegetation.dispose();
+    this.weather.dispose();
     this.town.dispose();
     this.water.dispose();
     for (const mesh of [this.sky]) {

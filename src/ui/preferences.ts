@@ -4,6 +4,7 @@ export interface Preferences extends AudioLevels, GraphicsOptions {
   quality: 'auto' | 'low' | 'medium' | 'high';
   edgeScrolling: boolean;
   dayNight: boolean;
+  weather: boolean;
   uiScale: number;
 }
 const defaults: Preferences = {
@@ -11,6 +12,7 @@ const defaults: Preferences = {
   quality: 'auto',
   edgeScrolling: false,
   dayNight: true,
+  weather: true,
   uiScale: 100,
   volume: AUDIO.volume,
   sfxVolume: AUDIO.sfxVolume,
@@ -41,6 +43,7 @@ export function readPreferences(): Preferences {
         : 'auto',
       edgeScrolling: value.edgeScrolling === true,
       dayNight: value.dayNight !== false,
+      weather: value.weather !== false,
       uiScale:
         typeof value.uiScale === 'number' &&
         value.uiScale >= 90 &&
