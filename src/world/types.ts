@@ -87,6 +87,8 @@ export interface HealthSummary {
   residents: number;
 }
 export interface Building {
+  bodies?: { pending: number };
+  mortuary?: import('./deathcare').Mortuary;
   wasteFacility?: import('./garbage').WasteFacility;
   industry?: import('../data/policies').IndustrySpecializationId;
   floorLimit?: number;

@@ -18,6 +18,7 @@ function patch(b: Building): BuildingPatch {
     jobs: b.jobs,
     workers: b.workers,
     housing: b.housing,
+    bodies: b.bodies ? { ...b.bodies } : undefined,
     jobEducation: b.jobEducation,
     workerEducation: b.workerEducation,
   };

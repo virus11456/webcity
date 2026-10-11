@@ -77,6 +77,7 @@ export type FinanceView = Pick<
 
 /** Structured-clone wire format, never a reference to the authoritative state. */
 export interface WorldSnapshot {
+  deathcare: import('./deathcare').DeathcareState;
   garbage: import('./garbage').GarbageState;
   cargo: import('./cargo').CargoState;
   fire: import('./fire').FireState;

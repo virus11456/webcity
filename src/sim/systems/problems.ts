@@ -24,6 +24,7 @@ export function updateProblems(s: SimState): BuildingPatch[] {
     } else {
       let abandon = false;
       for (const problem of BUILDING_PROBLEMS) {
+        if (problem === 'deathcare') continue;
         if (!hasBuildingProblem(b, problem)) {
           b.problemTimers[problem] = 0;
           if (b.problemSinceTick) delete b.problemSinceTick[problem];

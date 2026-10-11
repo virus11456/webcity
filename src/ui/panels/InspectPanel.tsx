@@ -1,3 +1,4 @@
+import { deathcareCapacity } from '../../world/deathcare';
 import { Icon } from '../components/Icon';
 import { PROBLEM_ICONS } from '../../data/icons';
 import type { Building } from '../../world/types';
@@ -43,7 +44,10 @@ function Content({
     const v = info.value;
     const mission = v.citizenId < 0;
     const fire = v.purpose === 7;
+    const deathcare = v.purpose === 10;
     const garbage = v.purpose === 9;
+    const collection = deathcare ? v.deathcare : v.garbage;
+    const labels = deathcare ? 'deathcare' : 'garbage';
     const rows: [string, string | number][] =
       v.purpose === 8
         ? [
@@ -51,16 +55,16 @@ function Content({
             [t('bus.onboard'), v.bus?.passengers ?? 0],
             [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
           ]
-        : garbage
+        : garbage || deathcare
           ? [
-              [t('garbage.depot'), v.garbage?.depot ?? 0],
-              [t('garbage.load'), v.garbage?.units.toFixed(1) ?? 0],
+              [t(`${labels}.depot`), collection?.depot ?? 0],
+              [t(`${labels}.load`), collection?.units.toFixed(1) ?? 0],
               [
                 t('vehicle.purpose'),
                 t(
-                  v.garbage?.phase === 'return'
-                    ? 'garbage.return'
-                    : 'garbage.collect',
+                  collection?.phase === 'return'
+                    ? `${labels}.return`
+                    : `${labels}.collect`,
                 ),
               ],
               [t('vehicle.destination'), v.destinationId],
@@ -115,8 +119,8 @@ function Content({
                     ? 'tram.tab'
                     : 'bus.vehicle'
                 : 'bus.walker'
-              : garbage
-                ? 'garbage.truck'
+              : garbage || deathcare
+                ? `${labels}.truck`
                 : fire
                   ? 'fire.truck'
                   : mission
@@ -142,8 +146,8 @@ function Content({
           {mission && v.originPos && (
             <Button onClick={() => locate?.(v.originPos!)}>
               {t(
-                garbage
-                  ? 'garbage.locateOrigin'
+                garbage || deathcare
+                  ? `${labels}.locateOrigin`
                   : fire
                     ? 'fire.locateStation'
                     : 'cargo.locateOrigin',
@@ -214,7 +218,11 @@ function Content({
             .join(' / '),
         ],
       );
-    if ((b.kind === 'park' && b.defId !== 'tree') || b.wasteFacility)
+    if (
+      (b.kind === 'park' && b.defId !== 'tree') ||
+      b.wasteFacility ||
+      b.mortuary
+    )
       rows.push([
         t('service.status'),
         t(b.enabled === false ? 'service.off' : 'service.on'),
@@ -322,6 +330,17 @@ function Content({
         ],
         [t('fire.damage'), `${Math.round(b.fire.damage * 100)}%`],
       );
+    if (b.bodies) rows.push([t('deathcare.pending'), b.bodies.pending]);
+    if (b.mortuary)
+      rows.push(
+        [
+          t(b.defId === 'cemetery' ? 'deathcare.graves' : 'deathcare.waiting'),
+          `${b.mortuary.stock} / ${deathcareCapacity(b)}`,
+        ],
+        [t('deathcare.processed'), b.mortuary.processedToday],
+        [t('deathcare.trucks'), b.mortuary.vehicles],
+        [t('deathcare.routeHint'), b.mortuary.full ? t('deathcare.full') : ''],
+      );
     if (b.garbage)
       rows.push(
         [t('garbage.stock'), b.garbage.stock.toFixed(1)],
@@ -344,13 +363,14 @@ function Content({
         t(b.industry ? 'industry.rawStock' : 'cargo.stock'),
         `${b.cargo.stock.toFixed(0)} / ${b.cargo.capacity.toFixed(0)}`,
       ]);
-    const problems = Object.keys(PROBLEMS).filter(
+    const problems = [...Object.keys(PROBLEMS), 'deathcare'].filter(
       (key) =>
         (b.problemTimers[key as keyof typeof PROBLEMS] ?? 0) > 0 ||
         ((key === 'crime' ||
           key === 'fire' ||
           key === 'sickness' ||
-          key === 'garbage') &&
+          key === 'garbage' ||
+          key === 'deathcare') &&
           hasBuildingProblem(b, key)),
     );
     rows.push([

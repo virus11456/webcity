@@ -691,3 +691,6 @@ Pathfinder.between 支援可選 forbidden 道路集合，只由貨運傳入。Ca
 M4-06：District.industry 為可選特化 id，district action specialize 由 Worker 驗證 MS6。updateIndustry 在初始化、每日及結構更新時把行政區種類派生到工業建築，轉型報廢庫存；人口結構偵測含 industry，職缺教育分配同步重算。world/industry 提供資源取樣与定義。貨運 daily 依資源倍率產原料，原料 Shipment.commodity 僅容許出口，沿用真實路徑和抵達結算。render/buildings/industryGeometry 提供近遠景共用輪廓；特化不套用一般工業 GLB。存檔新增欄位皆向後相容並驗證，詳見 INDUSTRY.md。
 
 M4-07：GarbageSystem 使用既有 RoutePlanner／TrafficSystem，purpose=9／kind=6，collect 和 return 兩段路程，入場預留容量，四次尋路／tick。每日處理持久庫存並向 power 提供實際焚化發電；當日處理先於供電刷新。WorldSnapshot.garbage、Building.wasteFacility 為 Worker 權威，舊檔補空狀態；garbageValidation 驗證任務與容量，migrations 合併驗證共享 mission id 及交通端點。UI、圖示、通知與幸福度读取實際堆積／滿載，沒有 UI 回写。詳見 GARBAGE.md。
+
+### M4-08 殯葬權威狀態
+CitizenSystem 的實際死亡新增 Building.bodies.pending，人口 patch 同步到主執行緒。DeathcareSystem 採 Traffic purpose 10／kind 7 與共享 reserveMission ID，區分接運與回程，出發前預留 Mortuary 容量。服務覆蓋比例不會清除遺體；daily 處理火化，存檔 validateDeathcare 驗證整數與跨系統 ID，詳見 DEATHCARE.md。

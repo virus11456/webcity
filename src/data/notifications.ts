@@ -11,6 +11,7 @@ export const NOTICE_CODES = [
   'noPower',
   'noWater',
   'garbage',
+  'deathcare',
   'fire',
   'abandoned',
   'finance',

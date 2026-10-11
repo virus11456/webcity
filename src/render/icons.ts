@@ -34,6 +34,7 @@ const kinds: ProblemIcon[] = [
   'fire',
   'sickness',
   'garbage',
+  'deathcare',
 ];
 interface Entry {
   b: Building;
@@ -136,11 +137,17 @@ export class ProblemIcons {
     }
     problems.sort((a, bp) => {
       const left =
-        a === 'abandoned' ? -Infinity : PROBLEMS[a].days - b.problemTimers[a];
+        a === 'abandoned'
+          ? -Infinity
+          : a === 'deathcare'
+            ? 0
+            : PROBLEMS[a].days - b.problemTimers[a];
       const right =
         bp === 'abandoned'
           ? -Infinity
-          : PROBLEMS[bp].days - b.problemTimers[bp];
+          : bp === 'deathcare'
+            ? 0
+            : PROBLEMS[bp].days - b.problemTimers[bp];
       return left - right;
     });
     const old = this.entries.get(b.id);

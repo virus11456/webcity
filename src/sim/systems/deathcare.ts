@@ -1,0 +1,259 @@
+import { DEATHCARE as G } from '../../data/deathcare';
+import { TrafficKind } from '../../data/traffic';
+import {
+  deathcareCapacity,
+  deathcareDefinition,
+  deathcareOperational,
+  type DeathcareMission,
+} from '../../world/deathcare';
+import type { Building } from '../../world/types';
+import type { BuildingPatch } from '../../world/snapshot';
+import type { Route } from '../../world/routes';
+import type { SimState } from '../state';
+import type { RoutePlanner } from './routePlanner';
+import type { TrafficSystem } from './traffic';
+/** Pickup and depot unloading are separate physical journeys with capacity reservations. */
+export class DeathcareSystem {
+  private buildings = new Map<number, Building>();
+  private changed = new Set<number>();
+  private cursor = 0;
+  constructor(
+    private s: SimState,
+    private planner: RoutePlanner,
+    private traffic: TrafficSystem,
+  ) {
+    this.reconcile();
+  }
+  private fleet(b: Building) {
+    return deathcareOperational(b)
+      ? Math.floor(
+          (deathcareDefinition(b.defId)?.capacity?.vehicles ?? 0) *
+            this.s.budgets.deathcare,
+        )
+      : 0;
+  }
+  private reserved(id: number) {
+    return this.s.deathcare.missions
+      .filter((m) => m.from === id)
+      .reduce((n, m) => n + m.units, 0);
+  }
+  private status() {
+    for (const b of this.buildings.values())
+      if (b.mortuary) {
+        const full = b.mortuary.stock >= deathcareCapacity(b),
+          vehicles = this.s.deathcare.missions.filter(
+            (m) => m.from === b.id,
+          ).length;
+        if (b.mortuary.full !== full || b.mortuary.vehicles !== vehicles) {
+          b.mortuary.full = full;
+          b.mortuary.vehicles = vehicles;
+          this.changed.add(b.id);
+        }
+      }
+  }
+  reconcile() {
+    this.buildings = new Map(this.s.buildings.map((b) => [b.id, b]));
+    for (const b of this.buildings.values())
+      if (deathcareDefinition(b.defId) && !b.mortuary) {
+        b.mortuary = {
+          stock: 0,
+          processedToday: 0,
+          lastDay: this.s.clock.day - 1,
+          full: false,
+          vehicles: 0,
+        };
+        this.changed.add(b.id);
+      }
+    for (let i = this.s.deathcare.missions.length - 1; i >= 0; i--) {
+      const m = this.s.deathcare.missions[i]!,
+        from = this.buildings.get(m.from),
+        to = this.buildings.get(m.to);
+      if (!from || from.state !== 'active' || (m.phase === 'collect' && !to)) {
+        if (m.phase === 'return' && m.units) {
+          if (to?.bodies) {
+            to.bodies.pending += m.units;
+            this.changed.add(to.id);
+          } else this.s.deathcare.lost += m.units;
+        }
+        this.traffic.cancelMission(m.id);
+        this.s.deathcare.missions.splice(i, 1);
+      }
+    }
+    this.status();
+  }
+  daily() {
+    this.reconcile();
+    for (const b of this.buildings.values()) {
+      const q = b.mortuary,
+        def = deathcareDefinition(b.defId)?.capacity;
+      if (!q || !def || q.lastDay >= this.s.clock.day) continue;
+      q.processedToday = deathcareOperational(b)
+        ? Math.min(
+            q.stock,
+            Math.floor((def.processingPerDay ?? 0) * this.s.budgets.deathcare),
+          )
+        : 0;
+      q.stock -= q.processedToday;
+      q.lastDay = this.s.clock.day;
+      this.s.deathcare.processed += q.processedToday;
+      this.changed.add(b.id);
+    }
+    this.status();
+  }
+  private route(m: DeathcareMission): Route | null {
+    const from = this.buildings.get(m.phase === 'collect' ? m.from : m.to),
+      to = this.buildings.get(m.phase === 'collect' ? m.to : m.from);
+    if (!to) return null;
+    const stranded = this.traffic.strandedMission(m.id);
+    if (stranded)
+      return this.planner.paths.between(
+        this.planner.paths.recover(stranded, 'drive', stranded.lane),
+        this.planner.paths.access(to.pos, 'drive', to.frontageSetbackM),
+        'drive',
+      );
+    return this.planner.paths.find(
+      from?.pos ?? m.pickup,
+      to.pos,
+      'drive',
+      this.s.clock.day,
+      from?.frontageSetbackM ?? m.setback,
+      to.frontageSetbackM,
+    );
+  }
+  private start(m: DeathcareMission, route: Route) {
+    this.traffic.spawnMission(
+      {
+        journey: {
+          citizenId: -m.id,
+          originId: m.phase === 'collect' ? m.from : m.to,
+          destinationId: m.phase === 'collect' ? m.to : m.from,
+          purpose: G.purpose,
+          mode: 1,
+          requestedTick: m.requestedTick,
+        },
+        route,
+      },
+      TrafficKind.hearse,
+    );
+    m.retryTick = this.s.clock.ticks + G.retryTicks;
+  }
+  tick() {
+    this.reconcile();
+    this.planner.paths.sync(this.s.nodes, this.s.segments);
+    for (const id of this.traffic.takeMissionArrivals(
+      new Set(this.s.deathcare.missions.map((m) => m.id)),
+    )) {
+      const i = this.s.deathcare.missions.findIndex((m) => m.id === id),
+        m = this.s.deathcare.missions[i]!;
+      if (m.phase === 'collect') {
+        const b = this.buildings.get(m.to)!;
+        m.units = Math.min(m.units, b.bodies?.pending ?? 0);
+        if (b.bodies) {
+          b.bodies.pending -= m.units;
+          this.changed.add(b.id);
+        }
+        this.s.deathcare.collected += m.units;
+        m.phase = 'return';
+        m.requestedTick = this.s.clock.ticks;
+        m.retryTick = this.s.clock.ticks;
+      } else {
+        const b = this.buildings.get(m.from)!,
+          q = b.mortuary!;
+        q.stock += m.units;
+        this.changed.add(b.id);
+        this.s.deathcare.missions.splice(i, 1);
+      }
+    }
+    let budget = G.requestsPerTick;
+    for (const m of this.s.deathcare.missions) {
+      if (budget <= 0) break;
+      if (this.traffic.hasMission(m.id) || m.retryTick > this.s.clock.ticks)
+        continue;
+      budget--;
+      const route = this.route(m);
+      m.retryTick = this.s.clock.ticks + G.retryTicks;
+      if (route) this.start(m, route);
+    }
+    const assigned = new Set(
+      this.s.deathcare.missions
+        .filter((m) => m.phase === 'collect')
+        .map((m) => m.to),
+    );
+    const targets = this.s.buildings.filter(
+      (b) =>
+        (b.bodies?.pending ?? 0) >= G.minimumPickup &&
+        !assigned.has(b.id) &&
+        !b.fire?.burning,
+    );
+    for (
+      let n = 0;
+      n < targets.length &&
+      budget > 0 &&
+      this.s.deathcare.missions.length < G.maxMissions;
+      n++
+    ) {
+      const to = targets[this.cursor++ % targets.length]!;
+      const providers = this.s.buildings
+        .filter(
+          (b) =>
+            b.mortuary &&
+            this.fleet(b) >
+              this.s.deathcare.missions.filter((m) => m.from === b.id).length &&
+            deathcareCapacity(b) - b.mortuary.stock - this.reserved(b.id) >=
+              G.minimumPickup,
+        )
+        .sort(
+          (a, b) =>
+            Math.hypot(a.pos.x - to.pos.x, a.pos.z - to.pos.z) -
+              Math.hypot(b.pos.x - to.pos.x, b.pos.z - to.pos.z) || a.id - b.id,
+        );
+      for (const from of providers) {
+        if (budget-- <= 0) break;
+        const m: DeathcareMission = {
+          id: 0,
+          from: from.id,
+          to: to.id,
+          phase: 'collect',
+          pickup: { ...to.pos },
+          setback: to.frontageSetbackM ?? 0,
+          units: Math.min(
+            G.truckCapacity,
+            to.bodies!.pending,
+            deathcareCapacity(from) -
+              from.mortuary!.stock -
+              this.reserved(from.id),
+          ),
+          requestedTick: this.s.clock.ticks,
+          retryTick: this.s.clock.ticks,
+        };
+        const route = this.route(m);
+        if (
+          !route ||
+          route.length >
+            (deathcareDefinition(from.defId)?.radiusM ?? 0) *
+              this.s.budgets.deathcare
+        )
+          continue;
+        m.id = this.traffic.reserveMission();
+        this.s.deathcare.missions.push(m);
+        this.start(m, route);
+        break;
+      }
+    }
+    this.status();
+  }
+  patches(): BuildingPatch[] {
+    const patches: BuildingPatch[] = [];
+    for (const id of this.changed) {
+      const b = this.buildings.get(id);
+      if (b)
+        patches.push({
+          id,
+          ...(b.bodies ? { bodies: { ...b.bodies } } : {}),
+          ...(b.mortuary ? { mortuary: { ...b.mortuary } } : {}),
+        });
+    }
+    this.changed.clear();
+    return patches;
+  }
+}

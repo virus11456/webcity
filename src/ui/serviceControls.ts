@@ -62,11 +62,13 @@ export function createServiceControls(
       confirm.disabled = !s.ready || s.pending || !s.preview?.valid;
       const p = s.preview;
       host.dataset.reach = String(p?.roads.length ?? 0);
-      output.textContent = s.defId.startsWith('garbage_')
-        ? `${t('road.cost')} $${p?.cost ?? 0} · ${t('garbage.routeHint')}`
-        : p
-          ? `${t('road.cost')} $${p.cost} · ${t(s.defId.startsWith('park_') || s.defId === 'tree' ? 'park.radius' : 'service.radius')} ${p.radius.toFixed(0)} m${p.trees ? ` · ${p.trees.length} ${t('park.trees')}` : ''}`
-          : t('service.hint');
+      output.textContent = ['cemetery', 'crematorium'].includes(s.defId)
+        ? `${t('road.cost')} $${p?.cost ?? 0} · ${t('deathcare.routeHint')}`
+        : s.defId.startsWith('garbage_')
+          ? `${t('road.cost')} $${p?.cost ?? 0} · ${t('garbage.routeHint')}`
+          : p
+            ? `${t('road.cost')} $${p.cost} · ${t(s.defId.startsWith('park_') || s.defId === 'tree' ? 'park.radius' : 'service.radius')} ${p.radius.toFixed(0)} m${p.trees ? ` · ${p.trees.length} ${t('park.trees')}` : ''}`
+            : t('service.hint');
       const reason = s.reason ?? p?.reason;
       hint.dataset.invalid = String(!!reason);
       hint.textContent = s.pending

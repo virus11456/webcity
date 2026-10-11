@@ -14,7 +14,14 @@ export interface CityNotice {
   count?: number;
   index?: number;
 }
-const issues = ['noPower', 'noWater', 'fire', 'garbage', 'abandoned'] as const;
+const issues = [
+  'noPower',
+  'noWater',
+  'fire',
+  'garbage',
+  'deathcare',
+  'abandoned',
+] as const;
 /** Read-only projection of Worker events. Latches conditions until they actually clear. */
 export class CityNotices {
   private buildings = new Map<number, Building>();
@@ -31,6 +38,7 @@ export class CityNotices {
     this.zoned.delete(b.id);
     if (b.kind === 'zoned') this.zoned.add(b.id);
     if (b.state === 'abandoned') this.groups.abandoned.add(b.id);
+    if (hasBuildingProblem(b, 'deathcare')) this.groups.deathcare.add(b.id);
     if (b.state === 'active')
       for (const k of ['noPower', 'noWater', 'fire', 'garbage'] as const)
         if (hasBuildingProblem(b, k)) this.groups[k].add(b.id);
