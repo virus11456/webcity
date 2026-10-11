@@ -105,6 +105,14 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       enter.hidden = false;
       actions.demo();
     });
+  enter.dataset.tutorial = 'enter';
+  for (const [button, lesson] of [
+    [draw, 'road'],
+    [zones, 'zone'],
+    [power, 'power'],
+    [water, 'water'],
+  ] as const)
+    button.dataset.tutorial = lesson;
   tabs.setAttribute('aria-label', t('toolbar.categories'));
   for (const [button, category] of [
     [draw, 'road'],

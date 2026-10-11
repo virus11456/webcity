@@ -1,3 +1,4 @@
+import { createTutorial, validTutorial } from '../world/tutorial';
 import { emptyDisasters, validDisasters } from '../world/disasters';
 import { UNIQUE_IDS } from '../data/unique';
 import { MAP_TILES } from '../data/config';
@@ -606,6 +607,8 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     );
     shipmentIds.set(job.id, job);
   }
+  if (!Object.hasOwn(s, 'tutorial')) s.tutorial = createTutorial();
+  requireValue(validTutorial(s.tutorial!));
   if (!Object.hasOwn(s, 'disasters')) s.disasters = emptyDisasters();
   requireValue(validDisasters(s.disasters!));
   if (!Object.hasOwn(s, 'fire')) s.fire = emptyFire();

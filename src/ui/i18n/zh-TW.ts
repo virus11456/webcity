@@ -1,4 +1,34 @@
 export const ZH_TW = {
+  'tutorial.title': '建城教學',
+  'tutorial.enable': '開啟新手教學（可隨時跳過）',
+  'tutorial.skip': '跳過教學',
+  'tutorial.dismiss': '繼續建城',
+  'tutorial.locate': '查看操作位置',
+  'tutorial.complete': '教學完成！',
+  'tutorial.reward': '城市建設獎勵已入帳',
+  'tutorial.step0':
+    '先熟悉鏡頭：完成平移、旋轉與縮放。教學可收合，城市目前暫停中。',
+  'tutorial.step1':
+    '從高速公路匝道末端接出一條小路。點選起點、終點；觸控再按確認建造。',
+  'tutorial.step2':
+    '延伸至少三段相連道路，留出可蓋房子的街區。道路要接回匝道，居民才能進城。',
+  'tutorial.step3':
+    '沿路劃出住宅、商業與工業區。上方 RCI 條代表需求：綠色住宅、藍色商業、黃色工業；條越高需求越大。',
+  'tutorial.step4':
+    '放置風力發電機，再拉電線連到住宅區旁。選風力較強的位置，電線須接到發電機與住宅用地。',
+  'tutorial.step5':
+    '沿岸放抽水站與污水排放口，再用相連水管接到住宅區。排放口應在抽水站下游，避免喝到污水；設施也需要供電。',
+  'tutorial.step6':
+    '按上方 ▶ 開始時間，觀察地基、施工與房子完工。若沒有成長，檢查道路、分區需求與水電供應。',
+  'tutorial.step7':
+    '打開財政面板，查看稅率、服務預算與每週收支。讓城市收入足以負擔維護費。',
+  'tutorial.mouse.pan': '平移：WASD，或左鍵拖曳空地',
+  'tutorial.mouse.rotate': '旋轉：Q／E，或右鍵拖曳',
+  'tutorial.mouse.zoom': '縮放：滑鼠滾輪',
+  'tutorial.touch.pan': '平移：雙指同方向拖曳 ⇄',
+  'tutorial.touch.rotate': '旋轉：雙指繞圈轉動 ↻',
+  'tutorial.touch.zoom': '縮放：雙指張開或捏合 ↔',
+
   'err.undoEmpty': '沒有可復原的建造紀錄。',
   'err.undoConflict': '這筆建設已改變，無法復原；已略過此紀錄。',
   'undo.title': '復原建造',

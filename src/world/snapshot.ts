@@ -16,6 +16,7 @@ import type {
 } from './types';
 
 export interface CitySettings {
+  tutorial?: boolean;
   starterRoads?: boolean;
   seed: number;
   mapId: string;
@@ -77,6 +78,7 @@ export type FinanceView = Pick<
 
 /** Structured-clone wire format, never a reference to the authoritative state. */
 export interface WorldSnapshot {
+  tutorial?: import('./tutorial').TutorialState;
   disasters?: import('./disasters').DisasterState;
   deathcare: import('./deathcare').DeathcareState;
   garbage: import('./garbage').GarbageState;

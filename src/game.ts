@@ -45,6 +45,7 @@ import { UI_PALETTE } from './data/palette';
 import { ProblemIcons } from './render/icons';
 import { WaterTool } from './tools/waterTool';
 import { WaterUtilityRenderer } from './render/waterUtilities';
+import { createTutorialControls } from './ui/tutorialControls';
 import { createFinanceControls } from './ui/financeControls';
 import { createWaterControls } from './ui/waterControls';
 import { PlaceTool } from './tools/placeTool';
@@ -224,6 +225,7 @@ let sim: SimClient | undefined;
 let tileControls: ReturnType<typeof createTileControls> | undefined;
 let undoControls: ReturnType<typeof createUndoControls> | undefined;
 let cityStatistics: ReturnType<typeof createCityStatistics> | undefined;
+let tutorialControls: ReturnType<typeof createTutorialControls> | undefined;
 let financeControls: ReturnType<typeof createFinanceControls> | undefined;
 let simControls: ReturnType<typeof createSimControls> | undefined;
 try {
@@ -356,6 +358,7 @@ if (canvas && status) {
         );
     }
     input = new CameraController(canvas, city.cameraController, {
+      onCameraAction: (action) => tutorialControls?.camera(action),
       onTap: (p) => {
         picking?.tap(p.x, p.y);
         if (root.dataset.construction === 'true') inspectTool?.tap(p.x, p.y);
@@ -958,7 +961,10 @@ if (canvas && status) {
         infoControls?.set(null);
         city!.cameraController.flyTo(p, NOTIFICATIONS.focusDistanceM);
       });
-      financeControls = createFinanceControls(root, sim!);
+      financeControls = createFinanceControls(root, sim!, () =>
+        tutorialControls?.finance(),
+      );
+      tutorialControls = createTutorialControls(root, sim!);
       cityStatistics = createCityStatistics(root, sim!);
       undoControls = createUndoControls(root, sim!, () => {
         tools?.select(null);
@@ -1144,6 +1150,7 @@ if (import.meta.hot)
     catalogAssets = undefined;
     city?.dispose();
     debug?.dispose();
+    tutorialControls?.dispose();
     financeControls?.dispose();
     cityStatistics?.dispose();
     undoControls?.dispose();

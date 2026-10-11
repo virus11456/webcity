@@ -1,0 +1,87 @@
+.tutorial-panel {
+  position: absolute;
+  z-index: 10;
+  top: var(--topbar-bottom, 100px);
+  left: max(12px, env(safe-area-inset-left));
+  width: min(350px, calc(100vw - 24px));
+  max-height: 36dvh;
+  overflow-y: auto;
+  touch-action: pan-y;
+  background: var(--color-panel);
+  color: var(--color-text);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-panel);
+  padding: 8px 12px;
+  font-size: 14px;
+  backdrop-filter: blur(8px);
+}
+.tutorial-panel[hidden],
+.tutorial-arrow[hidden] {
+  display: none;
+}
+.tutorial-panel summary {
+  min-height: 44px;
+  line-height: 24px;
+  padding: 10px 0;
+  cursor: pointer;
+  color: var(--color-accent);
+}
+.tutorial-panel p {
+  margin: 4px 0 8px;
+  line-height: 1.5;
+}
+.tutorial-diagram {
+  font-size: 12px;
+}
+.tutorial-diagram [data-done='true'] {
+  color: var(--color-positive);
+}
+.tutorial-actions {
+  display: flex;
+  gap: 8px;
+}
+.tutorial-actions button {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-control);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 12px;
+}
+.tutorial-actions button:hover {
+  background: var(--color-control-hover);
+}
+.tutorial-target {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+.tutorial-arrow {
+  position: fixed;
+  z-index: 11;
+  pointer-events: none;
+  color: var(--color-accent);
+  font-size: 28px;
+  font-weight: bold;
+  text-shadow: 0 2px 4px var(--color-background);
+}
+#app:has(dialog[open]) .tutorial-panel,
+#app:has(dialog[open]) .tutorial-arrow {
+  visibility: hidden;
+}
+@media (max-width: 767px) {
+  .tutorial-panel {
+    font-size: 12px;
+    padding: 4px 10px;
+    max-height: 32dvh;
+  }
+}
+@media (max-height: 500px) {
+  .tutorial-panel {
+    left: auto;
+    right: max(12px, env(safe-area-inset-right));
+    width: 280px;
+    max-height: calc(100dvh - var(--topbar-bottom, 80px) - 80px);
+  }
+}

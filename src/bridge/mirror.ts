@@ -30,6 +30,9 @@ export class WorldMirror {
     count: 0,
     cost: 0,
   };
+  readTutorial() {
+    return structuredClone(this.state?.tutorial);
+  }
   readUndo() {
     return { ...this.undo };
   }
@@ -239,6 +242,9 @@ export class WorldMirror {
     const state = this.state;
     if (!state) return;
     switch (event.t) {
+      case 'tutorial':
+        state.tutorial = structuredClone(event.state);
+        break;
       case 'undoState':
         this.undo = { ...event.view };
         break;

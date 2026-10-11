@@ -6,7 +6,11 @@ import type { CommandInput } from '../bridge/protocol';
 import { t } from './i18n/t';
 
 /** Worker-backed tax, department budget, settlement ledger and loan panel. */
-export function createFinanceControls(parent: HTMLElement, client: SimClient) {
+export function createFinanceControls(
+  parent: HTMLElement,
+  client: SimClient,
+  onOpen?: () => void,
+) {
   const trigger = document.createElement('button');
   trigger.className = 'finance-trigger';
   trigger.textContent = t('finance.title');
@@ -275,6 +279,7 @@ export function createFinanceControls(parent: HTMLElement, client: SimClient) {
     update();
     dialog.showModal();
     chart.update(true);
+    onOpen?.();
   };
   const off = client.onEvent((e) => {
     if (e.t === 'clock') chart.update();

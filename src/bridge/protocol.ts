@@ -32,6 +32,7 @@ import type {
 } from '../world/snapshot';
 
 export type CommandInput =
+  | { t: 'tutorial'; action: import('../data/tutorial').TutorialAction }
   | { t: 'setDisasters'; enabled: boolean }
   | { t: 'rebuild'; id: number }
   | ({ t: 'district' } & import('../world/districts').DistrictAction)
@@ -121,6 +122,7 @@ export type Response =
     }
   | { t: 'inspectResult'; reqId: number; info: InspectInfo };
 export type SimEvent =
+  | { t: 'tutorial'; state: import('../world/tutorial').TutorialState }
   | { t: 'undoState'; view: import('../world/constructionUndo').UndoView }
   | { t: 'disasters'; state: import('../world/disasters').DisasterState }
   | { t: 'policies'; policies: import('../data/policies').PolicyId[] }
