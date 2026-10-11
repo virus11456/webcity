@@ -1,3 +1,4 @@
+import { UNIQUE_BUILDINGS } from './unique';
 import type { MilestoneId } from './milestones';
 // GDD §9, §10, §16. Null means unspecified by the design, never zero.
 export const SERVICE_TYPES = [
@@ -13,7 +14,7 @@ export const SERVICE_TYPES = [
 export type ServiceType = (typeof SERVICE_TYPES)[number];
 export interface BuildingDefinition {
   readonly id: string;
-  readonly kind: 'utility' | 'service' | 'park';
+  readonly kind: 'utility' | 'service' | 'park' | 'unique';
   readonly cost: number;
   readonly upkeepPerWeek: number;
   readonly unlock: MilestoneId;
@@ -55,6 +56,7 @@ export interface BuildingDefinition {
   readonly reducesNoise?: boolean;
 }
 export const BUILDINGS = [
+  ...UNIQUE_BUILDINGS,
   {
     id: 'power_wind',
     kind: 'utility',

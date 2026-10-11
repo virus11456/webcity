@@ -13,6 +13,7 @@ interface RoadActions {
   power(): void;
   water(): void;
   service?(): void;
+  unique?(): void;
   bus?(): void;
   metro?(): void;
   tram?(): void;
@@ -47,6 +48,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     bulldozePending = false;
   let powerActive = false,
     powerPending = false;
+  let uniqueActive = false;
   let serviceActive = false,
     servicePending = false;
   let waterActive = false,
@@ -84,6 +86,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     power = button('power.tab', actions.power),
     water = button('water.tab', actions.water),
     service = button('service.tab', () => actions.service?.()),
+    unique = button('unique.tab', () => actions.unique?.()),
     bus = button('bus.tab', () => actions.bus?.()),
     metro = button('metro.tab', () => actions.metro?.()),
     policy = button('policy.title', () => actions.policy?.()),
@@ -105,6 +108,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     [power, 'power'],
     [water, 'water'],
     [service, 'service'],
+    [unique, 'tower'],
     [bus, 'bus'],
     [metro, 'bus'],
     [tram, 'bus'],
@@ -119,6 +123,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     power,
     water,
     service,
+    unique,
     bus,
     metro,
     tram,
@@ -380,7 +385,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       if (latest) this.update(latest);
     },
     serviceHost,
-    updateService(active: boolean, pending: boolean) {
+    updateService(active: boolean, pending: boolean, unique = false) {
+      uniqueActive = active && unique;
       serviceActive = active;
       servicePending = pending;
       if (latest) this.update(latest);
@@ -479,7 +485,11 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         tramActive ||
         districtActive;
       serviceHost.hidden = !serviceActive;
-      service.setAttribute('aria-pressed', String(serviceActive));
+      service.setAttribute(
+        'aria-pressed',
+        String(serviceActive && !uniqueActive),
+      );
+      unique.setAttribute('aria-pressed', String(uniqueActive));
       service.disabled =
         !state.ready ||
         state.pending ||
@@ -492,6 +502,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         metroPending ||
         tramPending ||
         districtPending;
+      unique.disabled = service.disabled;
       waterHost.hidden = !waterActive;
       water.setAttribute('aria-pressed', String(waterActive));
       water.disabled =

@@ -22,15 +22,12 @@ export const facilityModels: readonly FacilityModel[] = [
       w,
       d,
       definition,
+      landmark:
+        definition.kind === 'unique'
+          ? LANDMARK_MODELS.findIndex((id) => `unique_${id}` === definition.id)
+          : undefined,
     };
   }),
-  ...LANDMARK_MODELS.map((id, landmark) => ({
-    id: `svc_unique_${id}`,
-    defId: `unique_${id}`,
-    w: R.landmarkLot[0],
-    d: R.landmarkLot[1],
-    landmark,
-  })),
 ];
 export const facilityModel = (id: string) =>
   facilityModels.find((m) => m.defId === id);

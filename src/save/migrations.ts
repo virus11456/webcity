@@ -1,3 +1,4 @@
+import { UNIQUE_IDS } from '../data/unique';
 import { MAP_TILES } from '../data/config';
 import { MILESTONES } from '../data/milestones';
 import { validateDeathcare } from './deathcareValidation';
@@ -214,6 +215,15 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
       );
       districtCells.add(cell);
     }
+  }
+  for (const id of UNIQUE_IDS) {
+    const matches = s.buildings.filter((b) => b.defId === id);
+    requireValue(
+      matches.length <= 1 &&
+        matches.every(
+          (b) => b.kind === 'unique' && b.lotW === 6 && b.lotD === 6,
+        ),
+    );
   }
   const nodes = new Set(s.nodes.map((n) => n.id)),
     roads = new Set(s.segments.map((n) => n.id)),
