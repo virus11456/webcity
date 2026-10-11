@@ -720,6 +720,15 @@ if (canvas && status) {
           followCamera?.start(id);
         },
         (building) => buildingThumbnails?.render(building),
+        async (id) => {
+          const r = await sim!.send({ t: 'rebuild', id });
+          return r.t === 'result' && r.ok
+            ? null
+            : r.t === 'result'
+              ? (r.reason ?? 'err.invalidCommand')
+              : 'sim.failed';
+        },
+        sim.mirror.readFinance()?.sandbox ?? false,
       );
       inspectTool = new InspectTool(
         sim,

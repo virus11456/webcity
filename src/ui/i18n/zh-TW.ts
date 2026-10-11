@@ -1,4 +1,18 @@
 export const ZH_TW = {
+  'disaster.enable': '啟用大型火災災害',
+  'disaster.hint':
+    '預設關閉。開啟後可能發生區域火災，會提前 3 天預警；日常建築火災仍由消防系統處理。',
+  'disaster.warning': '火災預警：預計發生於第',
+  'disaster.day': '天',
+  'disaster.clear': '目前沒有災害預警',
+  'disaster.locate': '查看預警位置',
+  'disaster.rebuild': '重建燒毀建築',
+  'disaster.rebuildCost': '重建費用',
+  'disaster.rebuildHint': '重建會重新施工，居民與職缺於完工後恢復。',
+  'notice.disasterWarning':
+    '大型火災預警：3 天內可能起火，請確認消防與道路暢通',
+  'notice.disasterFire': '大型火災發生，請確認消防救援；燒毀後可由建築詳情重建',
+
   'tiles.title': '購買土地',
   'tiles.close': '關閉土地地圖',
   'tiles.tile': '地塊',

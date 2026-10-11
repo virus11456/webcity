@@ -23,6 +23,11 @@ import { previewTrees } from '../world/parks';
 import { PARKS } from '../data/parks';
 import { updateEducationSummary } from './systems/education';
 import { updateHealth } from './systems/health';
+import {
+  emptyDisasters,
+  nextDisasterDay,
+  rebuildCost,
+} from '../world/disasters';
 import { FireSystem } from './systems/fire';
 import { updateCrime } from './systems/police';
 import { ServiceSystem } from './systems/services';
@@ -206,7 +211,12 @@ export class Simulation {
     this.state.environmentVersion = 1;
     updateHappiness(this.state);
     updateLevels(this.state);
-    this.fire = new FireSystem(this.state, this.routePlanner, this.traffic);
+    this.fire = new FireSystem(
+      this.state,
+      this.routePlanner,
+      this.traffic,
+      (e) => this.emit(e),
+    );
     this.time.onDay(() => {
       const industries = updateIndustry(this.state);
       const priorHappiness = updateHappiness(this.state);
@@ -827,6 +837,49 @@ export class Simulation {
         districts: districtViews(this.state.districts, this.state.buildings),
       });
     return r;
+  }
+  setDisasters(enabled: boolean): Omit<Result, 't' | 'reqId'> {
+    if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
+    const d = (this.state.disasters ??= emptyDisasters());
+    if (d.enabled !== enabled) {
+      d.enabled = enabled;
+      d.warning = null;
+      d.nextDay = enabled
+        ? nextDisasterDay(this.state.seed, this.state.clock.day)
+        : null;
+    }
+    this.emit({ t: 'disasters', state: structuredClone(d) });
+    return { ok: true };
+  }
+  rebuild(id: number): Omit<Result, 't' | 'reqId'> {
+    if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
+    const s = this.state,
+      b = s.buildings.find((b) => b.id === id);
+    if (!b || b.state !== 'burned' || b.rezoneAtTick !== undefined)
+      return { ok: false, reason: 'err.invalidCommand' };
+    const cost = s.settings.mode === 'sandbox' ? 0 : rebuildCost(b);
+    if (s.money < cost) return { ok: false, reason: 'err.notEnoughMoney' };
+    s.money -= cost;
+    Object.assign(b, {
+      state: 'construction',
+      stateTimer: 0,
+      constructionStartedTick: s.clock.ticks,
+      abandonedAtTick: undefined,
+      fire: { burning: false, damage: 0, startedDay: s.clock.day },
+      flags: 0,
+      builtDay: s.clock.day,
+      paidCost: cost,
+    });
+    this.emit({
+      t: 'buildingsChanged',
+      added: [],
+      removed: [],
+      updated: [structuredClone(b)],
+    });
+    this.emit({ t: 'fundsChanged', money: s.money });
+    this.refreshPopulation();
+    this.refreshPower();
+    return { ok: true, cost };
   }
   snapshot(): WorldSnapshot {
     this.cargo.reconcile();

@@ -1,3 +1,4 @@
+import { DisasterSettings } from './DisasterSettings';
 import { render } from 'preact';
 import type { SimClient } from '../../bridge/simClient';
 import type { SimSpeed } from '../../data/config';
@@ -58,6 +59,7 @@ export function createPauseMenu(
           <details>
             <summary>{t('menu.settings')}</summary>
             <Settings apply={apply} />
+            <DisasterSettings client={client} />
           </details>
           <Button
             onClick={() => {

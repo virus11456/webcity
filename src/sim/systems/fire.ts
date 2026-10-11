@@ -1,3 +1,5 @@
+import { updateDisasters } from './disasters';
+import type { SimEvent } from '../../bridge/protocol';
 import { Rng } from '../../core/rng';
 import { FIRE as F } from '../../data/fire';
 import { SERVICE_RULES } from '../../data/simulation';
@@ -25,6 +27,7 @@ export class FireSystem {
     private readonly s: SimState,
     private readonly planner: RoutePlanner,
     private readonly traffic: TrafficSystem,
+    private readonly emit: (event: SimEvent) => void = () => {},
   ) {
     this.network = new ServiceNetwork(s.nodes, s.segments);
     this.reconcile();
@@ -37,6 +40,7 @@ export class FireSystem {
     const elapsed =
       this.s.fire.lastDay < 0 ? 1 : this.s.clock.day - this.s.fire.lastDay;
     this.s.fire.lastDay = this.s.clock.day;
+    for (const id of updateDisasters(this.s, this.emit)) this.changed.add(id);
     for (const b of this.s.buildings) {
       if (b.state !== 'active') continue;
       if (b.fire?.burning) {

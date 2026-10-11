@@ -93,6 +93,13 @@ export class CityNotices {
         : [];
     } else return [];
     const notices: CityNotice[] = [];
+    if (e.t === 'ready' && e.snapshot.disasters?.warning)
+      notices.push({
+        key: 'disasterWarning',
+        code: 'disasterWarning',
+        tone: 'warning',
+        pos: { ...e.snapshot.disasters.warning.pos },
+      });
     for (const code of [...issues, 'finance'] as const) {
       const ids = code === 'finance' ? undefined : this.groups[code],
         count = ids?.size ?? 0;
