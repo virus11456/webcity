@@ -23,7 +23,11 @@ export function createTopBarModel(client: SimClient) {
       clock.value = client.mirror.clock;
       return;
     }
-    if (!['ready', 'stats', 'fundsChanged', 'economy'].includes(event.t))
+    if (
+      !['ready', 'stats', 'fundsChanged', 'economy', 'milestone'].includes(
+        event.t,
+      )
+    )
       return;
     batch(() => {
       stats.value = client.mirror.readStats();

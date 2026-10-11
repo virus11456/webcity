@@ -61,7 +61,9 @@ export class PlaceTool implements Tool {
     };
     this.unsubscribe = ctx.sim.onEvent((e) => {
       if (
-        ['ready', 'roadsChanged', 'networksChanged'].includes(e.t) ||
+        ['ready', 'milestone', 'roadsChanged', 'networksChanged'].includes(
+          e.t,
+        ) ||
         (e.t === 'buildingsChanged' && buildingsChangeFootprints(e))
       )
         refresh();

@@ -307,6 +307,7 @@ export class WorldMirror {
         };
         break;
       case 'milestone':
+        state.stats.milestone = Math.max(state.stats.milestone, event.index);
         if (!state.unlocked.includes(event.index))
           state.unlocked.push(event.index);
         break;

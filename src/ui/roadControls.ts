@@ -1,3 +1,4 @@
+import { FEATURES } from '../data/milestones';
 import { INTERSECTIONS } from '../data/intersections';
 import { ROAD_RULES, ROADS, type RoadTypeId } from '../data/roads';
 import type { RoadMode, RoadToolState } from '../tools/roadTool';
@@ -125,6 +126,23 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     explore,
     demo,
   );
+  const featureLocks = (
+    [
+      [district, 'district_tool'],
+      [policy, 'policies'],
+      [bus, 'bus'],
+      [metro, 'metro'],
+      [tram, 'bus'],
+    ] as const
+  ).map(([button, id]) => {
+    const unlock = FEATURES.find((f) => f.id === id)!.unlock,
+      lock = document.createElement('span');
+    lock.className = 'toolbar-feature-lock';
+    lock.setAttribute('aria-hidden', 'true');
+    lock.append(catalogIcon('lock'), ` MS${unlock}`);
+    button.append(lock);
+    return { button, lock, unlock };
+  });
   const future = document.createElement('details');
   future.className = 'toolbar-future';
   const futureLabel = document.createElement('summary');
@@ -559,6 +577,12 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         metroPending ||
         tramPending ||
         districtPending;
+      for (const { button, lock, unlock } of featureLocks) {
+        const locked = !state.unlocked.includes(unlock);
+        button.disabled ||= locked;
+        lock.hidden = !locked;
+        button.title = locked ? `${t('road.locked')} · MS${unlock}` : '';
+      }
       panel.dataset.ready = String(state.ready);
       panel.dataset.phase = state.phase;
       panel.dataset.mode = state.mode;

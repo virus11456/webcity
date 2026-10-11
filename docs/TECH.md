@@ -694,3 +694,6 @@ M4-07：GarbageSystem 使用既有 RoutePlanner／TrafficSystem，purpose=9／ki
 
 ### M4-08 殯葬權威狀態
 CitizenSystem 的實際死亡新增 Building.bodies.pending，人口 patch 同步到主執行緒。DeathcareSystem 採 Traffic purpose 10／kind 7 與共享 reserveMission ID，區分接運與回程，出發前預留 Mortuary 容量。服務覆蓋比例不會清除遺體；daily 處理火化，存檔 validateDeathcare 驗證整數與跨系統 ID，詳見 DEATHCARE.md。
+
+### M4-09 里程碑事件
+updateMilestones 只在 Worker 修改 unlocked、money 與 stats.milestone，依序發 fundsChanged／milestone／economy。unlocked 兼為一次性獎金記錄，Mirror 和建造工具收到 milestone 即刷新鎖定；UI 慶祝佇列只呈現事件。舊城補領在首個運行 tick 發生，已領不重播，見 MILESTONES.md。
