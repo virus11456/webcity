@@ -13,7 +13,7 @@ import { BUDGET_DEPARTMENTS, ECONOMY } from '../data/economy';
 import { MILESTONES } from '../data/milestones';
 import { HAPPINESS } from '../data/simulation';
 import { SIM_RUNTIME } from '../data/simRuntime';
-import { MAP_PRESETS } from '../data/terrain';
+import { resolveMap } from '../world/mapSelection';
 import { INITIAL_DEMAND, ZONES } from '../data/zones';
 import { Terrain } from '../world/terrain';
 import type { CitySettings, WorldSnapshot } from '../world/snapshot';
@@ -25,7 +25,7 @@ export interface SimState extends Omit<WorldSnapshot, 'terrain'> {
 
 /** Build the authoritative empty city. The visible preview buildings are not gameplay entities. */
 export function createState(settings: CitySettings): SimState {
-  const preset = MAP_PRESETS.find((p) => p.id === settings.mapId);
+  const preset = resolveMap(settings.mapId, settings.seed);
   if (
     !preset ||
     !Number.isSafeInteger(settings.seed) ||

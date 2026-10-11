@@ -1,3 +1,4 @@
+import { resolveMap } from './world/mapSelection';
 import { MAP_PRESETS } from './data/terrain';
 import type { CitySettings } from './world/snapshot';
 import { getSave } from './save/storage';
@@ -23,7 +24,7 @@ export async function prepareStartup(): Promise<void> {
     const settings = JSON.parse(fresh) as CitySettings;
     if (
       !settings ||
-      !MAP_PRESETS.some((p) => p.id === settings.mapId) ||
+      !resolveMap(settings.mapId, settings.seed) ||
       !Number.isSafeInteger(settings.seed) ||
       typeof settings.cityName !== 'string' ||
       !settings.cityName.trim() ||

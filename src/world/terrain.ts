@@ -2,7 +2,7 @@ import { createNoise2D } from 'simplex-noise';
 import { Rng } from '../core/rng';
 import { clamp } from '../core/math';
 import { MAP_SIZE, SEA_LEVEL, TERRAIN_GENERATION, WORLD } from '../data/config';
-import { MAP_PRESETS, TERRAIN } from '../data/terrain';
+import { MAP_PRESETS, TERRAIN, type TerrainPreset } from '../data/terrain';
 import type { Vec2 } from './types';
 const size = WORLD.heightmapVertices,
   spacing = WORLD.heightmapSpacingM,
@@ -26,7 +26,7 @@ export class Terrain {
   revision = 0;
   constructor(
     readonly seed: number,
-    preset: (typeof MAP_PRESETS)[number] = MAP_PRESETS[0],
+    preset: TerrainPreset = MAP_PRESETS[0],
   ) {
     const rng = new Rng(seed),
       noise = createNoise2D(() => rng.next());
