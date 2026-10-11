@@ -18,6 +18,7 @@ interface RoadActions {
   metro?(): void;
   tram?(): void;
   district?(): void;
+  terraform?(): void;
   policy?(): void;
   bulldoze(): void;
   demo(): void;
@@ -41,6 +42,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     b.addEventListener('click', run);
     return b;
   };
+  let terraformActive = false,
+    terraformPending = false;
   let construction = false;
   let zoneActive = false,
     zonePending = false;
@@ -91,6 +94,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     metro = button('metro.tab', () => actions.metro?.()),
     policy = button('policy.title', () => actions.policy?.()),
     district = button('district.tab', () => actions.district?.()),
+    terraform = button('terraform.tab', () => actions.terraform?.()),
     tram = button('tram.tab', () => actions.tram?.()),
     bulldoze = button('bulldoze.tab', actions.bulldoze),
     explore = button('road.explore', actions.explore),
@@ -119,6 +123,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     draw,
     zones,
     district,
+    terraform,
     policy,
     power,
     water,
@@ -263,6 +268,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   powerHost.hidden = true;
   const waterHost = document.createElement('div');
   waterHost.hidden = true;
+  const terraformHost = document.createElement('div');
+  terraformHost.hidden = true;
   const districtHost = document.createElement('div');
   districtHost.hidden = true;
   const tramHost = document.createElement('div');
@@ -285,6 +292,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     busHost,
     metroHost,
     tramHost,
+    terraformHost,
     districtHost,
     growthHost,
     note,
@@ -363,7 +371,13 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     busHost,
     metroHost,
     tramHost,
+    terraformHost,
     districtHost,
+    updateTerraform(active: boolean, pending: boolean) {
+      terraformActive = active;
+      terraformPending = pending;
+      if (latest) this.update(latest);
+    },
     updateDistrict(active: boolean, pending: boolean) {
       districtActive = active;
       districtPending = pending;
@@ -418,11 +432,15 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     },
     update(state: Readonly<RoadToolState>) {
       latest = state;
+      terraformHost.hidden = !terraformActive;
+      terraform.setAttribute('aria-pressed', String(terraformActive));
+      terraform.disabled = !state.ready || state.pending || terraformPending;
       districtHost.hidden = !districtActive;
       district.setAttribute('aria-pressed', String(districtActive));
       policy.disabled = district.disabled =
         !state.ready ||
         state.pending ||
+        terraformPending ||
         districtPending ||
         tramPending ||
         metroPending ||
@@ -443,6 +461,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         zonePending ||
         busPending ||
         metroPending ||
+        terraformPending ||
         districtPending ||
         tramPending ||
         !state.ready;
@@ -457,6 +476,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         zonePending ||
         busPending ||
         metroPending ||
+        terraformPending ||
         districtPending ||
         tramPending ||
         !state.ready;
@@ -471,6 +491,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         zonePending ||
         busPending ||
         metroPending ||
+        terraformPending ||
         districtPending ||
         tramPending ||
         !state.ready;
@@ -483,7 +504,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         busActive ||
         metroActive ||
         tramActive ||
-        districtActive;
+        districtActive ||
+        terraformActive;
       serviceHost.hidden = !serviceActive;
       service.setAttribute(
         'aria-pressed',
@@ -501,6 +523,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         busPending ||
         metroPending ||
         tramPending ||
+        terraformPending ||
         districtPending;
       unique.disabled = service.disabled;
       waterHost.hidden = !waterActive;
@@ -516,6 +539,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         busPending ||
         metroPending ||
         tramPending ||
+        terraformPending ||
         districtPending;
       powerHost.hidden = !powerActive;
       growthHost.hidden =
@@ -525,7 +549,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         busActive ||
         metroActive ||
         tramActive ||
-        districtActive;
+        districtActive ||
+        terraformActive;
       power.setAttribute('aria-pressed', String(powerActive));
       power.disabled =
         !state.ready ||
@@ -538,6 +563,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         busPending ||
         metroPending ||
         tramPending ||
+        terraformPending ||
         districtPending;
       bulldozeHost.hidden = !bulldozeActive;
       bulldoze.setAttribute('aria-pressed', String(bulldozeActive));
@@ -552,28 +578,31 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         busPending ||
         metroPending ||
         tramPending ||
+        terraformPending ||
         districtPending;
       zoneHost.hidden = !zoneActive;
       title.textContent = t(
-        districtActive
-          ? 'district.tab'
-          : tramActive
-            ? 'tram.tab'
-            : metroActive
-              ? 'metro.tab'
-              : busActive
-                ? 'bus.title'
-                : serviceActive
-                  ? 'service.title'
-                  : waterActive
-                    ? 'water.title'
-                    : powerActive
-                      ? 'power.title'
-                      : bulldozeActive
-                        ? 'bulldoze.title'
-                        : zoneActive
-                          ? 'zone.title'
-                          : 'road.title',
+        terraformActive
+          ? 'terraform.tab'
+          : districtActive
+            ? 'district.tab'
+            : tramActive
+              ? 'tram.tab'
+              : metroActive
+                ? 'metro.tab'
+                : busActive
+                  ? 'bus.title'
+                  : serviceActive
+                    ? 'service.title'
+                    : waterActive
+                      ? 'water.title'
+                      : powerActive
+                        ? 'power.title'
+                        : bulldozeActive
+                          ? 'bulldoze.title'
+                          : zoneActive
+                            ? 'zone.title'
+                            : 'road.title',
       );
       zones.setAttribute('aria-pressed', String(zoneActive));
       zones.disabled =
@@ -587,6 +616,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         busPending ||
         metroPending ||
         tramPending ||
+        terraformPending ||
         districtPending;
       for (const { button, lock, unlock } of featureLocks) {
         const locked = !state.unlocked.includes(unlock);
@@ -640,7 +670,8 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
             !busActive &&
             !metroActive &&
             !tramActive &&
-            !districtActive,
+            !districtActive &&
+            !terraformActive,
         ),
       );
       panel.dataset.exploring = explore.getAttribute('aria-pressed') ?? 'false';
@@ -655,6 +686,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         busPending ||
         metroPending ||
         tramPending ||
+        terraformPending ||
         districtPending;
       explore.disabled = demo.disabled =
         state.pending ||
@@ -666,7 +698,9 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
         busPending ||
         metroPending ||
         tramPending ||
+        terraformPending ||
         districtPending;
+      terraform.disabled = explore.disabled || !state.ready;
       options.hidden = !state.active;
       catalog.host.hidden = !state.active || state.mode === 'junction';
       select.disabled = state.pending;

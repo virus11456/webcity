@@ -1,3 +1,4 @@
+import { isTerraformDraft } from '../world/terraform';
 import {
   INDUSTRY_SPECIALIZATIONS,
   type IndustrySpecializationId,
@@ -29,6 +30,7 @@ const futureCommands = new Set([
   'setBuildingEnabled',
   'buildNetwork',
   'buildRoadPipes',
+  'terraform',
   'undo',
   'setTax',
   'setBudget',
@@ -229,6 +231,17 @@ export class CommandDispatcher {
     }
     if (this.simulation.gameOver) {
       fail('err.gameOver');
+      return;
+    }
+    if (value.t === 'terraform') {
+      if (!('draft' in value) || !isTerraformDraft(value.draft))
+        fail('err.invalidCommand');
+      else
+        this.emit({
+          t: 'result',
+          reqId,
+          ...this.simulation.terraform(value.draft),
+        });
       return;
     }
     if (value.t === 'setPolicy') {

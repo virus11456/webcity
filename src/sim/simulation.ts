@@ -1,3 +1,4 @@
+import { previewTerraform, type TerraformDraft } from '../world/terraform';
 import { MAP_TILES } from '../data/config';
 import { previewTile } from '../world/tiles';
 import { updateMilestones } from './systems/milestones';
@@ -546,6 +547,36 @@ export class Simulation {
     this.emit({ t: 'fundsChanged', money: s.money });
     this.refreshPopulation();
     return { ok: true, cost: preview.cost };
+  }
+  terraform(draft: TerraformDraft): Omit<Result, 't' | 'reqId'> {
+    if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
+    const preview = previewTerraform(this.powerWorld(), draft);
+    if (preview.reason) return { ok: false, reason: preview.reason };
+    const s = this.state,
+      patch = preview.patch;
+    patch.indices.forEach((id, i) => {
+      s.terrain.heights[id] = patch.heights[i]!;
+    });
+    s.terrain.revision++;
+    const zones = rebuildZoneGrid({ ...s, heights: s.terrain.heights });
+    s.zoneBlocks = zones.blocks;
+    s.segments = zones.segments;
+    s.nextId = zones.nextId;
+    this.emit({
+      t: 'roadsChanged',
+      added: structuredClone(s.segments),
+      removed: [],
+      nodes: [],
+      removedNodes: [],
+      terrain: { ...patch, revision: s.terrain.revision },
+    });
+    this.emit({
+      t: 'zonesChanged',
+      blocks: structuredClone(zones.blocks),
+      removed: zones.removed,
+    });
+    this.refreshPower();
+    return { ok: true, cost: 0 };
   }
   place(
     defId: string,

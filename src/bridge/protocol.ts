@@ -64,6 +64,7 @@ export type CommandInput =
       target: BulldozeTarget;
     }
   | { t: 'bulldoze'; targets: BulldozeTarget[] }
+  | { t: 'terraform'; draft: import('../world/terraform').TerraformDraft }
   | { t: 'undo' }
   | { t: 'setTax'; zone: ZoneType; rate: number }
   | { t: 'setBudget'; dept: BudgetDepartment; value: number }
@@ -80,6 +81,7 @@ export type CommandInput =
 export type Command = CommandInput & { reqId: number };
 export type FailureReason =
   | import('../world/tiles').TileReason
+  | import('../world/terraform').TerraformReason
   | PowerReason
   | ConstructionReason
   | ZoningReason
