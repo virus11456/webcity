@@ -235,6 +235,10 @@ export class CommandDispatcher {
       fail('err.gameOver');
       return;
     }
+    if (value.t === 'undo') {
+      this.emit({ t: 'result', reqId, ...this.simulation.undo() });
+      return;
+    }
     if (value.t === 'setDisasters') {
       if (!('enabled' in value) || typeof value.enabled !== 'boolean')
         fail('err.invalidCommand');

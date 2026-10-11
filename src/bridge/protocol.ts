@@ -82,6 +82,8 @@ export type CommandInput =
   | { t: 'inspect'; target: { kind: string; id: Id } };
 export type Command = CommandInput & { reqId: number };
 export type FailureReason =
+  | 'err.undoEmpty'
+  | 'err.undoConflict'
   | import('../world/tiles').TileReason
   | import('../world/terraform').TerraformReason
   | PowerReason
@@ -119,6 +121,7 @@ export type Response =
     }
   | { t: 'inspectResult'; reqId: number; info: InspectInfo };
 export type SimEvent =
+  | { t: 'undoState'; view: import('../world/constructionUndo').UndoView }
   | { t: 'disasters'; state: import('../world/disasters').DisasterState }
   | { t: 'policies'; policies: import('../data/policies').PolicyId[] }
   | { t: 'districts'; districts: import('../world/districts').DistrictView[] }

@@ -1,3 +1,12 @@
+import {
+  ConstructionHistory,
+  captureConstruction,
+  constructionChange,
+  canUndoConstruction,
+  applyConstructionUndo,
+  undoRefund,
+  type UndoAction,
+} from '../world/constructionUndo';
 import { previewTerraform, type TerraformDraft } from '../world/terraform';
 import { MAP_TILES } from '../data/config';
 import { previewTile } from '../world/tiles';
@@ -140,6 +149,114 @@ export class Simulation {
         districts: districtViews(this.state.districts, this.state.buildings),
       });
     this.sink(event);
+  }
+  private readonly constructionHistory = new ConstructionHistory();
+  private recordingConstruction = false;
+  private recordConstruction(
+    action: UndoAction,
+    run: () => Omit<Result, 't' | 'reqId'>,
+    rebuildId?: number,
+  ): Omit<Result, 't' | 'reqId'> {
+    if (this.recordingConstruction) return run();
+    const before = captureConstruction(this.state);
+    this.recordingConstruction = true;
+    try {
+      const result = run();
+      if (result.ok) {
+        const change = constructionChange(
+          before,
+          this.state,
+          action,
+          result.cost ?? 0,
+          rebuildId,
+        );
+        if (change) this.constructionHistory.push(change);
+        this.emit({ t: 'undoState', view: this.constructionHistory.view() });
+      }
+      return result;
+    } finally {
+      this.recordingConstruction = false;
+    }
+  }
+  undo(): Omit<Result, 't' | 'reqId'> {
+    if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
+    const e = this.constructionHistory.latest,
+      s = this.state;
+    if (!e) return { ok: false, reason: 'err.undoEmpty' };
+    if (!canUndoConstruction(s, e)) {
+      this.constructionHistory.pop();
+      this.emit({ t: 'undoState', view: this.constructionHistory.view() });
+      return { ok: false, reason: 'err.undoConflict' };
+    }
+    const oldRoads = s.segments.map((r) => r.id),
+      oldNodes = s.nodes.map((n) => n.id),
+      oldZones = s.zoneBlocks.map((b) => b.id),
+      oldBuildings = s.buildings.map((b) => b.id),
+      oldNetworks = {
+        power: s.networks.power.map((n) => n.id),
+        water: s.networks.water.map((n) => n.id),
+      };
+    const refund = undoRefund(e, s.clock.day);
+    applyConstructionUndo(s, e);
+    this.constructionHistory.pop();
+    if (e.terrain.length) s.terrain.revision++;
+    const zones = rebuildZoneGrid({ ...s, heights: s.terrain.heights });
+    s.segments = zones.segments;
+    s.zoneBlocks = zones.blocks;
+    s.nextId = zones.nextId;
+    const anchors = new Map<number, { zoneBlock: number; blockCell: number }>();
+    for (const b of s.zoneBlocks)
+      b.buildingAt.forEach((id, i) => {
+        if (id > 0 && !anchors.has(id))
+          anchors.set(id, { zoneBlock: b.id, blockCell: i });
+      });
+    for (const b of s.buildings)
+      if (b.kind === 'zoned') {
+        const a = anchors.get(b.id);
+        b.zoneBlock = a?.zoneBlock;
+        b.blockCell = a?.blockCell;
+      }
+    refreshRoadAccess(s);
+    this.growth.zoningChanged(s);
+    const removed = (old: number[], now: { id: number }[]) => {
+      const ids = new Set(now.map((v) => v.id));
+      return old.filter((id) => !ids.has(id));
+    };
+    this.emit({
+      t: 'roadsChanged',
+      added: structuredClone(s.segments),
+      removed: removed(oldRoads, s.segments),
+      nodes: structuredClone(s.nodes),
+      removedNodes: removed(oldNodes, s.nodes),
+      terrain: {
+        indices: e.terrain.map((p) => p.index),
+        heights: e.terrain.map((p) => p.before),
+        revision: s.terrain.revision,
+      },
+    });
+    this.emit({
+      t: 'zonesChanged',
+      blocks: structuredClone(s.zoneBlocks),
+      removed: removed(oldZones, s.zoneBlocks),
+    });
+    this.emit({
+      t: 'buildingsChanged',
+      added: structuredClone(s.buildings),
+      updated: [],
+      removed: removed(oldBuildings, s.buildings),
+    });
+    for (const net of ['power', 'water'] as const)
+      this.emit({
+        t: 'networksChanged',
+        net,
+        added: structuredClone(s.networks[net]),
+        removed: removed(oldNetworks[net], s.networks[net]),
+      });
+    s.stats.money = s.money;
+    this.emit({ t: 'fundsChanged', money: s.money });
+    this.refreshPopulation();
+    this.emit({ t: 'undoState', view: this.constructionHistory.view() });
+    return { ok: true, refund, cost: 0 };
   }
   private accumulatedMs = 0;
   private readonly time = new TimeSystem();
@@ -497,6 +614,9 @@ export class Simulation {
     });
   }
   plantTrees(points: Vec2[]): Omit<Result, 't' | 'reqId'> {
+    return this.recordConstruction('trees', () => this.doPlantTrees(points));
+  }
+  private doPlantTrees(points: Vec2[]): Omit<Result, 't' | 'reqId'> {
     if (this.gameOver || !points.length || points.length > PARKS.maxBrushTrees)
       return { ok: false, reason: 'err.invalidCommand' };
     const preview = previewTrees(this.powerWorld(), points);
@@ -559,6 +679,9 @@ export class Simulation {
     return { ok: true, cost: preview.cost };
   }
   terraform(draft: TerraformDraft): Omit<Result, 't' | 'reqId'> {
+    return this.recordConstruction('terrain', () => this.doTerraform(draft));
+  }
+  private doTerraform(draft: TerraformDraft): Omit<Result, 't' | 'reqId'> {
     if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
     const preview = previewTerraform(this.powerWorld(), draft);
     if (preview.reason) return { ok: false, reason: preview.reason };
@@ -589,6 +712,15 @@ export class Simulation {
     return { ok: true, cost: 0 };
   }
   place(
+    defId: string,
+    pos: Vec2,
+    rotation: number,
+  ): Omit<Result, 't' | 'reqId'> {
+    return this.recordConstruction('place', () =>
+      this.doPlace(defId, pos, rotation),
+    );
+  }
+  private doPlace(
     defId: string,
     pos: Vec2,
     rotation: number,
@@ -693,6 +825,11 @@ export class Simulation {
     return { ok: true, cost: 0 };
   }
   buildPowerLine(points: Vec2[]): Omit<Result, 't' | 'reqId'> {
+    return this.recordConstruction('power', () =>
+      this.doBuildPowerLine(points),
+    );
+  }
+  private doBuildPowerLine(points: Vec2[]): Omit<Result, 't' | 'reqId'> {
     const p = previewLine(this.powerWorld(), points);
     if (!p.valid)
       return { ok: false, reason: p.reason ?? 'err.invalidCommand' };
@@ -719,6 +856,11 @@ export class Simulation {
   }
 
   buildWaterPipes(points?: Vec2[]): Omit<Result, 't' | 'reqId'> {
+    return this.recordConstruction('water', () =>
+      this.doBuildWaterPipes(points),
+    );
+  }
+  private doBuildWaterPipes(points?: Vec2[]): Omit<Result, 't' | 'reqId'> {
     const s = this.state,
       w = { ...this.powerWorld(), networks: s.networks.water };
     const preview = points ? previewPipe(w, points) : previewRoadPipes(w);
@@ -852,6 +994,9 @@ export class Simulation {
     return { ok: true };
   }
   rebuild(id: number): Omit<Result, 't' | 'reqId'> {
+    return this.recordConstruction('rebuild', () => this.doRebuild(id), id);
+  }
+  private doRebuild(id: number): Omit<Result, 't' | 'reqId'> {
     if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
     const s = this.state,
       b = s.buildings.find((b) => b.id === id);
@@ -892,6 +1037,14 @@ export class Simulation {
 
   /** Validate and atomically commit a ground road, also while paused; clients cannot supply prices. */
   buildRoad(type: RoadTypeId, points: RoadDraft): Omit<Result, 't' | 'reqId'> {
+    return this.recordConstruction('road', () =>
+      this.doBuildRoad(type, points),
+    );
+  }
+  private doBuildRoad(
+    type: RoadTypeId,
+    points: RoadDraft,
+  ): Omit<Result, 't' | 'reqId'> {
     const s = this.state;
     const result = validateRoadDraft(type, points, {
       ...s,
@@ -1026,6 +1179,14 @@ export class Simulation {
 
   /** Replace one road after a fresh authoritative quote; unaffected buildings retain their IDs. */
   upgradeRoad(id: number, type: RoadTypeId): Omit<Result, 't' | 'reqId'> {
+    return this.recordConstruction('upgrade', () =>
+      this.doUpgradeRoad(id, type),
+    );
+  }
+  private doUpgradeRoad(
+    id: number,
+    type: RoadTypeId,
+  ): Omit<Result, 't' | 'reqId'> {
     if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
     const s = this.state,
       old = s.segments.find((r) => r.id === id),
@@ -1232,6 +1393,12 @@ export class Simulation {
 
   /** Apply free zoning atomically; the renderer receives only acknowledged block copies. */
   zone(cells: ZoneCell[], zone: ZoneType | null): Omit<Result, 't' | 'reqId'> {
+    return this.recordConstruction('zone', () => this.doZone(cells, zone));
+  }
+  private doZone(
+    cells: ZoneCell[],
+    zone: ZoneType | null,
+  ): Omit<Result, 't' | 'reqId'> {
     if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
     const result = paintZones(
       { ...this.state, mode: this.state.settings.mode },

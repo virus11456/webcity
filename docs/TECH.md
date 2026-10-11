@@ -719,3 +719,5 @@ world/financeHistory 將既有 statsHistory 投影成最多 52 筆 FinancePoint�
 M4-16：WorldMirror 緩存 Worker roadTraffic，ready 從存檔重算、道路刪除清理；readCityStatistics 以住宅聚合及精簡 stats 計算獨立唯讀摘要。城市統計面板只在展開時響應 stats／roadTraffic，不受畫面車流上限影響，沒有新的權威狀態。見 CITY_STATISTICS.md。
 
 M4-17：world/mapSelection.resolveMap 共用確定性預設解析，random mapId 可保存；Terrain 接受只含 relief／coast 的設定。MapPreview 使用延後 120 ms 可取消的 effect，在離屏 Canvas 2D 生成縮圖並以 img 呈現，不配置 Worker 或 WebGL。Worker 仍驗證種子與地圖 ID；見 MAP_SELECTION.md。
+
+M4-18：Simulation 在成功建造邊界記錄 constructionUndo 差異，最多 UI_RULES.undoActions 筆；Worker undo 完整驗證後套用物件與地形反向差異，保留時鐘與人口等動態狀態、重新同步路網／區塊／服務。undoState 只向 Mirror 發送筆數、類型、日期與費用；主執行緒不持有可寫復原快照。紀錄不序列化，見 UNDO.md。

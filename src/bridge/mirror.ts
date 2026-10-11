@@ -26,6 +26,13 @@ function upsert<T extends { id: number }>(
 
 /** Read-only public view; all snapshots and incoming mutable data are copied. */
 export class WorldMirror {
+  private undo: import('../world/constructionUndo').UndoView = {
+    count: 0,
+    cost: 0,
+  };
+  readUndo() {
+    return { ...this.undo };
+  }
   private state: WorldSnapshot | undefined;
   private districts: DistrictView[] = [];
   private roadTraffic: RoadTraffic[] = [];
@@ -215,6 +222,7 @@ export class WorldMirror {
   /** Apply worker messages before notifying UI subscribers. */
   apply(event: SimEvent): void {
     if (event.t === 'ready') {
+      this.undo = { count: 0, cost: 0 };
       this.state = structuredClone(event.snapshot);
       this.roadTraffic = savedRoadTraffic(
         event.snapshot.segments,
@@ -231,6 +239,9 @@ export class WorldMirror {
     const state = this.state;
     if (!state) return;
     switch (event.t) {
+      case 'undoState':
+        this.undo = { ...event.view };
+        break;
       case 'roadTraffic':
         this.roadTraffic = structuredClone(event.roads);
         break;
