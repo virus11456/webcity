@@ -1,3 +1,7 @@
+import {
+  INDUSTRY_SPECIALIZATIONS,
+  type IndustrySpecializationId,
+} from '../data/policies';
 import { POLICIES, type PolicyId } from '../data/policies';
 import { PARKS } from '../data/parks';
 import { TRAFFIC_RUNTIME } from '../data/traffic';
@@ -241,6 +245,17 @@ export class CommandDispatcher {
             action: 'rename',
             id: value.id as number,
             name: value.name,
+          };
+        else if (
+          value.action === 'specialize' &&
+          'industry' in value &&
+          (value.industry === null ||
+            INDUSTRY_SPECIALIZATIONS.some((d) => d.id === value.industry))
+        )
+          command = {
+            action: 'specialize',
+            id: value.id as number,
+            industry: value.industry as IndustrySpecializationId | null,
           };
         else if (value.action === 'delete')
           command = { action: 'delete', id: value.id as number };

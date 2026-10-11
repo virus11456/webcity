@@ -1,3 +1,4 @@
+import { INDUSTRY_SPECIALIZATIONS } from '../data/policies';
 import { POLICIES } from '../data/policies';
 import { DISTRICTS } from '../data/districts';
 import { validateTransit } from './transitValidation';
@@ -167,6 +168,8 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
   requireValue(s.districts.length <= DISTRICTS.maxCount);
   const districtCells = new Set<number>();
   for (const d of s.districts) {
+    if (d.industry !== undefined)
+      requireValue(INDUSTRY_SPECIALIZATIONS.some((v) => v.id === d.industry));
     if (d.policies !== undefined)
       requireValue(
         d.policies &&
@@ -266,6 +269,12 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
             b.crimeUpdatedDay >= 0 &&
             b.crimeUpdatedDay <= s.clock.day)),
     );
+    if (b.industry !== undefined)
+      requireValue(
+        b.kind === 'zoned' &&
+          b.defId === 'I' &&
+          INDUSTRY_SPECIALIZATIONS.some((v) => v.id === b.industry),
+      );
     if (b.floorLimit !== undefined) requireValue(b.floorLimit === 4);
     if (b.garbage !== undefined)
       requireValue(
@@ -539,6 +548,11 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
           typeof b.cargo.exportBlocked === 'boolean',
       );
   for (const job of s.cargo.shipments) {
+    if (job.commodity !== undefined)
+      requireValue(
+        job.kind === 'export' &&
+          INDUSTRY_SPECIALIZATIONS.some((v) => v.id === job.commodity),
+      );
     requireValue(
       Number.isSafeInteger(job.id) &&
         job.id > 0 &&

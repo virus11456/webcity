@@ -1,3 +1,4 @@
+import { INDUSTRY_SPECIALIZATIONS } from '../../data/policies';
 import { DISTRICTS as D } from '../../data/districts';
 import { FEATURES } from '../../data/milestones';
 import { MAP_SIZE, GAME_MODES } from '../../data/config';
@@ -32,7 +33,16 @@ export function districtCommand(
       );
     else if (c.action === 'delete')
       s.districts = s.districts.filter((d) => d.id !== c.id);
-    else {
+    else if (c.action === 'specialize') {
+      const def = INDUSTRY_SPECIALIZATIONS.find((d) => d.id === c.industry);
+      if (c.industry !== null && !def)
+        return { ok: false, reason: 'err.invalidCommand' };
+      if (!GAME_MODES[s.settings.mode].allUnlocked && !s.unlocked.includes(6))
+        return { ok: false, reason: 'err.locked' };
+      s.districts = s.districts.map((d) =>
+        d.id === c.id ? { ...d, industry: def?.id } : d,
+      );
+    } else {
       if (
         c.points.some(
           (p) =>

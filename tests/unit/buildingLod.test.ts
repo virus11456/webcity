@@ -136,3 +136,45 @@ it('renders more than sixteen full models, fades safely, reduces city triangles 
   emission.dispose();
   material.dispose();
 });
+
+it('retains specialty geometry at normal city zoom and distinct silhouettes at far LOD', () => {
+  const canvas = { width: 1, height: 1 } as HTMLCanvasElement,
+    map = new CanvasTexture(canvas),
+    emission = new CanvasTexture(canvas);
+  const renderer = new BuildingRenderer(new Group(), {
+    heightAt: () => 0,
+    atlas: {
+      map,
+      emissiveMap: emission,
+      color: canvas,
+      emission: canvas,
+      dispose() {},
+    },
+    assets: { request: () => undefined },
+  });
+  const b = {
+    ...districtFixture(1)[0]!,
+    defId: 'I',
+    level: 1,
+    lotW: 4,
+    lotD: 4,
+    pos: { x: 0, z: 0 },
+    state: 'active' as const,
+    industry: 'industry_farming' as const,
+  };
+  renderer.reset([b]);
+  const camera = new PerspectiveCamera();
+  camera.position.set(0, 400, 0);
+  const settle = () => {
+    for (let i = 0; i < 100; i++) renderer.update(1 / 30, camera);
+  };
+  settle();
+  expect(renderer.inspect(b.id)).toMatchObject({ detail: true, lod: 1 });
+  camera.position.set(0, 1500, 0);
+  settle();
+  expect(renderer.inspect(b.id)).toMatchObject({ detail: false, lod: 2 });
+  expect(renderer.readStats().farInstances).toBeGreaterThan(1);
+  renderer.dispose();
+  map.dispose();
+  emission.dispose();
+});

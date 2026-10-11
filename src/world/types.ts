@@ -87,6 +87,7 @@ export interface HealthSummary {
   residents: number;
 }
 export interface Building {
+  industry?: import('../data/policies').IndustrySpecializationId;
   floorLimit?: number;
   garbage?: { stock: number; lastDay: number; generated: number };
   happiness?: number;

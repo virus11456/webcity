@@ -1,3 +1,4 @@
+import { industryDefinition } from '../../world/industry';
 import { MAP_SIZE, TIME } from '../../data/config';
 import { ENVIRONMENT as E } from '../../data/environment';
 import { PARKS } from '../../data/parks';
@@ -79,7 +80,9 @@ export function updatePollution(s: SimState) {
       continue;
     const amount =
       b.defId === 'I'
-        ? b.jobs * E.industrialPerJob
+        ? b.jobs *
+          (industryDefinition(b.industry)?.pollutionPerJob ??
+            E.industrialPerJob)
         : b.defId === 'power_coal' || b.defId === 'power_oil'
           ? E.powerPollution
           : b.defId === 'garbage_landfill'

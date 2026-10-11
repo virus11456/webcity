@@ -3,6 +3,7 @@ import { DISTRICTS as D } from '../data/districts';
 import { MAP_SIZE, MAP_TILES, TILE_SIZE } from '../data/config';
 import type { Building, Vec2 } from './types';
 export interface District {
+  industry?: import('../data/policies').IndustrySpecializationId;
   policies?: Partial<Record<PolicyId, boolean>>;
   id: number;
   name: string;
@@ -144,6 +145,11 @@ export function districtViews(
 }
 
 export type DistrictAction =
+  | {
+      action: 'specialize';
+      id: number;
+      industry: import('../data/policies').IndustrySpecializationId | null;
+    }
   | { action: 'create'; name: string }
   | { action: 'rename'; id: number; name: string }
   | { action: 'delete'; id: number }

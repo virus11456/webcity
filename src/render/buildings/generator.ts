@@ -1,3 +1,5 @@
+import { industryGeometry } from './industryGeometry';
+import type { IndustrySpecializationId } from '../../data/policies';
 import type { BufferGeometry } from 'three';
 import { Rng } from '../../core/rng';
 import { CELL_SIZE } from '../../data/config';
@@ -23,6 +25,7 @@ export function generateBuilding(
   seed: number,
   detail = true,
   maxFloors = Infinity,
+  industry?: IndustrySpecializationId,
 ): BufferGeometry {
   const rules = ZONES[zone];
   if (
@@ -36,6 +39,8 @@ export function generateBuilding(
     d > rules.lotDepthCells[1]
   )
     throw new RangeError('Invalid building specification');
+  if (zone === 'I' && industry)
+    return industryGeometry(industry, w * CELL_SIZE, d * CELL_SIZE, detail);
   const rng = new Rng(seed),
     g = new BuildingGeometry(detail),
     width = w * CELL_SIZE,

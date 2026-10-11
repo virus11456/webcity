@@ -234,7 +234,7 @@ export class BuildingRenderer {
       this.entries.delete(id);
       return;
     }
-    const recipe = `${b.defId}:${b.level}:${b.lotW}:${b.lotD}:${b.seed}:${b.floorLimit ?? 0}`;
+    const recipe = `${b.defId}:${b.level}:${b.lotW}:${b.lotD}:${b.seed}:${b.floorLimit ?? 0}:${b.industry ?? 'general'}`;
     const target =
       b.state === 'construction'
         ? Math.min(1, Math.max(0, b.stateTimer / GROWTH.constructionDays))
@@ -262,12 +262,14 @@ export class BuildingRenderer {
       this.options.assets ? visualSeed(b) : b.seed,
       false,
       b.floorLimit,
+      b.industry,
     );
     const massing = geometry.userData.massing as BuildingVolume[];
     const shape: Shape = {
-      massing: this.options.assets
-        ? distantMassing(massing, ['RH', 'CH', 'O'].includes(b.defId))
-        : massing,
+      massing:
+        this.options.assets && !b.industry
+          ? distantMassing(massing, ['RH', 'CH', 'O'].includes(b.defId))
+          : massing,
       wall: geometry.userData.wall as string,
       height: Math.max(...massing.map((v) => v.y + v.h)),
     };
@@ -413,7 +415,7 @@ export class BuildingRenderer {
           lod = 0;
         else lod = 2;
       }
-      if (!e.model && lod === 1) lod = 2;
+      if (!e.model && !e.data.industry && lod === 1) lod = 2;
       if (e.lod !== lod || (e.refresh && lod < 2) || (lod < 2 && !e.detail))
         this.lodQueue.set(e, lod);
       else this.lodQueue.delete(e);
@@ -501,6 +503,7 @@ export class BuildingRenderer {
             this.options.assets ? visualSeed(b) : b.seed,
             true,
             b.floorLimit,
+            b.industry,
           ));
     e.asset = Boolean(asset);
     if (asset && !this.catalogMaterials.has(asset.material)) {

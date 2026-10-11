@@ -687,3 +687,5 @@ Renderer 依地形建立頂點色格網，每幀最多建立 1,024 格，區名�
 全市政策仍為 PolicyId 陣列，District 的可選 policies 字典表示明確 boolean 覆寫（缺項繼承）。setPolicy 指令 on=null 僅用於取消單區覆寫。world/policies 統一解析作用位置、費用與效果；Worker 發出 policies／districts 事件，UI 不持有權威修改。垃圾產量／庫存及 policyExpenses 可選欄位相容舊存檔，載入驗證其有限值與政策鍵。
 
 Pathfinder.between 支援可選 forbidden 道路集合，只由貨運傳入。CargoSystem 在政策、區界或道路改變時重算禁行道路並透過 TrafficSystem 保留違規行程的實際停留位置；貨物與待送需求不消失。禁止高樓 floorLimit 由 Worker 計算，catalogModel 回退至樓層受限的程序模型。
+
+M4-06：District.industry 為可選特化 id，district action specialize 由 Worker 驗證 MS6。updateIndustry 在初始化、每日及結構更新時把行政區種類派生到工業建築，轉型報廢庫存；人口結構偵測含 industry，職缺教育分配同步重算。world/industry 提供資源取樣与定義。貨運 daily 依資源倍率產原料，原料 Shipment.commodity 僅容許出口，沿用真實路徑和抵達結算。render/buildings/industryGeometry 提供近遠景共用輪廓；特化不套用一般工業 GLB。存檔新增欄位皆向後相容並驗證，詳見 INDUSTRY.md。

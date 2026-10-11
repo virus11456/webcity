@@ -201,7 +201,8 @@ export class WorldMirror {
       case 'districts':
         this.districts = structuredClone(event.districts);
         state.districts = this.districts.map(
-          ({ id, name, cells, policies }) => ({
+          ({ id, name, cells, policies, industry }) => ({
+            ...(industry ? { industry } : {}),
             ...(policies ? { policies } : {}),
             id,
             name,

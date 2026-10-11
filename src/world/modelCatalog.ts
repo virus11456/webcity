@@ -27,10 +27,10 @@ const models = catalogModels();
 export function catalogModel(
   b: Pick<
     Building,
-    'defId' | 'level' | 'lotW' | 'lotD' | 'seed' | 'floorLimit'
+    'defId' | 'level' | 'lotW' | 'lotD' | 'seed' | 'floorLimit' | 'industry'
   >,
 ): CatalogModel | undefined {
-  if (b.floorLimit !== undefined) return;
+  if (b.floorLimit !== undefined || b.industry) return;
   const rules = MODEL_CATALOG[b.defId as keyof typeof MODEL_CATALOG];
   if (!rules) return;
   return models.find(
@@ -45,7 +45,7 @@ export function catalogModel(
 export function visualSeed(
   b: Pick<
     Building,
-    'defId' | 'level' | 'lotW' | 'lotD' | 'seed' | 'floorLimit'
+    'defId' | 'level' | 'lotW' | 'lotD' | 'seed' | 'floorLimit' | 'industry'
   >,
 ): number {
   return catalogModel(b)?.seed ?? b.seed;
