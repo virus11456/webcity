@@ -1,3 +1,4 @@
+import { PERFORMANCE } from '../data/performance';
 import { polygonBounds } from './zoneGeometry';
 import { uniqueReason } from './unique';
 import { BUILDINGS, type BuildingDefinition } from '../data/buildings';
@@ -28,6 +29,11 @@ interface Link {
   length: number;
   bounds: ReturnType<typeof polygonBounds>;
 }
+interface RasterSamples {
+  width: number;
+  indices: Uint32Array;
+  distances: Float64Array;
+}
 export interface ServiceAccess {
   road: number;
   distance: number;
@@ -47,7 +53,18 @@ export interface ServicePreview extends PowerPreview {
 export class ServiceNetwork {
   readonly links = new Map<number, Link>();
   private adjacency = new Map<number, { to: number; cost: number }[]>();
-  constructor(nodes: readonly RoadNode[], segments: readonly RoadSegment[]) {
+  private rasterSize = 0;
+  private rasterBytes = 0;
+  private readonly rasterCache = new Map<number, RasterSamples>();
+  /** Retained typed-array payload only; excludes temporary construction arrays and Map metadata. */
+  get cachedRasterBytes(): number {
+    return this.rasterBytes;
+  }
+  constructor(
+    nodes: readonly RoadNode[],
+    segments: readonly RoadSegment[],
+    private readonly rasterMaxBytes: number = PERFORMANCE.serviceRasterMaxBytes,
+  ) {
     const byId = new Map(nodes.map((n) => [n.id, n]));
     for (const segment of segments) {
       const a = byId.get(segment.start),
@@ -205,66 +222,128 @@ export class ServiceNetwork {
     }
     return result;
   }
-  /** Fill roadside cells with the same road-distance attenuation as building coverage. */
+  /** Visit geometry in sample/cell order, retaining duplicate projections at bends. */
+  private rasterSamples(
+    link: Link,
+    width: number,
+    size: number,
+    visit: (index: number, distance: number) => void,
+  ): void {
+    const cell = MAP_SIZE / size;
+    for (let i = 1; i < link.points.length; i++) {
+      const a = link.points[i - 1]!,
+        b = link.points[i]!;
+      const minX = Math.max(
+          0,
+          Math.floor((Math.min(a.x, b.x) - width + MAP_SIZE / 2) / cell),
+        ),
+        maxX = Math.min(
+          size - 1,
+          Math.floor((Math.max(a.x, b.x) + width + MAP_SIZE / 2) / cell),
+        ),
+        minZ = Math.max(
+          0,
+          Math.floor((Math.min(a.z, b.z) - width + MAP_SIZE / 2) / cell),
+        ),
+        maxZ = Math.min(
+          size - 1,
+          Math.floor((Math.max(a.z, b.z) + width + MAP_SIZE / 2) / cell),
+        );
+      for (let z = minZ; z <= maxZ; z++)
+        for (let x = minX; x <= maxX; x++) {
+          const p = closestPointOnSegment(
+            {
+              x: (x + 0.5) * cell - MAP_SIZE / 2,
+              z: (z + 0.5) * cell - MAP_SIZE / 2,
+            },
+            a,
+            b,
+          );
+          if (p.distance > width) continue;
+          visit(z * size + x, a.distance + p.t * (b.distance - a.distance));
+        }
+    }
+  }
+  /** Geometry is shared; radius, network reach and efficiency are evaluated for every provider. */
   raster(
     reach: ServiceReach,
     field: Float32Array,
     size: number,
     efficiency: number,
   ): void {
-    const cell = MAP_SIZE / size;
+    if (this.rasterSize !== size) {
+      this.rasterCache.clear();
+      this.rasterBytes = 0;
+      this.rasterSize = size;
+    }
     for (const [id, link] of this.links) {
       if (link.segment.elevated || ROADS[link.segment.type].zoning === 'none')
         continue;
+      const fromStart = reach.distances.get(link.segment.start) ?? Infinity,
+        fromEnd = reach.distances.get(link.segment.end) ?? Infinity;
       if (
         id !== reach.origin.road &&
-        Math.min(
-          reach.distances.get(link.segment.start) ?? Infinity,
-          reach.distances.get(link.segment.end) ?? Infinity,
-        ) >= reach.radius
+        Math.min(fromStart, fromEnd) >= reach.radius
       )
         continue;
       const width =
         ROADS[link.segment.type].widthM / 2 +
         CELL_SIZE * SERVICES.frontageCells;
-      for (let i = 1; i < link.points.length; i++) {
-        const a = link.points[i - 1]!,
-          b = link.points[i]!;
-        const minX = Math.max(
-            0,
-            Math.floor((Math.min(a.x, b.x) - width + MAP_SIZE / 2) / cell),
-          ),
-          maxX = Math.min(
-            size - 1,
-            Math.floor((Math.max(a.x, b.x) + width + MAP_SIZE / 2) / cell),
-          );
-        const minZ = Math.max(
-            0,
-            Math.floor((Math.min(a.z, b.z) - width + MAP_SIZE / 2) / cell),
-          ),
-          maxZ = Math.min(
-            size - 1,
-            Math.floor((Math.max(a.z, b.z) + width + MAP_SIZE / 2) / cell),
-          );
-        for (let z = minZ; z <= maxZ; z++)
-          for (let x = minX; x <= maxX; x++) {
-            const p = closestPointOnSegment(
-              {
-                x: (x + 0.5) * cell - MAP_SIZE / 2,
-                z: (z + 0.5) * cell - MAP_SIZE / 2,
-              },
-              a,
-              b,
-            );
-            if (p.distance > width) continue;
-            const value =
-              this.coverage(reach, {
-                road: id,
-                distance: a.distance + p.t * (b.distance - a.distance),
-              }) * efficiency;
-            const index = z * size + x;
-            field[index] = Math.max(field[index]!, value);
-          }
+      let cached = this.rasterCache.get(id);
+      if (cached && cached.width !== width) {
+        this.rasterBytes -=
+          cached.indices.byteLength + cached.distances.byteLength;
+        this.rasterCache.delete(id);
+        cached = undefined;
+      }
+      const endDistance = fromEnd + link.length,
+        origin = id === reach.origin.road ? reach.origin.distance : undefined;
+      const apply = (index: number, along: number) => {
+        // Same operation order as distance()/coverage(), without per-cell objects and Map lookups.
+        const distance = Math.min(
+          origin === undefined ? Infinity : Math.abs(along - origin),
+          fromStart + along,
+          endDistance - along,
+        );
+        const value = Math.max(0, 1 - distance / reach.radius) * efficiency;
+        field[index] = Math.max(field[index]!, value);
+      };
+      if (cached) {
+        for (let i = 0; i < cached.indices.length; i++)
+          apply(cached.indices[i]!, cached.distances[i]!);
+        continue;
+      }
+      const bytesPerSample =
+          Uint32Array.BYTES_PER_ELEMENT + Float64Array.BYTES_PER_ELEMENT,
+        capacity = Math.floor(
+          (this.rasterMaxBytes - this.rasterBytes) / bytesPerSample,
+        ),
+        indices: number[] = [],
+        distances: number[] = [];
+      let retain =
+        capacity > 0 &&
+        this.rasterCache.size < PERFORMANCE.serviceRasterMaxRoads;
+      this.rasterSamples(link, width, size, (index, distance) => {
+        apply(index, distance);
+        if (!retain) return;
+        if (indices.length >= capacity) {
+          // Too large: discard staging data and finish the exact calculation without caching.
+          retain = false;
+          indices.length = distances.length = 0;
+          return;
+        }
+        indices.push(index);
+        distances.push(distance);
+      });
+      if (retain && indices.length) {
+        const samples = {
+          width,
+          indices: Uint32Array.from(indices),
+          distances: Float64Array.from(distances),
+        };
+        this.rasterCache.set(id, samples);
+        this.rasterBytes +=
+          samples.indices.byteLength + samples.distances.byteLength;
       }
     }
   }

@@ -566,6 +566,8 @@ CargoSystem 管理 WorldSnapshot.cargo 與 Building.cargo，每 tick 最多八�
 
 ### M2-14 公共服務框架
 
+M5-03 第四批：ServiceNetwork 的 raster 幾何快取只保存道路投影格索引與 Float64 沿路距離，保持原始重複樣本與順序；服務 reach／radius／efficiency 每次重新計算。PERFORMANCE 集中設定每 network 8 MiB typed-array payload 與 1,024 道路上限；超額回到精確即時計算。單一解析度，size 變化清除，路寬變化替換，networkChanged 重建釋放。不序列化；payload 上限不含 Map 與建構暫存，不能當成總記憶體預算。
+
 world/ServiceNetwork 共用道路接入、二元堆 Dijkstra、預覽路段裁切及覆蓋場取樣；sim/ServiceSystem 在 Worker 計算 Building.coverage／serviceStatus 與既有 coverage TypedArray。新增 setBuildingEnabled 命令，暫停時仍重新计算並送 building patches；derived coverage 在載入時重算。ServiceTool 只讀鏡像預覽，設置由 Worker 重驗；ServiceRenderer 按材質合併原創幾何。見 SERVICES.md。
 
 ### M2-15 警察與犯罪

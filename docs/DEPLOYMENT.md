@@ -13,3 +13,5 @@
 2026-10-11 23:25 左右唯讀複查：Vercel MCP 對既有 scope 回覆 403；使用已登入 CLI 確認目標為 `virus11456s-projects/webcity`（`prj_6yhBx3NgKW44C4bMJWBgKd8MsULy`）後成功查詢。最近清單已有多筆當日 production／preview，超過每日兩次上限，因此本輪沒有建立任何部署。最新觀察到的既有正式部署為 `dpl_2qheQ4sf1iikdbpAnpGCWps23tnb`，台北時間 11:09:20 建立、CLI 狀態 READY、別名包含 `webcity-theta.vercel.app`，URL 為 https://webcity-4suwokqi8-virus11456s-projects.vercel.app 。此資訊更新上段較早的發布觀察，但本輪未驗證它的 commit 與瀏覽器內容，也不是本輪效能修改的部署成果。使用者已授權本批完成後可部署；後續仍需遵守每日上限與平台限制，沒有建立排程。
 
 2026-10-12 凌晨唯讀檢查：MCP 仍回覆既有 scope 的 403；改用已登入 CLI，明確指定同一 team／project，以 `/v7/deployments` 的 `since=1791734400000`（台北 10 月 12 日 00:00）查詢，回覆 `deployments: []`、`count: 0`、`next: null`。本輪沒有本機部署嘗試。每日次數雖已換日，前述平台要求等待 24 小時的期限要到台北 10 月 12 日 03:34 才滿，因此本輪未發送部署請求。期限屆滿也須先重新查詢當日次數，不能直接把等待結束當成部署成功；本輪沒有建立排程。
+
+2026-10-12 01:33 左右再次唯讀確認：MCP scope 仍為 403，同 team／project 的已登入 CLI 回覆今日部署零筆、無下一頁。第四批服務覆蓋效能修改沒有發送部署請求；平台 03:34 等待期限尚未滿，未建立排程。
