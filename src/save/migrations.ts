@@ -1,3 +1,4 @@
+import { MILESTONES } from '../data/milestones';
 import { validateDeathcare } from './deathcareValidation';
 import { validateGarbage } from './garbageValidation';
 import { INDUSTRY_SPECIALIZATIONS } from '../data/policies';
@@ -137,6 +138,12 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
       s.stats.water &&
       s.stats.sewage,
   );
+  requireValue(
+    s.unlocked.includes(0) &&
+      new Set(s.unlocked).size === s.unlocked.length &&
+      s.unlocked.every((id) => MILESTONES.some((m) => m.id === id)),
+  );
+  s.stats.milestone = Math.max(0, ...s.unlocked);
   const ids = new Set<number>();
   for (const item of [
     ...s.nodes,

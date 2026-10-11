@@ -1,3 +1,4 @@
+import { createMilestoneControls } from './milestoneControls';
 import { h, render } from 'preact';
 import type { SimClient } from '../bridge/simClient';
 import { TopBar } from './hud/TopBar';
@@ -9,6 +10,7 @@ export function createSimControls(parent: HTMLElement, client: SimClient) {
   host.className = 'topbar-host';
   parent.append(host);
   const model = createTopBarModel(client);
+  const milestones = createMilestoneControls(parent, client);
   render(h(TopBar, { model }), host);
   const bar = host.querySelector<HTMLElement>('.topbar')!;
   const updateInset = () =>
@@ -26,6 +28,7 @@ export function createSimControls(parent: HTMLElement, client: SimClient) {
       resize.disconnect();
       parent.style.removeProperty('--topbar-bottom');
       model.dispose();
+      milestones.dispose();
       render(null, host);
       host.remove();
     },

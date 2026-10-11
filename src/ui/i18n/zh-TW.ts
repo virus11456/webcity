@@ -1,4 +1,36 @@
 export const ZH_TW = {
+  'milestone.title': '城市里程碑',
+  'milestone.reward': '已發放獎金',
+  'milestone.unlocks': '新解鎖內容',
+  'milestone.saved': '解鎖永久保留；人口下降或讀檔不會重複發獎。',
+  'milestone.continue': '繼續建設城市',
+  'milestone.name.0': '小聚落',
+  'milestone.unlocks.0': '基礎道路、住宅、商業、工業、水電與小公園',
+  'milestone.name.1': '小村莊',
+  'milestone.unlocks.1':
+    '四線道、警察局、消防局、診所、垃圾掩埋場、兒童遊樂場與預算',
+  'milestone.name.2': '村莊',
+  'milestone.unlocks.2': '林蔭小路、小學、墓園、路口工具、行政區與廣場',
+  'milestone.name.3': '小鎮',
+  'milestone.unlocks.3':
+    '高速公路、匝道、高密度住宅／商業、高中、燃油電廠、分開稅率與第 2 塊地',
+  'milestone.name.4': '繁忙小鎮',
+  'milestone.unlocks.4':
+    '六線大道、辦公區、醫院、焚化廠、污水處理廠、火葬場、大額貸款、公車與政策',
+  'milestone.name.5': '大鎮',
+  'milestone.unlocks.5':
+    '大學、警察總局、消防總局、太陽能電廠、大公園與第 3 塊地',
+  'milestone.name.6': '小城市',
+  'milestone.unlocks.6': '隧道、水力發電、回收中心、工業特化與第 4 塊地',
+  'milestone.name.7': '城市',
+  'milestone.unlocks.7': '地鐵與第 5 塊地',
+  'milestone.name.8': '大城市',
+  'milestone.unlocks.8': '獨特建築第一批與第 6 塊地',
+  'milestone.name.9': '都會',
+  'milestone.unlocks.9': '第 7 塊地',
+  'milestone.name.10': '大都會',
+  'milestone.unlocks.10': '獨特建築第二批與第 8、9 塊地',
+
   'service.cemetery': '墓園',
   'service.crematorium': '火葬場',
   'problem.deathcare': '殯葬需求待處理',

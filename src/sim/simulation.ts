@@ -1,3 +1,4 @@
+import { updateMilestones } from './systems/milestones';
 import { DeathcareSystem } from './systems/deathcare';
 import { GarbageSystem } from './systems/garbage';
 import { updateIndustry } from './systems/industry';
@@ -150,6 +151,7 @@ export class Simulation {
     }
     updateIndustry(this.state);
     updatePopulation(this.state);
+    this.state.stats.milestone = Math.max(0, ...this.state.unlocked);
     this.schedules = new ScheduleSystem(this.state);
     this.routePlanner = new RoutePlanner(
       this.state,
@@ -204,6 +206,7 @@ export class Simulation {
       const industries = updateIndustry(this.state);
       const priorHappiness = updateHappiness(this.state);
       const population = updatePopulation(this.state, true);
+      this.refreshMilestones();
       this.garbage.daily();
       this.deathcare.daily();
       const power = [...updatePower(this.state), ...updateWater(this.state)];
@@ -1169,6 +1172,13 @@ export class Simulation {
     return { ok: true, cost: 0 };
   }
 
+  private refreshMilestones(): void {
+    const reached = updateMilestones(this.state);
+    if (!reached.length) return;
+    this.emit({ t: 'fundsChanged', money: this.state.money });
+    for (const index of reached) this.emit({ t: 'milestone', index });
+    this.emit({ t: 'economy', finance: financeView(this.state) });
+  }
   private refreshPopulation(): void {
     const updated = [
       ...updateIndustry(this.state),
@@ -1181,12 +1191,14 @@ export class Simulation {
         removed: [],
         updated: structuredClone(updated),
       });
+    this.refreshMilestones();
     this.refreshPower();
   }
 
   /** Advance exactly one simulation step, unless paused. */
   tick(): void {
     if (this.state.clock.speed === 0 || this.gameOver) return;
+    this.refreshMilestones();
     const dayCompleted = this.time.tick(this.state.clock);
     const growth = this.growth.tick(this.state);
     if (growth.blocks.length)

@@ -1,0 +1,55 @@
+.milestone-dialog {
+  text-align: center;
+}
+.milestone-dialog .milestone-badge {
+  width: 56px;
+  height: 56px;
+  color: var(--color-accent);
+}
+.milestone-dialog h1 {
+  font-size: 24px;
+  margin: 12px 0;
+}
+.milestone-dialog h2 {
+  font-size: 16px;
+  margin: 20px 0 8px;
+}
+.milestone-reward {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-positive);
+}
+.milestone-unlocks {
+  text-align: left;
+  border-block: 1px solid var(--color-border);
+  padding: 12px 0;
+}
+.milestone-dialog button {
+  width: 100%;
+}
+@media (max-height: 450px) {
+  .milestone-dialog .milestone-badge {
+    width: 32px;
+    height: 32px;
+  }
+  .milestone-dialog h1 {
+    margin: 4px 0;
+    font-size: 20px;
+  }
+  .milestone-dialog p {
+    margin: 6px 0;
+  }
+}
+.toolbar-feature-lock {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  color: var(--color-secondary);
+}
+.toolbar-feature-lock[hidden] {
+  display: none;
+}
+.toolbar-feature-lock .ui-icon {
+  width: 14px;
+  height: 14px;
+}
