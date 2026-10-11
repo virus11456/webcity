@@ -226,3 +226,47 @@ it('shares home school choices without sharing personal admissions or retaining 
   system.reconcile();
   expect([...c.schoolId.slice(0, 400)]).toEqual(Array(400).fill(0));
 });
+
+it('reserves existing pupils before lower-ID newcomers even when both schools have the same distance', () => {
+  const { s, c, school } = fixture();
+  c.schoolId.fill(0, 0, c.count);
+  c.schoolId.fill(school.id, 300, 400);
+  s.budgets.education = 0.2;
+  s.buildings.push({ ...structuredClone(school), id: 3 });
+  new CitizenSystem(s).reconcile();
+  expect([...c.schoolId.slice(300, 360)]).toEqual(Array(60).fill(2));
+  expect([...c.schoolId.slice(0, 60)]).toEqual(Array(60).fill(3));
+  expect([...c.schoolId.slice(60, 300)]).toEqual(Array(240).fill(0));
+  expect([...c.schoolId.slice(360, 400)]).toEqual(Array(40).fill(0));
+});
+
+it('separates all three education levels while retaining valid original schools and replacing mismatches', () => {
+  const { s, c, school } = fixture(30);
+  for (const [id, defId] of [
+    [5, 'university'],
+    [4, 'school_high'],
+    [3, 'school_elementary'],
+  ] as const)
+    s.buildings.push({
+      ...structuredClone(school),
+      id,
+      defId,
+      pos: { x: -30, z: 9 },
+    });
+  c.education.fill(0, 0, 10);
+  c.age.fill(6, 0, 10);
+  c.education.fill(1, 10, 20);
+  c.age.fill(13, 10, 20);
+  c.education.fill(2, 20, 30);
+  c.age.fill(19, 20, 30);
+  c.schoolId.fill(2, 0, 30);
+  c.schoolId[0] = 0;
+  new CitizenSystem(s).reconcile();
+  expect(c.schoolId[0]).toBe(3);
+  expect([...c.schoolId.slice(1, 10)]).toEqual(Array(9).fill(2));
+  expect([...c.schoolId.slice(10, 20)]).toEqual(Array(10).fill(4));
+  expect([...c.schoolId.slice(20, 30)]).toEqual(Array(10).fill(5));
+  s.buildings.find((b) => b.id === 4)!.enabled = false;
+  new CitizenSystem(s).reconcile();
+  expect([...c.schoolId.slice(10, 20)]).toEqual(Array(10).fill(0));
+});

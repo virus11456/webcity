@@ -524,6 +524,12 @@ export class CitizenSystem {
       const d = network.distance(reach, a);
       return d <= reach.radius ? d : Infinity;
     };
+    // Only schools teaching the resident's next level can be candidates; preserve ID order.
+    const schoolsByLevel: Building[][] = [[], [], []];
+    for (const school of schools) {
+      const level = definitions.get(school.defId)?.capacity?.educationLevel;
+      if (level !== undefined) schoolsByLevel[level - 1]?.push(school);
+    }
     // Home and education determine road reach; personal age/ID/capacity decisions stay below.
     // Rebuilt for every allocation, so road edits, budgets and disabled schools take effect.
     const byHomeEducation = new Map<
@@ -535,7 +541,7 @@ export class CitizenSystem {
       let candidates = byHomeEducation.get(key);
       if (!candidates) {
         candidates = [];
-        for (const school of schools) {
+        for (const school of schoolsByLevel[c.education[i]!] ?? []) {
           const d = distance(i, school.id);
           if (Number.isFinite(d))
             candidates.push({ id: school.id, distance: d });
@@ -563,10 +569,7 @@ export class CitizenSystem {
     // Reserve eligible existing pupils before admitting newcomers; capacity cuts use stable IDs.
     for (const i of eligible) {
       const old = c.schoolId[i]!;
-      if (
-        (slots.get(old) ?? 0) > 0 &&
-        options(i).some((school) => school.id === old)
-      )
+      if ((slots.get(old) ?? 0) > 0 && Number.isFinite(distance(i, old)))
         slots.set(old, slots.get(old)! - 1);
       else c.schoolId[i] = 0;
     }
