@@ -57,6 +57,51 @@ function world(): PowerWorld {
   };
 }
 const powered = (b: Building) => Boolean(b.flags & POWER.flag);
+it('cached topology matches a fresh graph after in-place geometry, load and supply changes', () => {
+  const s = state(b(1, -200, 'power_coal'), b(2, 0));
+  s.networks.power = [
+    {
+      id: 5,
+      points: [
+        { x: -170, z: 8 },
+        { x: -10, z: 8 },
+      ],
+    },
+  ];
+  const check = () => {
+    const fresh = structuredClone(s);
+    // Separate state identity forces a rebuild; clearing flags also checks emitted patches.
+    for (const city of [s, fresh])
+      for (const building of city.buildings) building.flags = 8;
+    expect(updatePower(s)).toEqual(updatePower(fresh));
+    expect(s.stats.power).toEqual(fresh.stats.power);
+    expect(s.buildings.map(powered)).toEqual(fresh.buildings.map(powered));
+  };
+  check();
+  check();
+  expect(powered(s.buildings[1]!)).toBe(true);
+  s.networks.power[0]!.points[1]!.x = -100;
+  check();
+  expect(powered(s.buildings[1]!)).toBe(false);
+  s.networks.power[0]!.points[1]!.x = -10;
+  check();
+  expect(powered(s.buildings[1]!)).toBe(true);
+  s.buildings[1]!.pos.z = 70;
+  check();
+  s.buildings[1]!.lotD = 10;
+  s.buildings[1]!.rotation = Math.PI / 2;
+  check();
+  s.buildings.reverse();
+  check();
+  s.buildings[0]!.households = 100000;
+  check();
+  s.budgets.power = 0;
+  check();
+  s.buildings[0]!.state = 'abandoned';
+  check();
+  s.buildings.pop();
+  check();
+});
 describe('electrical connectivity and island capacity', () => {
   it('conducts through adjacent footprints at 16m and preserves other flags', () => {
     const s = state(b(1, -60, 'power_coal'), b(2, -20), b(3, 12), b(4, 44.01));

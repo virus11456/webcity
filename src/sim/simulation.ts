@@ -1605,7 +1605,7 @@ export class Simulation {
   }
 
   /** Consume elapsed milliseconds with a bounded catch-up window; return executed steps. */
-  advance(elapsedMs: number): number {
+  advance(elapsedMs: number, measure?: (ms: number) => void): number {
     if (!Number.isFinite(elapsedMs) || elapsedMs < 0)
       throw new RangeError('Invalid elapsed time');
     if (this.state.clock.speed === 0) return 0;
@@ -1614,7 +1614,9 @@ export class Simulation {
     let steps = 0;
     while (this.accumulatedMs >= tickMs) {
       this.accumulatedMs -= tickMs;
+      const start = measure ? performance.now() : 0;
       this.tick();
+      if (measure) measure(performance.now() - start);
       steps++;
     }
     return steps;

@@ -1,0 +1,25 @@
+{
+  "populationStart": 100000,
+  "populationEnd": 99066,
+  "buildings": 2032,
+  "segments": 32,
+  "shopping": {
+    "samples": 10,
+    "meanMs": 325.5238042000002,
+    "p95Ms": 339.96554200000037,
+    "maxMs": 339.96554200000037
+  },
+  "ticks": {
+    "samples": 60,
+    "meanMs": 35.75757919999993,
+    "p95Ms": 161.31629199999952,
+    "maxMs": 232.56491600000027
+  },
+  "daily": {
+    "samples": 6,
+    "meanMs": 169.34600683333323,
+    "p95Ms": 232.56491600000027,
+    "maxMs": 232.56491600000027
+  },
+  "note": "Node full Simulation.tick including fiscal-day work; excludes browser postMessage and GPU. Authored unserviced city."
+}

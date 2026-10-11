@@ -122,6 +122,7 @@ export type Response =
     }
   | { t: 'inspectResult'; reqId: number; info: InspectInfo };
 export type SimEvent =
+  | { t: 'performance'; tick: import('../core/timingWindow').TimingSummary }
   | { t: 'tutorial'; state: import('../world/tutorial').TutorialState }
   | { t: 'undoState'; view: import('../world/constructionUndo').UndoView }
   | { t: 'disasters'; state: import('../world/disasters').DisasterState }

@@ -18,8 +18,10 @@ export function updateHealth(s: SimState, daily = false): BuildingPatch[] {
       .map((b) => [b.id, b]),
   );
   const changes = new Map<number, number>(),
+    multipliers = new Map<number, number>(),
     totals = new Map<number, HealthSummary>();
   for (const b of homes.values()) {
+    multipliers.set(b.id, policyValue(s, b.pos, 'healthMultiplier', 1));
     changes.set(
       b.id,
       (b.coverage?.health ?? 0) * H.recoveryPerCoverageDay -
@@ -56,7 +58,7 @@ export function updateHealth(s: SimState, daily = false): BuildingPatch[] {
     const value = Math.min(
       CITIZENS.healthRange[1],
       (c.health[i]! + c.healthFraction[i]! / H.precision) *
-        policyValue(s, homes.get(home)!.pos, 'healthMultiplier', 1),
+        multipliers.get(home)!,
     );
     summary.average += value;
     summary.residents++;

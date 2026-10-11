@@ -13,6 +13,7 @@
     "lint": "eslint . --max-warnings 0 && prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "perf:sim": "vitest run --config vitest.perf.config.ts",
     "e2e": "playwright test",
     "icons": "node scripts/generateIcons.ts",
     "test:coverage": "vitest run --coverage",

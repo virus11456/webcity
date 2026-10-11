@@ -28,6 +28,8 @@ import {
 } from 'three';
 import type { ShaderHook } from './buildings/buildingMaterial';
 import { MAP_SIZE, type QualityLevel } from '../data/config';
+import { TimingWindow, type TimingSummary } from '../core/timingWindow';
+import { PERFORMANCE } from '../data/performance';
 import { Terrain } from '../world/terrain';
 import { TerrainRenderer } from './terrain/terrainRenderer';
 import { CityPreview } from './cityPreview';
@@ -47,6 +49,7 @@ import {
 } from './quality';
 
 export interface RenderStats {
+  frame?: TimingSummary;
   fps: number;
   calls: number;
   triangles: number;
@@ -107,12 +110,16 @@ export class CityRenderer {
   private statsFrames = 0;
   private disposed = false;
   private contextLost = false;
+  private readonly frameTiming: TimingWindow | undefined;
 
   /** Create the renderer in an existing canvas; throws if WebGL2 is unavailable. */
   constructor(
     private readonly canvas: HTMLCanvasElement,
     private readonly options: RendererOptions = {},
   ) {
+    this.frameTiming = options.onStats
+      ? new TimingWindow(PERFORMANCE.samples)
+      : undefined;
     this.terrain = new Terrain(
       options.seed ?? MAP_PRESETS[0].seed,
       resolveMap(
@@ -405,6 +412,7 @@ export class CityRenderer {
     this.visibility();
   };
   private readonly frame = (now: number): void => {
+    const started = this.frameTiming ? performance.now() : 0;
     if (
       this.stats.dpr !==
       renderPixelRatio(this.stats.quality, window.devicePixelRatio)
@@ -462,6 +470,7 @@ export class CityRenderer {
     this.renderer.info.reset();
     if (this.postfx) this.postfx.render();
     else this.renderer.render(this.scene, this.camera);
+    this.frameTiming?.record(performance.now() - started);
     if (this.statsStart === 0) {
       this.statsStart = now;
       this.statsFrames = 0;
@@ -471,6 +480,7 @@ export class CityRenderer {
       this.stats.fps = (this.statsFrames * 1000) / elapsed;
       this.stats.calls = this.renderer.info.render.calls;
       this.stats.triangles = this.renderer.info.render.triangles;
+      this.stats.frame = this.frameTiming?.read();
       this.options.onStats?.(this.stats);
       this.statsStart = now;
       this.statsFrames = 0;

@@ -1,0 +1,33 @@
+{
+  "baseCommit": "cbe0cb0288696dab2f52c991e9d145cdb61614d3",
+  "samples": [
+    {
+      "viewport": "iPhone 15",
+      "population": 5017,
+      "buildings": 191,
+      "quality": "low",
+      "fps": 60.00318953831433,
+      "frames": 301,
+      "p95ms": 16.700000000000728
+    },
+    {
+      "viewport": "iPad Pro 11",
+      "population": 5017,
+      "buildings": 191,
+      "quality": "low",
+      "fps": 60.003189538314324,
+      "frames": 301,
+      "p95ms": 16.700000000000728
+    },
+    {
+      "viewport": "Desktop",
+      "population": 5017,
+      "buildings": 191,
+      "quality": "low",
+      "fps": 60.003189538314324,
+      "frames": 301,
+      "p95ms": 16.700000000000728
+    }
+  ],
+  "note": "Same machine, Chrome, 5017 residents, low quality. Frame task timing and heap were not instrumented in this baseline."
+}

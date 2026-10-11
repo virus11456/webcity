@@ -220,7 +220,14 @@
   top: max(88px, var(--topbar-bottom, 88px));
 }
 #app .picking-debug {
-  top: max(212px, calc(var(--topbar-bottom, 88px) + 124px));
+  top: calc(
+    max(88px, var(--topbar-bottom, 88px)) + var(--debug-height, 124px) + 8px
+  );
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  #app .debug-panel {
+    left: max(104px, calc(env(safe-area-inset-left) + 96px));
+  }
 }
 @media (max-width: 720px) {
   #app .population-summary {

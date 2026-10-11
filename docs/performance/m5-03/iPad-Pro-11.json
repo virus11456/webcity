@@ -1,0 +1,28 @@
+{
+  "viewport": "iPad Pro 11",
+  "population": 5017,
+  "buildings": 191,
+  "quality": "low",
+  "diagnostic": {
+    "frameP95Ms": "1.5999999046325684",
+    "frameMaxMs": "2",
+    "workerP95Ms": "13.200000047683716",
+    "workerMaxMs": "23.59999990463257",
+    "workerSamples": "27",
+    "heapBytes": "177439448",
+    "fps": "59.98800239952005",
+    "calls": "230",
+    "triangles": "213805",
+    "quality": "low",
+    "dpr": "1.5",
+    "aspect": "0.6984924623115578",
+    "shadows": "0",
+    "fogDensity": "0.00010026006283928005",
+    "hour": "3.5095600000000005",
+    "postfx": "0",
+    "tilt": "0"
+  },
+  "fps": 60.001993421708356,
+  "frames": 301,
+  "p95ms": 16.700000000000728
+}
