@@ -414,6 +414,7 @@ export const ZH_TW = {
   'menu.start': '開始建城',
   'menu.scale': '介面字級',
   'menu.dayNight': '日夜循環',
+  'menu.weather': '天氣（雨、霧與雲影）',
   'menu.volume': '音量',
   'menu.audioHint': '首次點擊畫面後啟用音訊；切到背景會自動靜音。',
   'menu.sfxVolume': '操作音效',

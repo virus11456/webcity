@@ -81,6 +81,7 @@ import { App } from './ui/App';
 
 declare global {
   interface Window {
+    __webcityWeather?: () => ReturnType<CityRenderer['weather']['readState']>;
     __webcityTerrain?: (
       x: number,
       z: number,
@@ -367,6 +368,7 @@ if (canvas && status) {
     input.setEdgeScrolling(preferences.edgeScrolling);
     city.setGraphics(preferences);
     city.setDayNight(preferences.dayNight);
+    city.weather.enabled = preferences.weather;
     if (sim?.mirror.clock) city.acceptClock(sim.mirror.clock);
     if (sim) {
       const vegetationWorld = sim.mirror.readVegetationWorld();
@@ -963,6 +965,7 @@ if (canvas && status) {
           city?.setQuality(value.quality);
           city?.setGraphics(value);
           city?.setDayNight(value.dayNight);
+          if (city) city.weather.enabled = value.weather;
         },
         () => saveController!.save(SAVE.autoId),
       );
@@ -980,6 +983,7 @@ if (canvas && status) {
       bulldozeControls.update(bulldozeTool.readState());
     }
     if (debug) {
+      window.__webcityWeather = () => city!.weather.readState();
       window.__webcityGraphics = () => city!.readGraphics();
       window.__webcityCamera = city.cameraController;
       window.__webcityVehicles = {
@@ -1044,6 +1048,7 @@ if (import.meta.hot)
     delete window.__webcityTransit;
     delete window.__webcityTerrain;
     delete window.__webcityStats;
+    delete window.__webcityWeather;
     delete window.__webcityGraphics;
     delete window.__webcityCamera;
     delete window.__webcityVehicles;
