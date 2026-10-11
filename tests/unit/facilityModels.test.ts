@@ -12,7 +12,7 @@ import {
 } from '../../src/render/facilities/geometry';
 import { parseAssetManifest } from '../../src/core/assetManifest';
 it('covers every placeable building ID and twelve distinct original landmarks', () => {
-  expect(facilityModels).toHaveLength(BUILDINGS.length + 12);
+  expect(facilityModels).toHaveLength(BUILDINGS.length);
   expect(new Set(facilityModels.map((m) => m.id)).size).toBe(42);
   for (const d of BUILDINGS)
     expect(facilityModel(d.id)?.id).toBe(`svc_${d.id}`);

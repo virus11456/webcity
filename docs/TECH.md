@@ -700,3 +700,6 @@ updateMilestones 只在 Worker 修改 unlocked、money 與 stats.milestone，依
 
 ### M4-10 土地指令與裝置限制
 WorldSnapshot.tileLimit 是 4／9；SimClient 的當前裝置限制隨每次 init／load 送入 Worker，舊存檔可預設 9。buyTile 採 world/tiles 的相同預覽與權威驗證，成功原子扣款／更新 ownedTiles 並發 tilesChanged；Mirror 和快取建造工具即時刷新。讀取九塊城市到手機只停用新增購買，不刪土地。見 TILES.md。
+
+### M4-11 獨特建築
+`data/unique` 提供十二筆建築資料，`world/unique` 共用唯一性／解鎖判斷。ServiceTool 與 Worker place 共用預覽，卡片只顯示唯讀狀態。地標沿用 parkField 地價／幸福度、預算、停用、拆除與保存，使用 unique kind；facilityModels 保留原 M3 模型 ID 與 landmark 索引，無重複資產。詳見 UNIQUE_BUILDINGS.md。

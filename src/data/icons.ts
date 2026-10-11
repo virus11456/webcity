@@ -71,6 +71,18 @@ export const ICON_PATHS = {
 } as const;
 export type IconName = keyof typeof ICON_PATHS;
 export const ITEM_ICONS: Readonly<Record<string, IconName>> = {
+  unique_city_hall: 'service',
+  unique_museum: 'service',
+  unique_observatory: 'explore',
+  unique_stadium: 'plaza',
+  unique_clock_tower: 'tower',
+  unique_botanical_garden: 'park',
+  unique_convention_center: 'office',
+  unique_opera_house: 'service',
+  unique_science_center: 'office',
+  unique_memorial: 'plaza',
+  unique_lighthouse: 'tower',
+  unique_sky_tower: 'tower',
   RL: 'home',
   RH: 'tower',
   CL: 'shop',

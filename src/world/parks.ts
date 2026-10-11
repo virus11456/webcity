@@ -5,7 +5,9 @@ import { zoneBuildingFootprint } from './zoneGeometry';
 import type { Vec2 } from './types';
 import type { ServicePreview } from './services';
 export const parkDefinition = (id: string): BuildingDefinition | undefined =>
-  BUILDINGS.find((d) => d.id === id && d.kind === 'park');
+  BUILDINGS.find(
+    (d) => d.id === id && (d.kind === 'park' || d.kind === 'unique'),
+  );
 /** Grid-aligned circular brush sampled along a stroke, with bounded work per segment. */
 export function treeBrush(a: Vec2, b: Vec2): Vec2[] {
   const points = new Map<string, Vec2>(),

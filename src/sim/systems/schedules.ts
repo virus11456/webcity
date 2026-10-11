@@ -67,7 +67,10 @@ export class ScheduleSystem {
         b.roadDisconnectedDay !== undefined
       )
         continue;
-      if (!(leisure && b.kind === 'park') && !['CL', 'CH'].includes(b.defId))
+      if (
+        !(leisure && (b.kind === 'park' || b.kind === 'unique')) &&
+        !['CL', 'CH'].includes(b.defId)
+      )
         continue;
       const distance = Math.hypot(
         b.pos.x - origin.pos.x,

@@ -1,3 +1,4 @@
+import { uniqueReason } from './unique';
 import { BUILDINGS, type BuildingDefinition } from '../data/buildings';
 import { SERVICES } from '../data/services';
 import { BULLDOZE } from '../data/bulldoze';
@@ -259,6 +260,11 @@ export function previewService(
       maxSlope: SERVICES.maxSlope,
       maxHeightDifferenceM: SERVICES.maxHeightDifferenceM,
     });
+  const unique = uniqueReason(w, id);
+  if (unique) {
+    p.valid = false;
+    p.reason = unique;
+  }
   const center = p.points.length
     ? p.points.reduce(
         (a, b) => ({
@@ -278,7 +284,7 @@ export function previewService(
     ...p,
     radius,
     roads:
-      definition?.kind === 'park'
+      definition?.kind === 'park' || definition?.kind === 'unique'
         ? [
             Array.from({ length: 33 }, (_, i) => ({
               x: center.x + Math.cos((i * Math.PI) / 16) * radius,

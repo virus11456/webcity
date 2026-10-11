@@ -54,7 +54,8 @@ export function citizenJobType(b: Building): number {
   return service ? JobType[service] : JobType.utility;
 }
 export function citizenJobPlaces(b: Building): EducationCounts {
-  if (b.state !== 'active' || b.kind === 'park') return emptyEducation();
+  if (b.state !== 'active' || b.kind === 'park' || b.kind === 'unique')
+    return emptyEducation();
   if (b.kind === 'zoned') return jobPlaces(b);
   const def = definitions.get(b.defId);
   if (def?.service === 'education' && (b.enabled === false || b.fire?.burning))

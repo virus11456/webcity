@@ -1,3 +1,4 @@
+import { uniqueDefinition } from '../../world/unique';
 import { deathcareCapacity } from '../../world/deathcare';
 import { Icon } from '../components/Icon';
 import { PROBLEM_ICONS } from '../../data/icons';
@@ -219,7 +220,7 @@ function Content({
         ],
       );
     if (
-      (b.kind === 'park' && b.defId !== 'tree') ||
+      ((b.kind === 'park' || b.kind === 'unique') && b.defId !== 'tree') ||
       b.wasteFacility ||
       b.mortuary
     )
@@ -291,6 +292,12 @@ function Content({
       rows.push([
         t('environment.discharge'),
         `${b.sewageDischarge.toFixed(0)} m³ / ${t('environment.week')}`,
+      ]);
+    const unique = uniqueDefinition(b.defId);
+    if (unique)
+      rows.push([
+        t('unique.effect'),
+        `+${unique.landValueBonus} · ${unique.radiusM} m`,
       ]);
     if (b.landValue !== undefined)
       rows.push([t('park.landValue'), b.landValue.toFixed(1)]);

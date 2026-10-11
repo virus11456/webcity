@@ -86,7 +86,7 @@ describe('data registry integrity', () => {
     for (const id of sourceIds) expect(dataIds.has(id ?? ''), id).toBe(true);
     expect(Object.keys(ROADS)).toHaveLength(8);
     expect(Object.keys(ZONES)).toHaveLength(6);
-    expect(BUILDINGS).toHaveLength(30);
+    expect(BUILDINGS).toHaveLength(42);
     expect(NETWORKS).toHaveLength(3);
     expect(POLICIES).toHaveLength(11);
     expect(INDUSTRY_SPECIALIZATIONS).toHaveLength(4);
@@ -289,7 +289,10 @@ it('utility generation, water, garbage and service capacities retain GDD units',
       else if ('vehicles' in capacity)
         expect(capacity.vehicles).toBe(counts?.[0]);
     }
-    if (building.kind === 'park' && building.id !== 'tree') {
+    if (
+      (building.kind === 'park' || building.kind === 'unique') &&
+      building.id !== 'tree'
+    ) {
       expect(building.footprintCells).toEqual(
         cells[4]?.split('（')[0]?.match(/\d+/g)?.map(Number),
       );

@@ -582,7 +582,11 @@ if (canvas && status) {
       serviceTool = new ServiceTool(
         { ...powerContext, preview: (p) => serviceRenderer?.show(p) },
         (s) => {
-          roadControls?.updateService(s.active, s.pending);
+          roadControls?.updateService(
+            s.active,
+            s.pending,
+            s.defId.startsWith('unique_'),
+          );
           serviceControls?.update(s);
         },
       );
@@ -741,7 +745,16 @@ if (canvas && status) {
           tools!.select(busTool!);
           canvas.focus({ preventScroll: true });
         },
+        unique() {
+          serviceControls?.setCategory(true);
+          serviceTool!.setDefinition('unique_city_hall');
+          mode(true);
+          tools!.select(serviceTool!);
+          canvas.focus({ preventScroll: true });
+        },
         service() {
+          serviceControls?.setCategory(false);
+          serviceTool!.setDefinition('police_station');
           mode(true);
           tools!.select(serviceTool!);
           canvas.focus({ preventScroll: true });

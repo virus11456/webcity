@@ -33,6 +33,8 @@ export interface PowerWorld extends RoadConstructionWorld {
   networks: NetworkSegment[];
 }
 export type PowerReason =
+  | 'err.uniqueExists'
+  | 'err.uniqueRequires'
   | 'err.serviceRoad'
   | 'err.invalidCommand'
   | 'err.landNotOwned'

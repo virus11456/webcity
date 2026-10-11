@@ -1,3 +1,5 @@
+import { uniqueDefinition } from '../world/unique';
+import type { FailureReason } from '../bridge/protocol';
 import { BUILDINGS, NETWORKS } from '../data/buildings';
 import { ROADS, type RoadTypeId } from '../data/roads';
 import { GROWTH, ZONES } from '../data/zones';
@@ -65,6 +67,14 @@ export function createBuildCatalog(
       maintenance,
       lock,
     );
+    const unique = uniqueDefinition(id);
+    if (unique) {
+      const effect = document.createElement('small');
+      effect.textContent = `${t('unique.effect')} +${unique.landValueBonus} · ${unique.radiusM} m`;
+      const requirement = document.createElement('small');
+      requirement.textContent = `MS${unique.unlock} · ${t('unique.requires')} ${t(unique.requires === 'water_treatment' ? 'water.water_treatment' : `service.${unique.requires}`)}`;
+      button.append(effect, requirement);
+    }
     button.onclick = () => {
       if (select.disabled || option.disabled) return;
       select.value = id;
@@ -79,9 +89,16 @@ export function createBuildCatalog(
   });
   return {
     host,
-    update(unlocked?: readonly number[]) {
+    update(
+      unlocked?: readonly number[],
+      reasons: Record<string, FailureReason | undefined> = {},
+    ) {
       for (const { option, button, lock, unlock } of entries) {
         if (unlocked) option.disabled = !unlocked.includes(unlock);
+        if (reasons[option.value]) option.disabled = true;
+        lock.textContent = reasons[option.value]
+          ? t(reasons[option.value]!)
+          : `MS${unlock} · ${t('road.locked')}`;
         button.disabled = select.disabled || option.disabled;
         button.setAttribute(
           'aria-pressed',

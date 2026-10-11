@@ -1,3 +1,5 @@
+import { UNIQUE_IDS } from '../data/unique';
+import { uniqueReason } from '../world/unique';
 import { previewTrees, treeBrush } from '../world/parks';
 import { PARKS } from '../data/parks';
 import type { SimClient } from '../bridge/simClient';
@@ -22,6 +24,7 @@ export interface ServiceToolState {
   reason: FailureReason | 'sim.failed' | null;
   rotation: number;
   defId: ServiceId;
+  uniqueReasons?: Partial<Record<ServiceId, FailureReason>>;
 }
 export interface ServiceToolContext {
   sim: SimClient;
@@ -62,12 +65,24 @@ export class ServiceTool implements Tool {
         : undefined;
       this.state.ready = !!this.world;
       this.state.unlocked = this.world?.unlocked ?? [];
+      this.state.uniqueReasons = {};
+      if (this.world)
+        for (const id of UNIQUE_IDS) {
+          const reason = uniqueReason(this.world, id);
+          if (reason) this.state.uniqueReasons[id] = reason;
+        }
+
       this.publish();
     };
     this.unsubscribe = ctx.sim.onEvent((e) => {
       if (
         ['ready', 'tilesChanged', 'milestone', 'roadsChanged'].includes(e.t) ||
         (e.t === 'buildingsChanged' && buildingsChangeFootprints(e))
+      )
+        refresh();
+      else if (
+        e.t === 'buildingsChanged' &&
+        e.updated.some((p) => p.state !== undefined || p.enabled !== undefined)
       )
         refresh();
       else if (e.t === 'economy') this.publish();

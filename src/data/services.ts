@@ -1,7 +1,9 @@
+import { UNIQUE_IDS } from './unique';
 import { PARKS } from './parks';
 /** GDD §10; capacity conversions fill the unspecified service-demand units. */
 export const SERVICES = {
   ids: [
+    ...UNIQUE_IDS,
     'cemetery',
     'crematorium',
     'garbage_landfill',

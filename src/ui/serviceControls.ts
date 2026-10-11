@@ -1,3 +1,4 @@
+import { uniqueDefinition } from '../world/unique';
 import { SERVICES, type ServiceId } from '../data/services';
 import type { ServiceToolState } from '../tools/serviceTool';
 import { t } from './i18n/t';
@@ -46,7 +47,15 @@ export function createServiceControls(
   actionRow.append(rotate, confirm, cancel);
   host.append(catalog.host, row, output, hint, actionRow);
   parent.append(host);
+  const setCategory = (unique: boolean) => {
+    for (const card of catalog.host.querySelectorAll<HTMLElement>(
+      '[data-item]',
+    ))
+      card.hidden = !!uniqueDefinition(card.dataset.item!) !== unique;
+  };
+  setCategory(false);
   return {
+    setCategory,
     update(s: ServiceToolState) {
       if (!s.active) return;
       host.dataset.valid = String(!!s.preview?.valid);
@@ -56,7 +65,7 @@ export function createServiceControls(
       host.dataset.rotation = String(s.rotation);
       select.value = s.defId;
       select.disabled = !s.ready || s.pending;
-      catalog.update(s.unlocked);
+      catalog.update(s.unlocked, s.uniqueReasons);
       rotate.disabled = s.pending || s.defId === 'tree';
       cancel.disabled = s.pending;
       confirm.disabled = !s.ready || s.pending || !s.preview?.valid;
@@ -67,7 +76,7 @@ export function createServiceControls(
         : s.defId.startsWith('garbage_')
           ? `${t('road.cost')} $${p?.cost ?? 0} · ${t('garbage.routeHint')}`
           : p
-            ? `${t('road.cost')} $${p.cost} · ${t(s.defId.startsWith('park_') || s.defId === 'tree' ? 'park.radius' : 'service.radius')} ${p.radius.toFixed(0)} m${p.trees ? ` · ${p.trees.length} ${t('park.trees')}` : ''}`
+            ? `${t('road.cost')} $${p.cost} · ${t(s.defId.startsWith('unique_') || s.defId.startsWith('park_') || s.defId === 'tree' ? 'park.radius' : 'service.radius')} ${p.radius.toFixed(0)} m${p.trees ? ` · ${p.trees.length} ${t('park.trees')}` : ''}`
             : t('service.hint');
       const reason = s.reason ?? p?.reason;
       hint.dataset.invalid = String(!!reason);
