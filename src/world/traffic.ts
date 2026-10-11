@@ -67,6 +67,7 @@ export function saveRoute(route: Route): SavedRoute {
 }
 
 export interface TrafficInfo {
+  deathcare?: { units: number; phase: 'collect' | 'return'; depot: number };
   garbage?: { units: number; phase: 'collect' | 'return'; depot: number };
   bus?: { line: number; passengers: number };
   id: number;

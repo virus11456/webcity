@@ -1,3 +1,4 @@
+import { DEATHCARE } from '../../data/deathcare';
 import { policyValue } from '../../world/policies';
 import { ServiceNetwork } from '../../world/services';
 import { SpatialHash } from '../../core/spatial';
@@ -309,6 +310,11 @@ export class CitizenSystem {
         const list = this.homes.get(f.home)!;
         list.splice(list.indexOf(f), 1);
       }
+      if (
+        b &&
+        (s.settings.mode === 'sandbox' || s.unlocked.includes(DEATHCARE.unlock))
+      )
+        (b.bodies ??= { pending: 0 }).pending++;
       this.remove(id);
       c.deaths++;
     }

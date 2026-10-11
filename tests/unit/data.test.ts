@@ -284,10 +284,10 @@ it('utility generation, water, garbage and service capacities retain GDD units',
       else if ('students' in capacity) {
         expect(capacity.students).toBe(counts?.[0]);
         expect(capacity.educationLevel).toBe(numeric(cells[6]));
-      } else if ('vehicles' in capacity)
+      } else if ('processingPerDay' in capacity)
+        expect([capacity.processingPerDay, capacity.vehicles]).toEqual(counts);
+      else if ('vehicles' in capacity)
         expect(capacity.vehicles).toBe(counts?.[0]);
-      else if ('processingPerDay' in capacity)
-        expect(capacity.processingPerDay).toBe(counts?.[0]);
     }
     if (building.kind === 'park' && building.id !== 'tree') {
       expect(building.footprintCells).toEqual(

@@ -363,7 +363,7 @@ export class TrafficSystem {
   spawnMission(job: PlannedJourney, kind: number = TrafficKind.truck): boolean {
     if (
       job.journey.citizenId >= 0 ||
-      ![6, 7, 8, 9].includes(job.journey.purpose)
+      ![6, 7, 8, 9, 10].includes(job.journey.purpose)
     )
       return false;
     return this.admit(job, kind);

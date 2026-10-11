@@ -353,7 +353,7 @@ export const BUILDINGS = [
     cost: 3000,
     upkeepPerWeek: 120,
     unlock: 2,
-    footprintCells: null,
+    footprintCells: [4, 4],
     service: 'deathcare',
     radiusM: 600,
     capacity: {
@@ -367,11 +367,12 @@ export const BUILDINGS = [
     cost: 15000,
     upkeepPerWeek: 600,
     unlock: 4,
-    footprintCells: null,
+    footprintCells: [4, 4],
     service: 'deathcare',
     radiusM: 900,
     capacity: {
       processingPerDay: 100,
+      vehicles: 4,
     },
   },
   {

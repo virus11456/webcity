@@ -15,6 +15,7 @@ export const BUILDING_PROBLEMS = [
   'fire',
   'sickness',
   'garbage',
+  'deathcare',
 ] as const;
 export type BuildingProblem = (typeof BUILDING_PROBLEMS)[number];
 export type ProblemIcon = BuildingProblem | 'abandoned';
@@ -23,6 +24,8 @@ export function hasBuildingProblem(
   b: Building,
   problem: BuildingProblem,
 ): boolean {
+  if (problem === 'deathcare')
+    return (b.bodies?.pending ?? 0) > 0 || !!b.mortuary?.full;
   if (b.state !== 'active') return false;
   if (problem === 'sickness')
     return (

@@ -1,3 +1,4 @@
+import { validateDeathcare } from './deathcareValidation';
 import { validateGarbage } from './garbageValidation';
 import { INDUSTRY_SPECIALIZATIONS } from '../data/policies';
 import { POLICIES } from '../data/policies';
@@ -612,6 +613,11 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     fireTargets.add(m.to);
   }
   const garbageIds = validateGarbage(s);
+  const deathcareIds = validateDeathcare(s);
+  for (const id of deathcareIds.keys())
+    requireValue(
+      !shipmentIds.has(id) && !fireIds.has(id) && !garbageIds.has(id),
+    );
   for (const id of garbageIds.keys())
     requireValue(!shipmentIds.has(id) && !fireIds.has(id));
   // No traffic collection existed before M2-10.
@@ -628,6 +634,7 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
           ...shipmentIds.keys(),
           ...fireIds.keys(),
           ...garbageIds.keys(),
+          ...deathcareIds.keys(),
         ) &&
       traffic.nextMissionId <= TRAFFIC_RUNTIME.maxVehicleId &&
       Number.isSafeInteger(traffic.nextId) &&
@@ -712,6 +719,14 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
             (garbageIds.get(-j.citizenId)!.phase === 'collect'
               ? garbageIds.get(-j.citizenId)!.to
               : garbageIds.get(-j.citizenId)!.from) === j.destinationId) ||
+          (j.purpose === 10 &&
+            deathcareIds.has(-j.citizenId) &&
+            (deathcareIds.get(-j.citizenId)!.phase === 'collect'
+              ? deathcareIds.get(-j.citizenId)!.from
+              : deathcareIds.get(-j.citizenId)!.to) === j.originId &&
+            (deathcareIds.get(-j.citizenId)!.phase === 'collect'
+              ? deathcareIds.get(-j.citizenId)!.to
+              : deathcareIds.get(-j.citizenId)!.from) === j.destinationId) ||
           (j.purpose === 7 &&
             fireIds.get(-j.citizenId)?.from === j.originId &&
             fireIds.get(-j.citizenId)?.to === j.destinationId)))) &&
@@ -720,7 +735,7 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     Number.isSafeInteger(j.destinationId) &&
     (j.destinationId > 0 || (j.citizenId < 0 && j.destinationId === 0)) &&
     (j.citizenId < 0
-      ? [6, 7, 8, 9].includes(j.purpose)
+      ? [6, 7, 8, 9, 10].includes(j.purpose)
       : [1, 2, 3, 4, 5].includes(j.purpose)) &&
     [0, 1].includes(j.mode) &&
     Number.isSafeInteger(j.requestedTick) &&
@@ -736,6 +751,7 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
         !travelling.has(v.journey.citizenId) &&
         Number.isSafeInteger(v.kind) &&
         (v.journey.purpose !== 9 || v.kind === 6) &&
+        (v.journey.purpose !== 10 || v.kind === 7) &&
         (v.journey.purpose !== 8 ||
           transitMissions.get(-v.journey.citizenId)?.kind === v.kind) &&
         v.kind >= 0 &&
@@ -776,7 +792,8 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
       travelling.has(-id) &&
         !shipmentIds.has(id) &&
         !fireIds.has(id) &&
-        !garbageIds.has(id),
+        !garbageIds.has(id) &&
+        !deathcareIds.has(id),
     );
   return s;
 }

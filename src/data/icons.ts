@@ -156,6 +156,7 @@ export const PROBLEM_ICONS: Readonly<Record<string, IconName>> = {
   noGoods: 'box',
   noExport: 'box',
   garbage: 'garbage',
+  deathcare: 'grave',
   crime: 'shield',
   sickness: 'health',
   fire: 'fire',
