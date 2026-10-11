@@ -1,3 +1,5 @@
+import { cityStatistics } from '../world/cityStatistics';
+import { savedRoadTraffic, type RoadTraffic } from '../world/roadTraffic';
 import { financeHistory } from '../world/financeHistory';
 import { districtViews, type DistrictView } from '../world/districts';
 import { busLineViews, type BusLineView } from '../world/transit';
@@ -26,6 +28,13 @@ function upsert<T extends { id: number }>(
 export class WorldMirror {
   private state: WorldSnapshot | undefined;
   private districts: DistrictView[] = [];
+  private roadTraffic: RoadTraffic[] = [];
+  readCityStatistics() {
+    return (
+      this.state &&
+      cityStatistics(this.state.buildings, this.state.stats, this.roadTraffic)
+    );
+  }
   readPolicies() {
     return (
       this.state &&
@@ -207,6 +216,10 @@ export class WorldMirror {
   apply(event: SimEvent): void {
     if (event.t === 'ready') {
       this.state = structuredClone(event.snapshot);
+      this.roadTraffic = savedRoadTraffic(
+        event.snapshot.segments,
+        event.snapshot.traffic,
+      );
       this.busLines = busLineViews(event.snapshot.transitLines);
       this.districts = districtViews(
         event.snapshot.districts,
@@ -218,6 +231,9 @@ export class WorldMirror {
     const state = this.state;
     if (!state) return;
     switch (event.t) {
+      case 'roadTraffic':
+        this.roadTraffic = structuredClone(event.roads);
+        break;
       case 'disasters':
         state.disasters = structuredClone(event.state);
         break;
@@ -254,6 +270,9 @@ export class WorldMirror {
         state.money = state.stats.money = event.money;
         break;
       case 'roadsChanged':
+        this.roadTraffic = this.roadTraffic.filter(
+          (r) => !event.removed.includes(r.id),
+        );
         if (event.terrain) {
           event.terrain.indices.forEach((index, i) => {
             state.terrain.heights[index] = event.terrain!.heights[i]!;

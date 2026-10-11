@@ -715,3 +715,5 @@ WorldSnapshot.disasters 保存開關、下一次預警日或待發生預警；�
 
 ### M4-15 財政歷史投影
 world/financeHistory 將既有 statsHistory 投影成最多 52 筆 FinancePoint；Mirror 提供防禦性小陣列。ui/financeChart 以原生 Canvas 2D 自繪，輸出至 img，面板未展開不繪圖，ResizeObserver 與訂閱於 dispose 清理。週界樣本不重加總每日收入，不增套件或 Worker 權威資料。見 FINANCE_CHARTS.md。
+
+M4-16：WorldMirror 緩存 Worker roadTraffic，ready 從存檔重算、道路刪除清理；readCityStatistics 以住宅聚合及精簡 stats 計算獨立唯讀摘要。城市統計面板只在展開時響應 stats／roadTraffic，不受畫面車流上限影響，沒有新的權威狀態。見 CITY_STATISTICS.md。
