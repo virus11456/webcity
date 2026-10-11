@@ -1,3 +1,4 @@
+import { districtViews, type DistrictView } from '../world/districts';
 import { busLineViews, type BusLineView } from '../world/transit';
 import type { VegetationWorld } from '../world/vegetation';
 import type { SimSpeed } from '../data/config';
@@ -23,6 +24,13 @@ function upsert<T extends { id: number }>(
 /** Read-only public view; all snapshots and incoming mutable data are copied. */
 export class WorldMirror {
   private state: WorldSnapshot | undefined;
+  private districts: DistrictView[] = [];
+  readOwnedTiles(): number[] {
+    return [...(this.state?.ownedTiles ?? [])];
+  }
+  readDistricts() {
+    return structuredClone(this.districts);
+  }
   private busLines: BusLineView[] = [];
   readTransit(): BusLineView[] {
     return structuredClone(this.busLines);
@@ -166,12 +174,24 @@ export class WorldMirror {
     if (event.t === 'ready') {
       this.state = structuredClone(event.snapshot);
       this.busLines = busLineViews(event.snapshot.transitLines);
+      this.districts = districtViews(
+        event.snapshot.districts,
+        event.snapshot.buildings,
+      );
       this.vehicles = { data: new Float32Array(), count: 0 };
       return;
     }
     const state = this.state;
     if (!state) return;
     switch (event.t) {
+      case 'districts':
+        this.districts = structuredClone(event.districts);
+        state.districts = this.districts.map(({ id, name, cells }) => ({
+          id,
+          name,
+          cells,
+        }));
+        break;
       case 'economy': {
         const finance = structuredClone(event.finance);
         state.money = finance.money;

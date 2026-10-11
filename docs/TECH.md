@@ -675,3 +675,9 @@ TransitSystem 的向後相容 mode／stationIds 標記地下路線，共用個�
 
 ### M4-03 道路電車
 TransitSystem 的 tram mode 使用既有道路 RouteLeg 與 TrafficKind.tram；同車道占用及路口規則不另開旁路。路線保存已支付軌道的路段與車道取樣，道路改變後只允許仍在已鋪軌路段的路徑，拆路移除相應軌道。createBusLine.preview 是純驗證報價，不配置 ID、派車或扣款，正式命令重驗狀態。TramTracks 依權威摘要繪製成單批線段，與 M3 原創 18 m 軌道車體共用素材；沒新增外部素材。見 TRAM.md。
+
+## M4-04 行政區資料流
+
+`world/districts.ts` 定義 District／DistrictView 與 16 m 格網純函式。Worker 的 district 指令集中處理建立、命名、刪除、塗抹及所有權轉移，成功後以 districts 事件通知 Mirror；人口和建築事件補送統計。區界以不可變集合替換，衍生格網索引使用 WeakMap 快取。SimClient 只發送命令，districtTool 管理手勢草稿，UI 只讀統計。存檔驗證 ID、名稱及全市互斥格子。
+
+Renderer 依地形建立頂點色格網，每幀最多建立 1,024 格，區名用 CanvasTexture／Sprite，無新增依賴。筆刷預覽僅顯示目前觸點並限制已購地塊，完整連續筆劃於放開時交 Worker 套用。`__webcityDistricts` 僅為 debug 唯讀副本。

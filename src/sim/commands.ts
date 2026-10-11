@@ -160,6 +160,7 @@ export class CommandDispatcher {
       value.t !== 'setIntersection' &&
       value.t !== 'zone' &&
       value.t !== 'bulldoze' &&
+      value.t !== 'district' &&
       !futureCommands.has(value.t)
     ) {
       fail('err.invalidCommand');
@@ -192,6 +193,57 @@ export class CommandDispatcher {
     }
     if (this.simulation.gameOver) {
       fail('err.gameOver');
+      return;
+    }
+    if (value.t === 'district') {
+      if (!('action' in value)) {
+        fail('err.invalidCommand');
+        return;
+      }
+      let command: import('../world/districts').DistrictAction | undefined;
+      if (
+        value.action === 'create' &&
+        'name' in value &&
+        typeof value.name === 'string'
+      )
+        command = { action: 'create', name: value.name };
+      else if ('id' in value && Number.isSafeInteger(value.id)) {
+        if (
+          value.action === 'rename' &&
+          'name' in value &&
+          typeof value.name === 'string'
+        )
+          command = {
+            action: 'rename',
+            id: value.id as number,
+            name: value.name,
+          };
+        else if (value.action === 'delete')
+          command = { action: 'delete', id: value.id as number };
+      }
+      if (
+        value.action === 'paint' &&
+        'id' in value &&
+        (value.id === null || Number.isSafeInteger(value.id)) &&
+        'points' in value &&
+        Array.isArray(value.points) &&
+        value.points.every(finitePoint) &&
+        'radius' in value &&
+        typeof value.radius === 'number'
+      )
+        command = {
+          action: 'paint',
+          id: value.id as number | null,
+          points: value.points,
+          radius: value.radius,
+        };
+      if (command)
+        this.emit({
+          t: 'result',
+          reqId,
+          ...this.simulation.districtCommand(command),
+        });
+      else fail('err.invalidCommand');
       return;
     }
     if (

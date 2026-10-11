@@ -1,0 +1,15 @@
+export const DISTRICTS = {
+  renderCellsPerFrame: 1024,
+  maxCount: 64,
+  maxName: 32,
+  smallRadiusM: 32,
+  largeRadiusM: 96,
+  maxStrokePoints: 128,
+  cellM: 16,
+  gridSize: 300,
+  opacity: 0.28,
+  surfaceLiftM: 0.3,
+  labelDistanceM: 500,
+  labelHeightM: 32,
+  labelLiftM: 80,
+} as const;

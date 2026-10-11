@@ -105,7 +105,7 @@ export interface WorldSnapshot {
   citizens: CitizenTable;
   traffic: TrafficState;
   transitLines: import('./transit').BusLine[];
-  districts: never[];
+  districts: import('./districts').District[];
   policies: PolicyId[];
   unlocked: number[];
   stats: CityStats;

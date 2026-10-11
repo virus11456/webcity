@@ -1,3 +1,5 @@
+import { districtCommand } from './systems/districts';
+import { districtViews, type DistrictAction } from '../world/districts';
 import { TransitSystem } from './systems/transit';
 import { busLineViews } from '../world/transit';
 import { TRANSIT } from '../data/transit';
@@ -113,6 +115,14 @@ export class Simulation {
       this.transit.tick();
       this.sink({ t: 'transit', lines: busLineViews(this.state.transitLines) });
     }
+    if (
+      (event.t === 'stats' || event.t === 'buildingsChanged') &&
+      this.state.districts.length
+    )
+      this.sink({
+        t: 'districts',
+        districts: districtViews(this.state.districts, this.state.buildings),
+      });
     this.sink(event);
   }
   private accumulatedMs = 0;
@@ -674,6 +684,15 @@ export class Simulation {
     if (result.ok)
       this.emit({ t: 'transit', lines: busLineViews(this.state.transitLines) });
     return result;
+  }
+  districtCommand(command: DistrictAction): Omit<Result, 't' | 'reqId'> {
+    const r = districtCommand(this.state, command);
+    if (r.ok)
+      this.emit({
+        t: 'districts',
+        districts: districtViews(this.state.districts, this.state.buildings),
+      });
+    return r;
   }
   snapshot(): WorldSnapshot {
     this.cargo.reconcile();
