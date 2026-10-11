@@ -1,3 +1,4 @@
+import { MAP_TILES } from '../data/config';
 import { MILESTONES } from '../data/milestones';
 import { validateDeathcare } from './deathcareValidation';
 import { validateGarbage } from './garbageValidation';
@@ -144,6 +145,16 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
       s.unlocked.every((id) => MILESTONES.some((m) => m.id === id)),
   );
   s.stats.milestone = Math.max(0, ...s.unlocked);
+  if (!Object.hasOwn(s, 'tileLimit')) s.tileLimit = 9;
+  requireValue(
+    [4, 9].includes(s.tileLimit) &&
+      s.ownedTiles.length > 0 &&
+      s.ownedTiles.length <= 9 &&
+      new Set(s.ownedTiles).size === s.ownedTiles.length &&
+      s.ownedTiles.every(
+        (n) => Number.isInteger(n) && n >= 0 && n < MAP_TILES ** 2,
+      ),
+  );
   const ids = new Set<number>();
   for (const item of [
     ...s.nodes,

@@ -43,7 +43,8 @@ export class DistrictTool implements Tool {
       this.publish();
     };
     this.stop = sim.onEvent((e) => {
-      if (e.t === 'ready' || e.t === 'districts') refresh();
+      if (e.t === 'ready' || e.t === 'tilesChanged' || e.t === 'districts')
+        refresh();
     });
     refresh();
   }

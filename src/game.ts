@@ -1,3 +1,5 @@
+import { deviceTileLimit } from './world/tiles';
+import { createTileControls } from './ui/tileControls';
 import { createPolicyControls } from './ui/policyControls';
 import { DistrictTool } from './tools/districtTool';
 import { DistrictRenderer } from './render/districts';
@@ -207,11 +209,13 @@ const debug =
     ? createDebugPanel(root)
     : undefined;
 let sim: SimClient | undefined;
+let tileControls: ReturnType<typeof createTileControls> | undefined;
 let financeControls: ReturnType<typeof createFinanceControls> | undefined;
 let simControls: ReturnType<typeof createSimControls> | undefined;
 try {
   sim = new SimClient(
     new Worker(new URL('./sim/worker.ts', import.meta.url), { type: 'module' }),
+    deviceTileLimit(navigator.userAgent),
   );
   simControls = createSimControls(root, sim);
   unsubscribeAudio = sim.onEvent((e) => {
@@ -873,6 +877,7 @@ if (canvas && status) {
         city!.cameraController.flyTo(p, NOTIFICATIONS.focusDistanceM);
       });
       financeControls = createFinanceControls(root, sim!);
+      tileControls = createTileControls(root, sim!);
       saveController = createSaveController(
         sim,
         () =>
@@ -1047,5 +1052,6 @@ if (import.meta.hot)
     debug?.dispose();
     financeControls?.dispose();
     simControls?.dispose();
+    tileControls?.dispose();
     sim?.dispose();
   });

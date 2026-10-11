@@ -80,6 +80,14 @@ export class CommandDispatcher {
       fail('err.notReady');
       return;
     }
+    if (
+      (value.t === 'load' || value.t === 'init') &&
+      'tileLimit' in value &&
+      ![4, 9].includes(value.tileLimit as number)
+    ) {
+      fail('err.invalidCommand');
+      return;
+    }
     if (value.t === 'load' && this.persistence) {
       if (!('data' in value) || !(value.data instanceof ArrayBuffer)) {
         fail('err.invalidCommand');
@@ -89,7 +97,12 @@ export class CommandDispatcher {
       void this.persistence
         .deserialize(value.data)
         .then((snapshot) => {
-          const next = new Simulation(snapshot.settings, this.emit, snapshot);
+          const next = new Simulation(
+            snapshot.settings,
+            this.emit,
+            snapshot,
+            'tileLimit' in value ? (value.tileLimit as 4 | 9) : undefined,
+          );
           const restored = next.snapshot();
           this.simulation = next;
           this.streamElapsed = 0;
@@ -148,6 +161,8 @@ export class CommandDispatcher {
               : {}),
           } as CitySettings,
           this.emit,
+          undefined,
+          'tileLimit' in value ? (value.tileLimit as 4 | 9) : undefined,
         );
         const snapshot = next.snapshot();
         this.simulation = next;
@@ -173,6 +188,22 @@ export class CommandDispatcher {
     }
     if (!this.simulation) {
       fail('err.notReady');
+      return;
+    }
+    if (value.t === 'buyTile') {
+      if (
+        !('tx' in value) ||
+        !('tz' in value) ||
+        !Number.isSafeInteger(value.tx) ||
+        !Number.isSafeInteger(value.tz)
+      )
+        fail('err.invalidCommand');
+      else
+        this.emit({
+          t: 'result',
+          reqId,
+          ...this.simulation.buyTile(value.tx as number, value.tz as number),
+        });
       return;
     }
     if (value.t === 'inspect') {

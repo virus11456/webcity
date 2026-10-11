@@ -697,3 +697,6 @@ CitizenSystem 的實際死亡新增 Building.bodies.pending，人口 patch 同�
 
 ### M4-09 里程碑事件
 updateMilestones 只在 Worker 修改 unlocked、money 與 stats.milestone，依序發 fundsChanged／milestone／economy。unlocked 兼為一次性獎金記錄，Mirror 和建造工具收到 milestone 即刷新鎖定；UI 慶祝佇列只呈現事件。舊城補領在首個運行 tick 發生，已領不重播，見 MILESTONES.md。
+
+### M4-10 土地指令與裝置限制
+WorldSnapshot.tileLimit 是 4／9；SimClient 的當前裝置限制隨每次 init／load 送入 Worker，舊存檔可預設 9。buyTile 採 world/tiles 的相同預覽與權威驗證，成功原子扣款／更新 ownedTiles 並發 tilesChanged；Mirror 和快取建造工具即時刷新。讀取九塊城市到手機只停用新增購買，不刪土地。見 TILES.md。

@@ -1,3 +1,5 @@
+import { MAP_TILES } from '../data/config';
+import { previewTile } from '../world/tiles';
 import { updateMilestones } from './systems/milestones';
 import { DeathcareSystem } from './systems/deathcare';
 import { GarbageSystem } from './systems/garbage';
@@ -141,6 +143,7 @@ export class Simulation {
     settings: CitySettings,
     private readonly sink: (event: SimEvent) => void = () => {},
     restored?: WorldSnapshot,
+    tileLimit?: 4 | 9,
   ) {
     this.state = createState(settings);
     if (restored) {
@@ -149,6 +152,7 @@ export class Simulation {
       Object.assign(terrain, copy.terrain);
       Object.assign(this.state, copy, { terrain });
     }
+    this.state.tileLimit = tileLimit ?? this.state.tileLimit;
     updateIndustry(this.state);
     updatePopulation(this.state);
     this.state.stats.milestone = Math.max(0, ...this.state.unlocked);
@@ -1172,6 +1176,18 @@ export class Simulation {
     return { ok: true, cost: 0 };
   }
 
+  buyTile(tx: number, tz: number): Omit<Result, 't' | 'reqId'> {
+    if (this.gameOver) return { ok: false, reason: 'err.gameOver' };
+    const s = this.state,
+      q = previewTile(s, tx, tz);
+    if (!q.ok) return q;
+    s.money -= q.cost;
+    s.stats.money = s.money;
+    s.ownedTiles.push(tz * MAP_TILES + tx);
+    this.emit({ t: 'fundsChanged', money: s.money });
+    this.emit({ t: 'tilesChanged', ownedTiles: [...s.ownedTiles] });
+    return q;
+  }
   private refreshMilestones(): void {
     const reached = updateMilestones(this.state);
     if (!reached.length) return;

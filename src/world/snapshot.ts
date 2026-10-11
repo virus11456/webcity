@@ -96,6 +96,7 @@ export interface WorldSnapshot {
     revision: number;
     resources: Record<'fertile' | 'forest' | 'ore' | 'oil', Uint8Array>;
   };
+  tileLimit: 4 | 9;
   ownedTiles: number[];
   nodes: RoadNode[];
   segments: RoadSegment[];

@@ -89,6 +89,7 @@ export class RoadTool implements Tool {
       if (event.t === 'zonesChanged' && event.occupancyOnly) return;
       if (
         event.t === 'ready' ||
+        event.t === 'tilesChanged' ||
         event.t === 'roadsChanged' ||
         event.t === 'zonesChanged' ||
         event.t === 'milestone'

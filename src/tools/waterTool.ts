@@ -60,6 +60,7 @@ export class WaterTool implements Tool {
     this.unsubscribe = ctx.sim.onEvent((e) => {
       if (
         e.t === 'ready' ||
+        e.t === 'tilesChanged' ||
         e.t === 'milestone' ||
         e.t === 'roadsChanged' ||
         e.t === 'networksChanged' ||
