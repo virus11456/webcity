@@ -1,3 +1,4 @@
+import { createFinanceChart } from './financeChart';
 import { BUDGET_DEPARTMENTS, ECONOMY, LOANS } from '../data/economy';
 import { ZONES, type ZoneType } from '../data/zones';
 import type { SimClient } from '../bridge/simClient';
@@ -31,6 +32,7 @@ export function createFinanceControls(parent: HTMLElement, client: SimClient) {
   message.setAttribute('role', 'status');
   message.className = 'finance-message';
   dialog.append(heading, close, balance, summary, warning, restart, message);
+  const chart = createFinanceChart(dialog, client);
   const tax = section('finance.tax', 'finance.taxHint'),
     budget = section('finance.budget', 'finance.budgetHint');
   const sliders: {
@@ -197,6 +199,7 @@ export function createFinanceControls(parent: HTMLElement, client: SimClient) {
     const s = client.mirror.readFinance(),
       stats = client.mirror.readStats();
     if (!s || !stats) return;
+    chart.update();
     const ended = s.economy.status === 'gameOver';
     dialog.dataset.money = String(s.money);
     dialog.dataset.week = String(s.economy.settledWeek);
@@ -271,8 +274,10 @@ export function createFinanceControls(parent: HTMLElement, client: SimClient) {
   trigger.onclick = () => {
     update();
     dialog.showModal();
+    chart.update(true);
   };
   const off = client.onEvent((e) => {
+    if (e.t === 'clock') chart.update();
     if (
       ['ready', 'stats', 'economy', 'fundsChanged', 'milestone'].includes(e.t)
     )
@@ -282,6 +287,7 @@ export function createFinanceControls(parent: HTMLElement, client: SimClient) {
   return {
     dispose() {
       off();
+      chart.dispose();
       dialog.remove();
       trigger.remove();
     },

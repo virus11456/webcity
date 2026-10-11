@@ -1,3 +1,4 @@
+import { financeHistory } from '../world/financeHistory';
 import { districtViews, type DistrictView } from '../world/districts';
 import { busLineViews, type BusLineView } from '../world/transit';
 import type { VegetationWorld } from '../world/vegetation';
@@ -81,6 +82,12 @@ export class WorldMirror {
 
   readStats(): CityStats | undefined {
     return this.state && structuredClone(this.state.stats);
+  }
+
+  readFinanceHistory() {
+    return this.state
+      ? financeHistory(this.state.statsHistory, this.state.clock.day)
+      : [];
   }
 
   readFinance(): FinanceView | undefined {

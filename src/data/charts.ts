@@ -1,0 +1,15 @@
+export const FINANCE_CHART = {
+  weeks: 52,
+  height: 240,
+  minWidth: 240,
+  maxDpr: 2,
+  left: 62,
+  right: 18,
+  top: 18,
+  bottom: 36,
+  gridSteps: 4,
+  fontPx: 12,
+  lineWidth: 2,
+  markerRadius: 4,
+  domainPadding: 0.1,
+} as const;
