@@ -1,3 +1,12 @@
+import { closestPointOnSegment } from '../../src/core/math';
+import { ROADS } from '../../src/data/roads';
+import { BULLDOZE } from '../../src/data/bulldoze';
+import { CITIZEN_RULES } from '../../src/data/citizens';
+import { createCitizens } from '../../src/world/citizens';
+import {
+  serviceDefinition,
+  type ServiceAccess,
+} from '../../src/world/services';
 import { describe, expect, it } from 'vitest';
 import { createState } from '../../src/sim/state';
 import { RoadGraph } from '../../src/world/roadGraph';
@@ -166,4 +175,114 @@ describe('road-network public services', () => {
     expect(next.setBuildingEnabled(10001, true).ok).toBe(true);
     expect(next.snapshot().buildings[1]!.coverage!.police).toBeGreaterThan(0);
   });
+});
+
+it('matches exhaustive road access for curves, ties, setbacks and excluded roads', () => {
+  const { s } = fixture();
+  s.segments[0]!.c1 = { x: -100, z: 90 };
+  s.segments[0]!.c2 = { x: 100, z: -90 };
+  s.segments.push(
+    { ...s.segments[0]!, id: 999 },
+    { ...s.segments[1]!, id: 1000, elevated: true },
+    { ...s.segments[2]!, id: 1001, type: 'highway' },
+  );
+  const network = new ServiceNetwork(s.nodes, s.segments);
+  const reference = (pos: { x: number; z: number }, setback: number) => {
+    let best = Infinity,
+      result: ServiceAccess | undefined;
+    for (const [id, link] of network.links) {
+      if (link.segment.elevated || ROADS[link.segment.type].zoning === 'none')
+        continue;
+      const limit =
+        ROADS[link.segment.type].widthM / 2 +
+        BULLDOZE.frontageToleranceM +
+        setback;
+      for (let i = 1; i < link.points.length; i++) {
+        const a = link.points[i - 1]!,
+          b = link.points[i]!,
+          p = closestPointOnSegment(pos, a, b);
+        if (p.distance <= limit && p.distance < best) {
+          best = p.distance;
+          result = {
+            road: id,
+            distance: a.distance + p.t * (b.distance - a.distance),
+          };
+        }
+      }
+    }
+    return result;
+  };
+  for (const setback of [0, 8, 80]) {
+    for (let x = -350; x <= 350; x += 25)
+      for (let z = -100; z <= 400; z += 23) {
+        const pos = { x, z };
+        expect(network.access(pos, setback)).toEqual(reference(pos, setback));
+      }
+    const limit = 8 + BULLDOZE.frontageToleranceM + setback;
+    for (const offset of [-1e-8, 0, 1e-8]) {
+      const pos = { x: 300 - limit + offset, z: 150 };
+      expect(network.access(pos, setback)).toEqual(reference(pos, setback));
+    }
+  }
+});
+
+it('matches per-resident school demand after age, education, population and coverage changes', () => {
+  const { s, b, system } = fixture();
+  s.buildings[0]!.defId = 'school_elementary';
+  s.buildings.push(
+    b(10004, 'school_high', -180, 8, 'service'),
+    b(10005, 'university', 60, 8, 'service'),
+  );
+  s.citizens = createCitizens(64);
+  s.citizens.count = 64;
+  const c = s.citizens,
+    ages = [5, 6, 12, 13, 18, 19, 24, 25];
+  for (let i = 0; i < c.count; i++) {
+    c.homeId[i] = i % 3 === 0 ? 10003 : 10002;
+    c.age[i] = ages[i % ages.length]!;
+    c.education[i] = Math.floor(i / 8) % 4;
+  }
+  const check = () => {
+    system.update();
+    const network = new ServiceNetwork(s.nodes, s.segments);
+    for (const school of s.buildings.filter(
+      (b) => serviceDefinition(b.defId)?.capacity?.educationLevel,
+    )) {
+      const level =
+        serviceDefinition(school.defId)!.capacity!.educationLevel! - 1;
+      const origin = network.access(school.pos, school.frontageSetbackM)!;
+      const reach = network.reach(origin, school.serviceStatus!.radius);
+      let expected = 0;
+      for (let i = 0; i < c.count; i++) {
+        const home = s.buildings.find((b) => b.id === c.homeId[i]);
+        if (
+          home?.state === 'active' &&
+          network.coverage(
+            reach,
+            network.access(home.pos, home.frontageSetbackM),
+          ) > 0 &&
+          c.education[i] === level &&
+          c.age[i]! >= CITIZEN_RULES.schoolMinAge[level]! &&
+          c.age[i]! <= CITIZEN_RULES.schoolMaxAge[level]!
+        )
+          expected++;
+      }
+      expect(school.serviceStatus!.demand).toBe(expected);
+    }
+  };
+  check();
+  c.age[0] = 6;
+  c.education[0] = 0;
+  c.homeId[0] = 10002;
+  check();
+  c.education.fill(2);
+  c.age.fill(20);
+  check();
+  c.count = 20;
+  s.budgets.education = 0.5;
+  check();
+  s.buildings[1]!.state = 'abandoned';
+  check();
+  s.buildings[0]!.enabled = false;
+  check();
 });

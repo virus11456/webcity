@@ -33,6 +33,33 @@ export class ServiceSystem {
         }
       return changed;
     }
+    // A resident's age/education eligibility is shared by all schools in this update.
+    // Coverage still selects the target homes separately for each provider.
+    const eligible = new Map<number, number[]>();
+    if (
+      providers.some(
+        (b) => serviceDefinition(b.defId)?.capacity?.educationLevel,
+      )
+    ) {
+      const c = s.citizens;
+      for (let i = 0; i < c.count; i++) {
+        const level = c.education[i]!,
+          age = c.age[i]!;
+        if (
+          level >= CITIZEN_RULES.schoolMinAge.length ||
+          age < CITIZEN_RULES.schoolMinAge[level]! ||
+          age > CITIZEN_RULES.schoolMaxAge[level]!
+        )
+          continue;
+        const home = c.homeId[i]!;
+        let counts = eligible.get(home);
+        if (!counts) {
+          counts = [0, 0, 0];
+          eligible.set(home, counts);
+        }
+        counts[level]!++;
+      }
+    }
     const access = new Map(
       s.buildings.map((b) => [
         b.id,
@@ -60,18 +87,13 @@ export class ServiceSystem {
               this.network.coverage(reach, access.get(b.id)) > 0,
           )
         : [];
-      const targetIds = new Set(targets.map((b) => b.id));
-      let students = 0;
-      const c = s.citizens;
       const level = def.capacity?.educationLevel;
-      for (let i = 0; level && i < c.count; i++)
-        if (
-          targetIds.has(c.homeId[i]!) &&
-          c.education[i] === level - 1 &&
-          c.age[i]! >= CITIZEN_RULES.schoolMinAge[level - 1]! &&
-          c.age[i]! <= CITIZEN_RULES.schoolMaxAge[level - 1]!
-        )
-          students++;
+      const students = level
+        ? targets.reduce(
+            (sum, b) => sum + (eligible.get(b.id)?.[level - 1] ?? 0),
+            0,
+          )
+        : 0;
       const demand = serviceDemand(def, targets, students);
       const efficiency =
         provider.state === 'active' &&

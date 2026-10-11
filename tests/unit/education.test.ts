@@ -188,3 +188,41 @@ describe('road-based education and effective school places', () => {
     });
   });
 });
+
+it('shares home school choices without sharing personal admissions or retaining stale choices', () => {
+  const { s, c, school, system } = fixture();
+  s.buildings.push({
+    ...structuredClone(school),
+    id: 3,
+    pos: { x: -60, z: 9 },
+  });
+  c.schoolId.fill(0);
+  system.reconcile();
+  expect([...c.schoolId.slice(0, 300)]).toEqual(Array(300).fill(2));
+  expect([...c.schoolId.slice(300, 400)]).toEqual(Array(100).fill(3));
+  c.education.fill(1, 0, 20);
+  c.age.fill(13, 0, 20);
+  s.buildings.push({
+    ...structuredClone(school),
+    id: 4,
+    defId: 'school_high',
+    pos: { x: 30, z: 9 },
+  });
+  system.reconcile();
+  expect([...c.schoolId.slice(0, 20)]).toEqual(Array(20).fill(4));
+  school.pos.x = 120;
+  system.reconcile();
+  expect([...c.schoolId.slice(20, 300)]).toEqual(Array(280).fill(2));
+  school.enabled = false;
+  system.reconcile();
+  expect([...c.schoolId.slice(20, 220)]).toEqual(Array(200).fill(3));
+  expect([...c.schoolId.slice(220, 300)]).toEqual(Array(80).fill(0));
+  expect([...c.schoolId.slice(300, 400)]).toEqual(Array(100).fill(3));
+  s.budgets.education = 0.5;
+  system.reconcile();
+  expect([...c.schoolId.slice(20, 170)]).toEqual(Array(150).fill(3));
+  expect([...c.schoolId.slice(170, 400)]).toEqual(Array(230).fill(0));
+  s.segments = [];
+  system.reconcile();
+  expect([...c.schoolId.slice(0, 400)]).toEqual(Array(400).fill(0));
+});
