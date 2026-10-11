@@ -1,3 +1,4 @@
+import { MapPreview } from '../components/MapPreview';
 import { render } from 'preact';
 import { useState } from 'preact/hooks';
 import { MAP_PRESETS } from '../../data/terrain';
@@ -13,6 +14,11 @@ import {
 } from '../preferences';
 import '../styles/ui-kit.css';
 import '../styles/menus.css';
+
+function randomSeed(previous: string): number {
+  const value = crypto.getRandomValues(new Uint32Array(1))[0]!;
+  return value === Number(previous) ? (value + 1) >>> 0 : value;
+}
 
 /** Settings share the same controls between the title screen and pause menu. */
 export function Settings({
@@ -226,13 +232,13 @@ function MainMenu({
               <select
                 value={mapId}
                 onChange={(e) => {
-                  const preset = MAP_PRESETS.find(
-                    (p) => p.id === e.currentTarget.value,
-                  )!;
-                  setMapId(preset.id);
-                  setSeed(String(preset.seed));
+                  const id = e.currentTarget.value;
+                  const preset = MAP_PRESETS.find((p) => p.id === id);
+                  setMapId(id);
+                  setSeed(String(preset?.seed ?? randomSeed(seed)));
                 }}
               >
+                <option value="random">{t('menu.map.random')}</option>
                 {MAP_PRESETS.map((p) => (
                   <option key={p.id} value={p.id}>
                     {t(`menu.map.${p.id}`)}
@@ -240,6 +246,7 @@ function MainMenu({
                 ))}
               </select>
             </label>
+            <MapPreview mapId={mapId} seed={seed} />
             <label>
               {t('menu.seed')}
               <input
@@ -250,6 +257,11 @@ function MainMenu({
                 onInput={(e) => setSeed(e.currentTarget.value)}
               />
             </label>
+            {mapId === 'random' && (
+              <Button onClick={() => setSeed(String(randomSeed(seed)))}>
+                {t('menu.reroll')}
+              </Button>
+            )}
             <label>
               {t('menu.mode')}
               <select

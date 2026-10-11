@@ -1,3 +1,4 @@
+import { resolveMap } from '../world/mapSelection';
 import { Weather } from './weather';
 import { WEATHER } from '../data/weather';
 import {
@@ -114,7 +115,10 @@ export class CityRenderer {
   ) {
     this.terrain = new Terrain(
       options.seed ?? MAP_PRESETS[0].seed,
-      MAP_PRESETS.find((p) => p.id === options.mapId) ?? MAP_PRESETS[0],
+      resolveMap(
+        options.mapId ?? MAP_PRESETS[0].id,
+        options.seed ?? MAP_PRESETS[0].seed,
+      ) ?? MAP_PRESETS[0],
     );
     this.weather = new Weather(this.terrain.seed);
     this.scene.add(this.weather.rain);

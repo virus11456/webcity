@@ -1,4 +1,15 @@
 export const ZH_TW = {
+  'menu.map.random': '隨機地圖',
+  'menu.reroll': '換一張隨機地圖',
+  'menu.mapPreview': '地形預覽',
+  'menu.mapPreviewHint': '全境地形；白框為起始地塊，地圖向上為北方。',
+  'menu.mapLoading': '產生地形預覽中…',
+  'menu.mapInvalid': '請輸入有效的整數種子碼。',
+  'menu.map.valleyHint': '河谷平原 · 中央平坦，適合初次建城。',
+  'menu.map.bayHint': '海灣 · 東側海岸與寬闊低地。',
+  'menu.map.mountainsHint': '群山之間 · 外圍高地較多，擴張需考慮坡度。',
+  'menu.map.randomHint': '隨機地圖 · 種子碼決定山勢與海岸，中央保留開局平地。',
+
   'cityStats.title': '城市統計',
   'cityStats.close': '關閉城市統計',
   'cityStats.hint': '人口與就業依城市每日結算更新；分布來自實際居民。',

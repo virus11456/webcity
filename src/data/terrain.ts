@@ -80,3 +80,18 @@ export const TERRAIN_DETAIL = {
   variationLarge: 0.16,
   triplanarSharpness: 4,
 } as const;
+
+export interface TerrainPreset {
+  relief: number;
+  coast: boolean;
+}
+export const MAP_SELECTION = {
+  randomSalt: 417,
+  relief: [0.7, 1.5] as const,
+  coastChance: 0.35,
+  previewSize: 240,
+  previewDelayMs: 120,
+  mountainHeight: 180,
+  hillHeight: 100,
+  tileLineWidth: 2,
+} as const;
