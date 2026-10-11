@@ -225,6 +225,23 @@ export function smoothField(source: Float32Array, size: number): Float32Array {
   const result = new Float32Array(source.length);
   for (let z = 0; z < size; z++)
     for (let x = 0; x < size; x++) {
+      const i = z * size + x;
+      if (z > 0 && z < size - 1 && x > 0 && x < size - 1) {
+        // Interior cells always have nine neighbors. Preserve the reference summation order.
+        result[i] = clamp(
+          (source[i - size - 1]! +
+            source[i - size]! +
+            source[i - size + 1]! +
+            source[i - 1]! +
+            source[i]! +
+            source[i + 1]! +
+            source[i + size - 1]! +
+            source[i + size]! +
+            source[i + size + 1]!) /
+            9,
+        );
+        continue;
+      }
       let sum = 0,
         count = 0;
       for (let dz = -1; dz <= 1; dz++)
@@ -311,7 +328,9 @@ export function environmentSummary(
     if (
       b.landValue !== landValue ||
       b.parkBonus !== parkBonus ||
-      JSON.stringify(b.environment) !== JSON.stringify(environment)
+      b.environment?.pollution !== environment.pollution ||
+      b.environment.noise !== environment.noise ||
+      b.environment.waterPollution !== environment.waterPollution
     ) {
       b.landValue = landValue;
       b.parkBonus = parkBonus;

@@ -389,6 +389,7 @@ export class CitizenSystem {
         jobs.set(b.id, [...b.jobEducation]);
     }
     this.schools(byId);
+    const waiting = new Map<number, number[][]>();
     // Reserve existing jobs before hiring. New nearer workplaces never arbitrarily steal employees.
     for (let i = 0; i < c.count; i++) {
       const slots = jobs.get(c.workId[i]!),
@@ -400,19 +401,16 @@ export class CitizenSystem {
         slots &&
         slots[required]! > 0 &&
         c.education[i]! >= required
-      )
+      ) {
         slots[required]!--;
-      else {
+        continue;
+      } else {
         c.workId[i] = 0;
         c.jobType[i] = JobType.none;
         c.shiftId[i] = 0;
         c.requiredEducation[i] = 0;
       }
-    }
-    const waiting = new Map<number, number[][]>();
-    for (let i = 0; i < c.count; i++) {
       if (
-        c.workId[i] ||
         c.schoolId[i] ||
         !working(c.age[i]!) ||
         byId.get(c.homeId[i]!)?.roadDisconnectedDay !== undefined
@@ -572,7 +570,7 @@ export class CitizenSystem {
     const assignments = new Map<
       number,
       Map<
-        string,
+        number,
         {
           workplaceId: number;
           education: number;
@@ -613,7 +611,8 @@ export class CitizenSystem {
         map = new Map();
         assignments.set(b.id, map);
       }
-      const key = `${work.id}:${e}:${c.requiredEducation[i]}`;
+      // Four education tiers; workId is Int32, so this packed key stays an exact integer.
+      const key = (work.id * 4 + e) * 4 + c.requiredEducation[i]!;
       let entry = map.get(key);
       if (!entry) {
         entry = {

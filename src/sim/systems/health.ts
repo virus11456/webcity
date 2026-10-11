@@ -17,14 +17,15 @@ export function updateHealth(s: SimState, daily = false): BuildingPatch[] {
       )
       .map((b) => [b.id, b]),
   );
-  const changes = new Map<number, number>(),
-    multipliers = new Map<number, number>(),
-    totals = new Map<number, HealthSummary>();
+  const homesHealth = new Map<
+    number,
+    { change: number; multiplier: number; summary: HealthSummary }
+  >();
   for (const b of homes.values()) {
-    multipliers.set(b.id, policyValue(s, b.pos, 'healthMultiplier', 1));
-    changes.set(
-      b.id,
-      (b.coverage?.health ?? 0) * H.recoveryPerCoverageDay -
+    homesHealth.set(b.id, {
+      multiplier: policyValue(s, b.pos, 'healthMultiplier', 1),
+      change:
+        (b.coverage?.health ?? 0) * H.recoveryPerCoverageDay -
         clamp(
           s.fields.pollution[fieldIndex(b.pos, s.fields.size)]!,
           0,
@@ -33,23 +34,22 @@ export function updateHealth(s: SimState, daily = false): BuildingPatch[] {
           H.pollutionLossPerPointDay -
         clamp(b.drinkingWaterPollution ?? 0, 0, H.maxExposure) *
           H.waterLossPerPointDay,
-    );
-    totals.set(b.id, { average: 0, sick: 0, residents: 0 });
+      summary: { average: 0, sick: 0, residents: 0 },
+    });
   }
   let sum = 0,
     sick = 0,
     count = 0;
   for (let i = 0; i < c.count; i++) {
-    const home = c.homeId[i]!,
-      summary = totals.get(home);
-    if (!summary) continue;
+    const home = homesHealth.get(c.homeId[i]!);
+    if (!home) continue;
+    const summary = home.summary;
     if (advance) {
       const value = Math.round(
         clamp(
-          c.health[i]! +
-            c.healthFraction[i]! / H.precision +
-            changes.get(home)!,
-          ...CITIZENS.healthRange,
+          c.health[i]! + c.healthFraction[i]! / H.precision + home.change,
+          CITIZENS.healthRange[0],
+          CITIZENS.healthRange[1],
         ) * H.precision,
       );
       c.health[i] = Math.floor(value / H.precision);
@@ -57,8 +57,7 @@ export function updateHealth(s: SimState, daily = false): BuildingPatch[] {
     }
     const value = Math.min(
       CITIZENS.healthRange[1],
-      (c.health[i]! + c.healthFraction[i]! / H.precision) *
-        multipliers.get(home)!,
+      (c.health[i]! + c.healthFraction[i]! / H.precision) * home.multiplier,
     );
     summary.average += value;
     summary.residents++;
@@ -77,7 +76,7 @@ export function updateHealth(s: SimState, daily = false): BuildingPatch[] {
   };
   const patches: BuildingPatch[] = [];
   for (const b of s.buildings) {
-    const h = totals.get(b.id);
+    const h = homesHealth.get(b.id)?.summary;
     if (h)
       h.average = h.residents
         ? h.average / h.residents

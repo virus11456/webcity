@@ -1,3 +1,5 @@
+import { zoneBuildingFootprint } from '../../src/world/zoneGeometry';
+import { UTILITY_RULES } from '../../src/data/buildings';
 import { RoadGraph } from '../../src/world/roadGraph';
 import { describe, it, expect } from 'vitest';
 import { POWER } from '../../src/data/power';
@@ -485,4 +487,83 @@ describe('worker transactions and mirror', () => {
       cost: 100,
     });
   });
+});
+
+it('matches all-pairs connectivity for rotated footprints, bucket boundaries and open power lines', () => {
+  const s = state(
+    b(1, -60, 'power_coal'),
+    ...Array.from({ length: 32 }, (_, i) => ({
+      ...b(i + 2, (i % 8) * 36, 'RL', Math.floor(i / 8) * 36),
+      rotation: ((i % 8) * Math.PI) / 8,
+    })),
+    b(100, 900),
+  );
+  s.networks.power = [
+    {
+      id: 200,
+      points: [
+        { x: -40, z: 8 },
+        { x: 10, z: 8 },
+      ],
+    },
+    {
+      id: 201,
+      points: [
+        { x: 200, z: 80 },
+        { x: 400, z: 100 },
+        { x: 600, z: 0 },
+      ],
+    },
+    {
+      id: 202,
+      points: [
+        { x: 580, z: -20 },
+        { x: 620, z: 20 },
+      ],
+    },
+  ];
+  const shapes = [
+    ...s.buildings.map((b) => ({
+      points: zoneBuildingFootprint(b),
+      closed: true,
+    })),
+    ...s.networks.power.map((n) => ({ points: n.points, closed: false })),
+  ];
+  const links = shapes.map(() => [] as number[]);
+  for (let i = 0; i < shapes.length; i++)
+    for (let j = 0; j < i; j++) {
+      const a = shapes[i]!,
+        b = shapes[j]!;
+      if (
+        shapeDistance(a.points, a.closed, b.points, b.closed) <=
+        UTILITY_RULES.powerReachM + POWER.epsilon
+      ) {
+        links[i]!.push(j);
+        links[j]!.push(i);
+      }
+    }
+  const seen = new Set<number>(),
+    supplied = new Set<number>();
+  let groups = 0;
+  for (let i = 0; i < shapes.length; i++) {
+    if (seen.has(i)) continue;
+    groups++;
+    const queue = [i];
+    seen.add(i);
+    for (let head = 0; head < queue.length; head++)
+      for (const next of links[queue[head]!]!) {
+        if (!seen.has(next)) {
+          seen.add(next);
+          queue.push(next);
+        }
+      }
+    if (queue.includes(0)) for (const member of queue) supplied.add(member);
+  }
+  updatePower(s);
+  expect(s.stats.power!.groups).toBe(groups);
+  expect(s.buildings.map(powered)).toEqual(
+    s.buildings.map((_, i) => supplied.has(i)),
+  );
+  expect(supplied.size).toBeGreaterThan(1);
+  expect(powered(s.buildings.at(-1)!)).toBe(false);
 });

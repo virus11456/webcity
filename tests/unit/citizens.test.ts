@@ -296,3 +296,38 @@ it('100k citizen memory and daily lifetime budget', () => {
   expect(citizenBytes(c)).toBeLessThan(20 * 1024 * 1024);
   expect(samples[Math.floor(samples.length * 0.95)]).toBeLessThan(10);
 });
+
+it('keeps employment summaries separate for adjacent Int32 workplace IDs and all education tiers', () => {
+  const s = fixture(100),
+    c = s.citizens,
+    work = s.buildings[1]!;
+  work.id = 0x7ffffffe;
+  work.lotW = work.lotD = 2;
+  s.buildings.push({
+    ...structuredClone(work),
+    id: 0x7fffffff,
+    pos: { x: 100, z: 0 },
+  });
+  for (let i = 0; i < c.count; i++) {
+    c.age[i] = 25;
+    c.education[i] = i % 4;
+    c.workId[i] = 0;
+  }
+  new CitizenSystem(s).reconcile();
+  const assignments = s.buildings[0]!.housing!.assignments;
+  expect(new Set(assignments.map((a) => a.workplaceId)).size).toBe(2);
+  const expected = new Map<string, number>();
+  for (let i = 0; i < c.count; i++)
+    if (c.workId[i]) {
+      const key = `${c.workId[i]}:${c.education[i]}:${c.requiredEducation[i]}`;
+      expected.set(key, (expected.get(key) ?? 0) + 1);
+    }
+  expect(
+    new Map(
+      assignments.map((a) => [
+        `${a.workplaceId}:${a.education}:${a.requiredEducation}`,
+        a.workers,
+      ]),
+    ),
+  ).toEqual(expected);
+});

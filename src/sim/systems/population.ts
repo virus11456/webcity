@@ -23,6 +23,37 @@ function patch(b: Building): BuildingPatch {
     workerEducation: b.workerEducation,
   };
 }
+/** Copy population scalars before in-place demographic updates, without JSON strings. */
+function populationValues(b: Building): (number | undefined)[] {
+  const h = b.housing,
+    values = [
+      b.households,
+      b.residents,
+      b.jobs,
+      b.workers,
+      b.bodies?.pending,
+      b.jobEducation?.length,
+      b.workerEducation?.length,
+      ...(b.jobEducation ?? []),
+      ...(b.workerEducation ?? []),
+      h ? 1 : 0,
+    ];
+  if (h) {
+    values.push(
+      h.occupied,
+      h.averageEducation,
+      h.employed,
+      h.lastMigrationDay,
+      ...h.sizes,
+      ...h.education,
+      ...h.ages,
+      ...h.availableWorkers,
+    );
+    for (const a of h.assignments)
+      values.push(a.workplaceId, a.education, a.requiredEducation, a.workers);
+  }
+  return values;
+}
 function pick(weights: readonly number[], rng: Rng): number {
   let draw = rng.float(
     0,
@@ -39,9 +70,7 @@ export function updatePopulation(
   s: SimState,
   migrate = false,
 ): BuildingPatch[] {
-  const before = new Map(
-    s.buildings.map((b) => [b.id, JSON.stringify(patch(b))]),
-  );
+  const before = new Map(s.buildings.map((b) => [b.id, populationValues(b)]));
   const previousPopulation = s.stats.population;
   const citizens = citizenSystem(s);
   const life = migrate ? citizens.daily() : { births: 0, deaths: 0 };
@@ -141,6 +170,13 @@ export function updatePopulation(
     movedOut: (previous?.movedOut ?? 0) + movedOut + displaced,
   };
   return s.buildings
-    .filter((b) => JSON.stringify(patch(b)) !== before.get(b.id))
+    .filter((b) => {
+      const previous = before.get(b.id),
+        next = populationValues(b);
+      return (
+        previous?.length !== next.length ||
+        next.some((value, i) => value !== previous[i])
+      );
+    })
     .map(patch);
 }

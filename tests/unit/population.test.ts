@@ -330,3 +330,48 @@ describe('moving out and replay', () => {
     expect(mirror.readSnapshot()!.statsHistory).toEqual(history);
   });
 });
+
+it('emits exactly the changed population fields across migration, lifetime and structural updates', () => {
+  const home = occupied(1, 100),
+    work = building(2, 'I'),
+    s = fixture(home, work);
+  const project = (b: Building) =>
+    JSON.stringify({
+      id: b.id,
+      households: b.households,
+      residents: b.residents,
+      jobs: b.jobs,
+      workers: b.workers,
+      housing: b.housing,
+      bodies: b.bodies,
+      jobEducation: b.jobEducation,
+      workerEducation: b.workerEducation,
+    });
+  const check = (daily = false) => {
+    const before = new Map(s.buildings.map((b) => [b.id, project(b)]));
+    const patches = updatePopulation(s, daily);
+    expect(patches.map((p) => JSON.stringify(p))).toEqual(
+      s.buildings.filter((b) => before.get(b.id) !== project(b)).map(project),
+    );
+  };
+  check();
+  check();
+  for (let day = 2; day <= 40; day++) {
+    s.clock.day = day;
+    if (day === 5) work.level = 2;
+    if (day === 10) home.happiness = 0;
+    if (day === 15) {
+      // A death edits the household and job summaries in place and creates pending remains.
+      s.settings.mode = 'sandbox';
+      s.citizens.age[0] = 99;
+      s.citizens.bornDay[0] = day - 360;
+    }
+    if (day === 20) work.state = 'abandoned';
+    if (day === 25) home.housing!.sizes = [1, 1, 1, 1, 1];
+    if (day === 30) home.state = 'abandoned';
+    check(true);
+    check();
+  }
+  expect(home.bodies!.pending).toBeGreaterThan(0);
+  expect(home.residents).toBe(0);
+});
