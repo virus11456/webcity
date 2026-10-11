@@ -712,3 +712,6 @@ WorldSnapshot.tileLimit 是 4／9；SimClient 的當前裝置限制隨每次 ini
 
 ### M4-14 災害與復建權威
 WorldSnapshot.disasters 保存開關、下一次預警日或待發生預警；舊檔補 disabled。FireSystem 每日防重後執行 updateDisasters，批次點火交由既有消防派遣／損毀處理，disasters 事件更新 Mirror。rebuild 原子檢查／扣款後重啟 constructionStartedTick，保留 ID、占地及庫存並刷新人口服務；UI 只發命令。見 DISASTERS.md。
+
+### M4-15 財政歷史投影
+world/financeHistory 將既有 statsHistory 投影成最多 52 筆 FinancePoint；Mirror 提供防禦性小陣列。ui/financeChart 以原生 Canvas 2D 自繪，輸出至 img，面板未展開不繪圖，ResizeObserver 與訂閱於 dispose 清理。週界樣本不重加總每日收入，不增套件或 Worker 權威資料。見 FINANCE_CHARTS.md。

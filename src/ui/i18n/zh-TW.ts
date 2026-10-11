@@ -1,4 +1,15 @@
 export const ZH_TW = {
+  'chart.income': '收入',
+  'chart.expenses': '支出',
+  'chart.money': '資金餘額',
+  'chart.title': '52 週財政趨勢',
+  'chart.hint':
+    '每週結算時記錄收入、支出與資金餘額；未完成的週與缺漏紀錄不補值。建設支出反映於資金，不列入每週維護支出。',
+  'chart.empty': '目前沒有最近 52 週的已完成結算紀錄。',
+  'chart.metric': '財政圖表指標',
+  'chart.selectWeek': '選擇歷史週次',
+  'chart.week': '週',
+
   'disaster.enable': '啟用大型火災災害',
   'disaster.hint':
     '預設關閉。開啟後可能發生區域火災，會提前 3 天預警；日常建築火災仍由消防系統處理。',
