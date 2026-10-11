@@ -1,4 +1,8 @@
 export const ZH_TW = {
+  'debug.frame': '主幀 P95',
+  'debug.worker': 'Worker tick P95',
+  'debug.heap': '主頁 JS heap',
+  'debug.unavailable': '無資料',
   'help.saveSlot': '將目前城市儲存到這個欄位，包含道路、居民、時間與財政狀態。',
   'help.overwrite': '以目前城市取代這個欄位的舊存檔；其他欄位不受影響。',
   'help.load': '讀取這個存檔並切換城市，未儲存的變更不會保留。',

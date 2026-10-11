@@ -230,11 +230,15 @@ let financeControls: ReturnType<typeof createFinanceControls> | undefined;
 let simControls: ReturnType<typeof createSimControls> | undefined;
 try {
   sim = new SimClient(
-    new Worker(new URL('./sim/worker.ts', import.meta.url), { type: 'module' }),
+    new Worker(new URL('./sim/worker.ts', import.meta.url), {
+      type: 'module',
+      name: debug ? 'webcity-debug' : 'webcity',
+    }),
     deviceTileLimit(navigator.userAgent),
   );
   simControls = createSimControls(root, sim);
   unsubscribeAudio = sim.onEvent((e) => {
+    if (e.t === 'performance') debug?.worker(e.tick);
     cityAudio.accept(e);
     if (e.t === 'vehicles') audioTraffic = Math.min(1, e.count / 40);
   });
@@ -306,8 +310,7 @@ if (canvas && status) {
           roadPreview?.roads.setNight(city.dayNight.night);
           vehicles?.setNight(city.dayNight.night);
         }
-        if (city)
-          districtRenderer?.frame(city.cameraController.readState().distance);
+        if (city) districtRenderer?.frame(city.cameraController.distance);
         input?.update(seconds);
         followCamera?.update();
         roadPreview?.roads.update();

@@ -1,0 +1,28 @@
+{
+  "viewport": "Desktop",
+  "population": 5017,
+  "buildings": 191,
+  "quality": "low",
+  "diagnostic": {
+    "frameP95Ms": "1.7000000476837158",
+    "frameMaxMs": "2",
+    "workerP95Ms": "14.5",
+    "workerMaxMs": "23.5",
+    "workerSamples": "23",
+    "heapBytes": "140843050",
+    "fps": "59.99612928198172",
+    "calls": "322",
+    "triangles": "227613",
+    "quality": "low",
+    "dpr": "0.75",
+    "aspect": "1.6",
+    "shadows": "0",
+    "fogDensity": "0.00010026006283928005",
+    "hour": "3.476446666666668",
+    "postfx": "0",
+    "tilt": "0"
+  },
+  "fps": 60.001993421708356,
+  "frames": 301,
+  "p95ms": 16.799999999999727
+}

@@ -1,0 +1,28 @@
+{
+  "viewport": "iPhone 15",
+  "population": 5017,
+  "buildings": 191,
+  "quality": "low",
+  "diagnostic": {
+    "frameP95Ms": "1.7000000476837158",
+    "frameMaxMs": "3.100000023841858",
+    "workerP95Ms": "15.899999976158142",
+    "workerMaxMs": "28.600000023841858",
+    "workerSamples": "23",
+    "heapBytes": "151887109",
+    "fps": "60",
+    "calls": "177",
+    "triangles": "208595",
+    "quality": "low",
+    "dpr": "1.5",
+    "aspect": "0.4612676056338028",
+    "shadows": "0",
+    "fogDensity": "0.00010026006283928005",
+    "hour": "3.4808866666666667",
+    "postfx": "0",
+    "tilt": "0"
+  },
+  "fps": 60.00318953831433,
+  "frames": 301,
+  "p95ms": 16.700000000000728
+}

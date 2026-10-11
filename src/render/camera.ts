@@ -355,6 +355,10 @@ export class RtsCamera {
   copyState(out: CameraState): void {
     Object.assign(out, this.current);
   }
+  /** Read zoom distance without allocating a snapshot in the render loop. */
+  get distance(): number {
+    return this.current.distance;
+  }
   /** Return a detached snapshot for UI/debug consumers; avoid calling every frame. */
   readState(): CameraState {
     return { ...this.current };

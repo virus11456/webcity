@@ -410,6 +410,10 @@ M0-12 已提供 `input/picking.ts` 的 `TerrainPicker`。`pick(clientX, clientY,
 - 開發時 `?debug=1` 顯示 FPS、draw calls、三角形數、Worker tick 時間、JS heap。
 - 大型重建（道路 Chunk、建築批次）若超過 4 ms 要分幀處理。
 
+M5-03 第一批：`?debug=1` 才啟用固定 240 筆的 TimingWindow。主幀 P95 是 render callback（包含遊戲 before/after hooks 與 WebGL 提交）的同步耗時，並非 GPU 時間或整個主執行緒忙碌時間；Worker 逐 tick 計時包含每日結算與同步事件 sink，每秒回報 `performance` 事件，paused 不產生假 tick。JS heap 只顯示瀏覽器提供的主頁用量，沒有資料時顯示無資料，不能當作 iPhone 全程序／GPU 記憶體。數據與尚未達標項目見 PERFORMANCE.md。
+
+ScheduleSystem 每 tick 建立一次可選目的地集合並按出發建築共用查詢，個別居民的機率、班表、旅程及抵達確認維持原規則。電網 WeakMap 只快取幾何連線；逐座標比較能偵測原地修改與順序變更，供需及政策每次重算。健康政策倍率在單次更新內按住宅共用，不跨更新保留。這些快取不進入存檔，不成為主執行緒的世界權威。
+
 ---
 
 ## 11. PWA

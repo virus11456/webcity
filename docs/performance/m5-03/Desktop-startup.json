@@ -1,0 +1,16 @@
+{
+  "viewport": "Desktop",
+  "interactiveMs": 1007.6000000238419,
+  "gzipBytes": 46450,
+  "scripts": [
+    "/webcity/assets/index-Dym0uoyP.js",
+    "/webcity/assets/rolldown-runtime-DK3Fl9T5.js",
+    "/webcity/assets/mapSelection-DEhb98yo.js",
+    "/webcity/assets/palette-D10_eThd.js",
+    "/webcity/assets/MainMenu-BR-bl0z_.js",
+    "/webcity/assets/ui-kit-MzPT2zMa.js",
+    "/webcity/assets/storage-CEWf2sWG.js"
+  ],
+  "network": "150ms latency, 1.6Mbps down / 0.75Mbps up, cold cache, SW blocked; local Chrome, no CPU throttling",
+  "scope": "main menu interactive, not full city startup; heap/viewport emulation is not physical iPhone memory"
+}

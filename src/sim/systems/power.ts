@@ -29,6 +29,32 @@ interface Node {
   output: number;
   load: number;
 }
+// Connectivity depends on geometry alone; generation, demand and policies are recalculated.
+const topology = new WeakMap<
+  SimState,
+  {
+    shapes: { points: Vec2[]; closed: boolean }[];
+    links: number[][];
+  }
+>();
+function sameShapes(
+  nodes: Node[],
+  shapes: { points: Vec2[]; closed: boolean }[],
+) {
+  return (
+    nodes.length === shapes.length &&
+    nodes.every((n, i) => {
+      const old = shapes[i]!;
+      return (
+        n.closed === old.closed &&
+        n.points.length === old.points.length &&
+        n.points.every(
+          (p, j) => p.x === old.points[j]!.x && p.z === old.points[j]!.z,
+        )
+      );
+    })
+  );
+}
 /** Spatial broad phase, exact footprint gaps, then BFS islands and deterministic near-first supply. */
 export function updatePower(s: SimState): BuildingPatch[] {
   const nodes: Node[] = s.buildings
@@ -45,49 +71,60 @@ export function updatePower(s: SimState): BuildingPatch[] {
     }));
   for (const n of s.networks.power)
     nodes.push({ points: n.points, closed: false, output: 0, load: 0 });
-  const links = nodes.map(() => [] as number[]),
-    buckets = new Map<string, number[]>();
-  nodes.forEach((node, i) => {
-    const box = polygonBounds(node.points),
-      seen = new Set<number>(),
-      reach = UTILITY_RULES.powerReachM;
-    const keys: string[] = [];
-    for (
-      let z = Math.floor((box.minZ - reach) / POWER.graphCellM);
-      z <= Math.floor((box.maxZ + reach) / POWER.graphCellM);
-      z++
-    )
+  const cached = topology.get(s);
+  let links = cached?.links;
+  if (!cached || !sameShapes(nodes, cached.shapes)) {
+    links = nodes.map(() => [] as number[]);
+    const buckets = new Map<string, number[]>();
+    nodes.forEach((node, i) => {
+      const box = polygonBounds(node.points),
+        seen = new Set<number>(),
+        reach = UTILITY_RULES.powerReachM;
+      const keys: string[] = [];
       for (
-        let x = Math.floor((box.minX - reach) / POWER.graphCellM);
-        x <= Math.floor((box.maxX + reach) / POWER.graphCellM);
-        x++
-      ) {
-        const key = `${x},${z}`;
-        keys.push(key);
-        for (const j of buckets.get(key) ?? [])
-          if (!seen.has(j)) {
-            seen.add(j);
-            const other = nodes[j]!;
-            if (
-              shapeDistance(
-                node.points,
-                node.closed,
-                other.points,
-                other.closed,
-              ) <=
-              reach + POWER.epsilon
-            ) {
-              links[i]!.push(j);
-              links[j]!.push(i);
+        let z = Math.floor((box.minZ - reach) / POWER.graphCellM);
+        z <= Math.floor((box.maxZ + reach) / POWER.graphCellM);
+        z++
+      )
+        for (
+          let x = Math.floor((box.minX - reach) / POWER.graphCellM);
+          x <= Math.floor((box.maxX + reach) / POWER.graphCellM);
+          x++
+        ) {
+          const key = `${x},${z}`;
+          keys.push(key);
+          for (const j of buckets.get(key) ?? [])
+            if (!seen.has(j)) {
+              seen.add(j);
+              const other = nodes[j]!;
+              if (
+                shapeDistance(
+                  node.points,
+                  node.closed,
+                  other.points,
+                  other.closed,
+                ) <=
+                reach + POWER.epsilon
+              ) {
+                links![i]!.push(j);
+                links![j]!.push(i);
+              }
             }
-          }
+        }
+      for (const key of keys) {
+        const bucket = buckets.get(key) ?? [];
+        bucket.push(i);
+        buckets.set(key, bucket);
       }
-    for (const key of keys) {
-      const bucket = buckets.get(key) ?? [];
-      bucket.push(i);
-      buckets.set(key, bucket);
-    }
-  });
+    });
+    topology.set(s, {
+      shapes: nodes.map((n) => ({
+        closed: n.closed,
+        points: n.points.map((p) => ({ ...p })),
+      })),
+      links,
+    });
+  }
   const seen = new Set<number>(),
     powered = new Set<number>();
   let produced = 0,
@@ -99,7 +136,7 @@ export function updatePower(s: SimState): BuildingPatch[] {
       const queue = [i];
       seen.add(i);
       for (let head = 0; head < queue.length; head++)
-        for (const next of links[queue[head]!]!)
+        for (const next of links![queue[head]!]!)
           if (!seen.has(next)) {
             seen.add(next);
             queue.push(next);

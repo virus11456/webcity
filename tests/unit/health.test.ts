@@ -49,6 +49,18 @@ function fixture() {
   return { s, b, day };
 }
 describe('resident health and healthcare', () => {
+  it('recomputes shared home policy multipliers without altering individual health', () => {
+    const f = fixture(),
+      c = f.s.citizens;
+    const before = c.health.slice();
+    f.s.policies = ['smoking_ban'];
+    updateHealth(f.s);
+    expect(f.b.health!.average).toBeCloseTo(55);
+    expect(c.health).toEqual(before);
+    f.s.policies = [];
+    updateHealth(f.s);
+    expect(f.b.health!.average).toBe(50);
+  });
   it('samples the centred map at edges and at its 16 metre cells', () => {
     expect(fieldIndex({ x: -2400, z: -2400 }, 300)).toBe(0);
     expect(fieldIndex({ x: 2400, z: 2400 }, 300)).toBe(89999);

@@ -18,6 +18,8 @@ import { citizenSystem } from './citizens';
 export class ScheduleSystem {
   private cursor = 0;
   private readonly buildings = new Map<number, Building>();
+  private readonly optionalTargets: Building[] = [];
+  private readonly optionalByOrigin = new Map<number, number>();
   constructor(private readonly s: SimState) {
     this.refreshBuildings();
   }
@@ -54,24 +56,16 @@ export class ScheduleSystem {
     c.tripStatus[i] = Status.pending;
     c.state[i] = CitizenState.commuting;
   }
-  private optionalDestination(i: number, leisure: boolean): number {
+  private optionalDestination(i: number): number {
     const c = this.s.citizens,
       origin = this.buildings.get(c.locationId[i]!);
     if (!origin) return 0;
+    const cached = this.optionalByOrigin.get(origin.id);
+    if (cached !== undefined) return cached;
     let best: number = SCHEDULES.optionalSearchRadiusM,
       result = 0;
-    for (const b of this.buildings.values()) {
-      if (
-        b.state !== 'active' ||
-        b.id === origin.id ||
-        b.roadDisconnectedDay !== undefined
-      )
-        continue;
-      if (
-        !(leisure && (b.kind === 'park' || b.kind === 'unique')) &&
-        !['CL', 'CH'].includes(b.defId)
-      )
-        continue;
+    for (const b of this.optionalTargets) {
+      if (b.id === origin.id) continue;
       const distance = Math.hypot(
         b.pos.x - origin.pos.x,
         b.pos.z - origin.pos.z,
@@ -81,6 +75,7 @@ export class ScheduleSystem {
         result = b.id;
       }
     }
+    this.optionalByOrigin.set(origin.id, result);
     return result;
   }
   tick(): void {
@@ -90,6 +85,26 @@ export class ScheduleSystem {
     this.refreshBuildings();
     const day = mobilityDay(tick),
       hour = mobilityHour(tick);
+    const shopping =
+      hour >= CITIZENS.schedule.shoppingHours[0] &&
+      hour < CITIZENS.schedule.shoppingHours[1];
+    const leisure =
+      hour >= CITIZENS.schedule.leisureHours[0] &&
+      hour < CITIZENS.schedule.leisureHours[1];
+    // Destinations depend on origin and the current activity window, not citizen ID.
+    // Rebuild once per tick so in-place closure, road loss and demolition take effect immediately.
+    this.optionalTargets.length = 0;
+    this.optionalByOrigin.clear();
+    if (shopping || leisure)
+      for (const b of this.buildings.values())
+        if (
+          b.state === 'active' &&
+          b.roadDisconnectedDay === undefined &&
+          ((leisure && (b.kind === 'park' || b.kind === 'unique')) ||
+            b.defId === 'CL' ||
+            b.defId === 'CH')
+        )
+          this.optionalTargets.push(b);
     for (let i = 0; i < c.count; i++) {
       if (!c.locationId[i]) c.locationId[i] = c.homeId[i]!;
       if (c.tripStatus[i] !== Status.none) continue; // Never reset a trip at midnight or fiscal-day boundaries.
@@ -122,12 +137,6 @@ export class ScheduleSystem {
         );
         continue;
       }
-      const shopping =
-        hour >= CITIZENS.schedule.shoppingHours[0] &&
-        hour < CITIZENS.schedule.shoppingHours[1];
-      const leisure =
-        hour >= CITIZENS.schedule.leisureHours[0] &&
-        hour < CITIZENS.schedule.leisureHours[1];
       const key = shopping ? 'lastShoppingCycle' : 'lastLeisureCycle';
       if ((shopping || leisure) && c[key][i]! < day + 1) {
         c[key][i] = day + 1;
@@ -140,7 +149,7 @@ export class ScheduleSystem {
             0) /
           4294967296;
         if (roll < chance) {
-          const target = this.optionalDestination(i, leisure);
+          const target = this.optionalDestination(i);
           if (target) {
             this.request(
               i,

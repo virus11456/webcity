@@ -78,6 +78,36 @@ function tripFor(f: ReturnType<typeof fixture>, i: number): Journey {
   return request!;
 }
 describe('personal daily itinerary', () => {
+  it('shares optional destination searches while preserving nearest/tie rules and immediate invalidation', () => {
+    const f = fixture(),
+      c = f.s.citizens,
+      base = f.s.buildings[1]!;
+    f.s.buildings.push(
+      { ...structuredClone(base), id: 4, defId: 'CL', pos: { x: -100, z: 0 } },
+      { ...structuredClone(base), id: 3, defId: 'CH', pos: { x: 100, z: 0 } },
+      { ...structuredClone(base), id: 5, kind: 'park', pos: { x: 20, z: 0 } },
+    );
+    c.id[0] = 121; // This stable daily roll participates in both activity windows.
+    const destinations = (hour: number) => {
+      c.workId.fill(0);
+      c.schoolId.fill(0);
+      c.tripStatus.fill(Status.none);
+      c.lastShoppingCycle.fill(0);
+      c.lastLeisureCycle.fill(0);
+      c.locationId.set(c.homeId);
+      at(f, hour);
+      const trips = f.system.pending(1000);
+      return new Set(trips.map((t) => t.destinationId));
+    };
+    expect(destinations(13)).toEqual(new Set([3]));
+    f.s.buildings.find((b) => b.id === 3)!.roadDisconnectedDay = 1;
+    expect(destinations(13)).toEqual(new Set([4]));
+    f.s.buildings.find((b) => b.id === 4)!.state = 'abandoned';
+    expect(destinations(13).size).toBe(0);
+    expect(destinations(20)).toEqual(new Set([5]));
+    f.s.buildings = f.s.buildings.filter((b) => b.id !== 5);
+    expect(destinations(20).size).toBe(0);
+  });
   it.each([0, 1, 2])(
     'shift %i travels to its own workplace, works, returns to its original home and rests',
     (shift) => {

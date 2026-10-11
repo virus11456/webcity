@@ -17,6 +17,22 @@ const settings: CitySettings = {
 };
 
 describe('authoritative simulation in Node', () => {
+  it('optional timing observes each actual step without changing world state or paused progression', () => {
+    const a = new Simulation(settings),
+      b = new Simulation(settings),
+      samples: number[] = [];
+    for (const sim of [a, b]) sim.setSpeed(4);
+    for (let i = 0; i < 6; i++) {
+      expect(a.advance(240, (ms) => samples.push(ms))).toBe(b.advance(240));
+    }
+    expect(samples).toHaveLength(a.readClock().ticks);
+    expect(samples.every((ms) => Number.isFinite(ms) && ms >= 0)).toBe(true);
+    deepStrictEqual(a.snapshot(), b.snapshot());
+    a.setSpeed(0);
+    const n = samples.length;
+    expect(a.advance(240, (ms) => samples.push(ms))).toBe(0);
+    expect(samples).toHaveLength(n);
+  });
   it('creates a reproducible empty city, with configuration and owned center tile', () => {
     const a = new Simulation(settings).snapshot();
     const b = new Simulation(settings).snapshot();

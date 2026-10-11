@@ -1,0 +1,16 @@
+{
+  "viewport": "iPhone 15",
+  "interactiveMs": 993.1000000238419,
+  "gzipBytes": 46468,
+  "scripts": [
+    "/webcity/assets/index-BZ2Aq5wV.js",
+    "/webcity/assets/rolldown-runtime-DK3Fl9T5.js",
+    "/webcity/assets/mapSelection-Bg_z5BHc.js",
+    "/webcity/assets/palette-D10_eThd.js",
+    "/webcity/assets/MainMenu-COvPM9El.js",
+    "/webcity/assets/ui-kit-MzPT2zMa.js",
+    "/webcity/assets/storage-CEWf2sWG.js"
+  ],
+  "network": "150ms latency, 1.6Mbps down / 0.75Mbps up, cold cache, SW blocked; local Chrome, no CPU throttling",
+  "scope": "main menu interactive, not full city startup; heap/viewport emulation is not physical iPhone memory"
+}

@@ -60,6 +60,7 @@ export class CommandDispatcher {
         data: ArrayBuffer,
       ): Promise<import('../world/snapshot').WorldSnapshot>;
     },
+    private readonly measureTick?: (ms: number) => void,
   ) {}
 
   /** Dispatch an untrusted structured-clone payload without exposing authority. */
@@ -661,7 +662,7 @@ export class CommandDispatcher {
   /** Send one compact clock event after each batch of fixed steps. */
   advance(elapsedMs: number): void {
     if (this.loading) return;
-    if (this.simulation?.advance(elapsedMs))
+    if (this.simulation?.advance(elapsedMs, this.measureTick))
       this.emit({ t: 'clock', clock: this.simulation.readClock() });
     this.streamElapsed += Math.min(elapsedMs, SIM_RUNTIME.maxElapsedMs);
     if (this.simulation && this.streamElapsed >= TRAFFIC_RUNTIME.streamMs) {

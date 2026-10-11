@@ -313,12 +313,12 @@ export class BuildingRenderer {
         break;
     }
     this.maxWorkMs = Math.max(this.maxWorkMs, performance.now() - start);
-    for (const [id, e] of this.entries) {
+    for (const e of this.entries.values()) {
       if (e.removed) {
         e.removal += dt;
         if (e.removal >= R.demolitionSeconds) {
           this.release(e);
-          this.entries.delete(id);
+          this.entries.delete(e.data.id);
           continue;
         }
       }
