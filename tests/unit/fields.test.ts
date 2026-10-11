@@ -248,3 +248,30 @@ describe('environmental fields', () => {
     expect(left.buildings[2]!.sewageDischarge).toBeGreaterThan(0);
   });
 });
+
+it.each([1, 2, 3, 17, 300])(
+  'smooths a %i-cell-wide field exactly like the bounded reference stencil',
+  (size) => {
+    const source = Float32Array.from(
+      { length: size * size },
+      (_, i) => ((i * 37) % 1001) / 7 - 20,
+    );
+    const original = source.slice(),
+      expected = new Float32Array(source.length);
+    for (let z = 0; z < size; z++)
+      for (let x = 0; x < size; x++) {
+        let sum = 0,
+          count = 0;
+        for (let dz = -1; dz <= 1; dz++)
+          for (let dx = -1; dx <= 1; dx++) {
+            if (z + dz < 0 || z + dz >= size || x + dx < 0 || x + dx >= size)
+              continue;
+            sum += source[(z + dz) * size + x + dx]!;
+            count++;
+          }
+        expected[z * size + x] = Math.max(0, Math.min(100, sum / count));
+      }
+    expect(smoothField(source, size)).toEqual(expected);
+    expect(source).toEqual(original);
+  },
+);

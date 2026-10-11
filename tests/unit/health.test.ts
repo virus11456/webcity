@@ -191,3 +191,28 @@ describe('resident health and healthcare', () => {
     expect(f.s.stats.health!.residents).toBe(0);
   });
 });
+
+it('keeps each home recovery and fractional individual health separate in one update', () => {
+  const { s, b, day } = fixture();
+  const other = { ...structuredClone(b), id: b.id + 1, pos: { x: 160, z: 9 } };
+  s.buildings.push(other);
+  updatePopulation(s);
+  b.coverage = { health: 0.01 };
+  other.coverage = { health: 0.5 };
+  for (let i = 0; i < s.citizens.count; i++) {
+    s.citizens.health[i] = 40 + i;
+    s.citizens.healthFraction[i] = i;
+  }
+  const before = s.citizens.health.slice(),
+    fractions = s.citizens.healthFraction.slice();
+  day();
+  for (let i = 0; i < s.citizens.count; i++) {
+    const gain = s.citizens.homeId[i] === b.id ? 4 : 200;
+    expect(s.citizens.health[i]! * 100 + s.citizens.healthFraction[i]!).toBe(
+      before[i]! * 100 + fractions[i]! + gain,
+    );
+  }
+  const settled = s.citizens.health.slice();
+  updateHealth(s, true);
+  expect(s.citizens.health).toEqual(settled);
+});

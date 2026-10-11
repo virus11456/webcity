@@ -75,9 +75,10 @@ export function updatePower(s: SimState): BuildingPatch[] {
   let links = cached?.links;
   if (!cached || !sameShapes(nodes, cached.shapes)) {
     links = nodes.map(() => [] as number[]);
-    const buckets = new Map<string, number[]>();
+    const buckets = new Map<string, number[]>(),
+      bounds = nodes.map((node) => polygonBounds(node.points));
     nodes.forEach((node, i) => {
-      const box = polygonBounds(node.points),
+      const box = bounds[i]!,
         seen = new Set<number>(),
         reach = UTILITY_RULES.powerReachM;
       const keys: string[] = [];
@@ -96,7 +97,21 @@ export function updatePower(s: SimState): BuildingPatch[] {
           for (const j of buckets.get(key) ?? [])
             if (!seen.has(j)) {
               seen.add(j);
-              const other = nodes[j]!;
+              const other = nodes[j]!,
+                otherBox = bounds[j]!;
+              // AABB separation is a lower bound on the exact footprint/path gap.
+              // Reject distant bucket neighbors before allocating and testing edge pairs.
+              const dx = Math.max(
+                  0,
+                  box.minX - otherBox.maxX,
+                  otherBox.minX - box.maxX,
+                ),
+                dz = Math.max(
+                  0,
+                  box.minZ - otherBox.maxZ,
+                  otherBox.minZ - box.maxZ,
+                );
+              if (dx * dx + dz * dz > (reach + POWER.epsilon) ** 2) continue;
               if (
                 shapeDistance(
                   node.points,

@@ -1,0 +1,257 @@
+{
+  "baseCommit": "7379900defdf678e8c598b6eb7d0c5855f472c3f",
+  "before": [
+    {
+      "populationStart": 100000,
+      "populationEnd": 99066,
+      "buildings": 2032,
+      "segments": 32,
+      "shopping": {
+        "samples": 10,
+        "meanMs": 11.032824900000014,
+        "p95Ms": 11.306083000000058,
+        "maxMs": 11.306083000000058
+      },
+      "ticks": {
+        "samples": 60,
+        "meanMs": 27.053758383333296,
+        "p95Ms": 94.34620899999982,
+        "maxMs": 175.05437500000005
+      },
+      "daily": {
+        "samples": 6,
+        "meanMs": 104.05667399999994,
+        "p95Ms": 175.05437500000005,
+        "maxMs": 175.05437500000005
+      },
+      "note": "Node full Simulation.tick including fiscal-day work; excludes browser postMessage and GPU. Authored unserviced city."
+    },
+    {
+      "populationStart": 100000,
+      "populationEnd": 99066,
+      "buildings": 2032,
+      "segments": 32,
+      "shopping": {
+        "samples": 10,
+        "meanMs": 11.141062400000038,
+        "p95Ms": 11.38775000000004,
+        "maxMs": 11.38775000000004
+      },
+      "ticks": {
+        "samples": 60,
+        "meanMs": 27.151606900000015,
+        "p95Ms": 94.75887499999999,
+        "maxMs": 177.8292080000001
+      },
+      "daily": {
+        "samples": 6,
+        "meanMs": 105.4740555,
+        "p95Ms": 177.8292080000001,
+        "maxMs": 177.8292080000001
+      },
+      "note": "Node full Simulation.tick including fiscal-day work; excludes browser postMessage and GPU. Authored unserviced city."
+    },
+    {
+      "populationStart": 100000,
+      "populationEnd": 99066,
+      "buildings": 2032,
+      "segments": 32,
+      "shopping": {
+        "samples": 10,
+        "meanMs": 10.755295799999994,
+        "p95Ms": 10.96308399999998,
+        "maxMs": 10.96308399999998
+      },
+      "ticks": {
+        "samples": 60,
+        "meanMs": 27.22358398333334,
+        "p95Ms": 94.5697909999999,
+        "maxMs": 186.81433300000003
+      },
+      "daily": {
+        "samples": 6,
+        "meanMs": 107.08626350000002,
+        "p95Ms": 186.81433300000003,
+        "maxMs": 186.81433300000003
+      },
+      "note": "Node full Simulation.tick including fiscal-day work; excludes browser postMessage and GPU. Authored unserviced city."
+    },
+    {
+      "populationStart": 100000,
+      "populationEnd": 99066,
+      "buildings": 2032,
+      "segments": 32,
+      "shopping": {
+        "samples": 10,
+        "meanMs": 11.142033300000003,
+        "p95Ms": 11.596916000000022,
+        "maxMs": 11.596916000000022
+      },
+      "ticks": {
+        "samples": 60,
+        "meanMs": 27.34363046666666,
+        "p95Ms": 95.76979200000005,
+        "maxMs": 172.61287499999992
+      },
+      "daily": {
+        "samples": 6,
+        "meanMs": 104.94029850000003,
+        "p95Ms": 172.61287499999992,
+        "maxMs": 172.61287499999992
+      },
+      "note": "Node full Simulation.tick including fiscal-day work; excludes browser postMessage and GPU. Authored unserviced city."
+    },
+    {
+      "populationStart": 100000,
+      "populationEnd": 99066,
+      "buildings": 2032,
+      "segments": 32,
+      "shopping": {
+        "samples": 10,
+        "meanMs": 11.060091700000015,
+        "p95Ms": 11.351249999999993,
+        "maxMs": 11.351249999999993
+      },
+      "ticks": {
+        "samples": 60,
+        "meanMs": 27.645241049999964,
+        "p95Ms": 98.04212499999994,
+        "maxMs": 184.88020900000004
+      },
+      "daily": {
+        "samples": 6,
+        "meanMs": 108.02765999999995,
+        "p95Ms": 184.88020900000004,
+        "maxMs": 184.88020900000004
+      },
+      "note": "Node full Simulation.tick including fiscal-day work; excludes browser postMessage and GPU. Authored unserviced city."
+    }
+  ],
+  "after": [
+    {
+      "populationStart": 100000,
+      "populationEnd": 99066,
+      "buildings": 2032,
+      "segments": 32,
+      "shopping": {
+        "samples": 10,
+        "meanMs": 10.7903749,
+        "p95Ms": 11.21350000000001,
+        "maxMs": 11.21350000000001
+      },
+      "ticks": {
+        "samples": 60,
+        "meanMs": 25.455965350000003,
+        "p95Ms": 86.58999999999969,
+        "maxMs": 128.68525
+      },
+      "daily": {
+        "samples": 6,
+        "meanMs": 91.13045133333333,
+        "p95Ms": 128.68525,
+        "maxMs": 128.68525
+      },
+      "note": "Node full Simulation.tick including fiscal-day work; excludes browser postMessage and GPU. Authored unserviced city."
+    },
+    {
+      "populationStart": 100000,
+      "populationEnd": 99066,
+      "buildings": 2032,
+      "segments": 32,
+      "shopping": {
+        "samples": 10,
+        "meanMs": 11.421808199999981,
+        "p95Ms": 11.612207999999953,
+        "maxMs": 11.612207999999953
+      },
+      "ticks": {
+        "samples": 60,
+        "meanMs": 26.54912771666667,
+        "p95Ms": 89.88629200000014,
+        "maxMs": 141.14554199999986
+      },
+      "daily": {
+        "samples": 6,
+        "meanMs": 95.50004849999999,
+        "p95Ms": 141.14554199999986,
+        "maxMs": 141.14554199999986
+      },
+      "note": "Node full Simulation.tick including fiscal-day work; excludes browser postMessage and GPU. Authored unserviced city."
+    },
+    {
+      "populationStart": 100000,
+      "populationEnd": 99066,
+      "buildings": 2032,
+      "segments": 32,
+      "shopping": {
+        "samples": 10,
+        "meanMs": 10.768337600000006,
+        "p95Ms": 10.989666000000057,
+        "maxMs": 10.989666000000057
+      },
+      "ticks": {
+        "samples": 60,
+        "meanMs": 25.254960383333323,
+        "p95Ms": 89.28370799999993,
+        "maxMs": 127.84291700000006
+      },
+      "daily": {
+        "samples": 6,
+        "meanMs": 91.92054850000001,
+        "p95Ms": 127.84291700000006,
+        "maxMs": 127.84291700000006
+      },
+      "note": "Node full Simulation.tick including fiscal-day work; excludes browser postMessage and GPU. Authored unserviced city."
+    },
+    {
+      "populationStart": 100000,
+      "populationEnd": 99066,
+      "buildings": 2032,
+      "segments": 32,
+      "shopping": {
+        "samples": 10,
+        "meanMs": 10.955529099999989,
+        "p95Ms": 11.218665999999985,
+        "maxMs": 11.218665999999985
+      },
+      "ticks": {
+        "samples": 60,
+        "meanMs": 26.359510449999966,
+        "p95Ms": 91.86837500000001,
+        "maxMs": 129.87966600000004
+      },
+      "daily": {
+        "samples": 6,
+        "meanMs": 93.80126399999999,
+        "p95Ms": 129.87966600000004,
+        "maxMs": 129.87966600000004
+      },
+      "note": "Node full Simulation.tick including fiscal-day work; excludes browser postMessage and GPU. Authored unserviced city."
+    },
+    {
+      "populationStart": 100000,
+      "populationEnd": 99066,
+      "buildings": 2032,
+      "segments": 32,
+      "shopping": {
+        "samples": 10,
+        "meanMs": 11.303279299999986,
+        "p95Ms": 11.657125000000008,
+        "maxMs": 11.657125000000008
+      },
+      "ticks": {
+        "samples": 60,
+        "meanMs": 26.465417449999986,
+        "p95Ms": 91.00091699999984,
+        "maxMs": 132.11620900000003
+      },
+      "daily": {
+        "samples": 6,
+        "meanMs": 94.27443783333327,
+        "p95Ms": 132.11620900000003,
+        "maxMs": 132.11620900000003
+      },
+      "note": "Node full Simulation.tick including fiscal-day work; excludes browser postMessage and GPU. Authored unserviced city."
+    }
+  ]
+}
