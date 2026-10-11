@@ -2,6 +2,7 @@ import {
   summarizeRoadTraffic,
   type RoadTraffic,
 } from '../../world/roadTraffic';
+import { TRAM } from '../../data/tram';
 import { METRO } from '../../data/metro';
 import { TIME } from '../../data/config';
 import { PATHFINDING } from '../../data/pathfinding';
@@ -125,15 +126,17 @@ export class TrafficSystem {
     return v;
   }
   private length(v: Vehicle): number {
-    return v.kind === TrafficKind.metro
-      ? METRO.trainLengthM
-      : v.kind === TrafficKind.pedestrian
-        ? C.pedestrianLengthM
-        : v.kind === TrafficKind.truck || v.kind === TrafficKind.garbage
-          ? C.truckLengthM
-          : v.kind === TrafficKind.bus
-            ? C.busLengthM
-            : C.carLengthM;
+    return v.kind === TrafficKind.tram
+      ? TRAM.vehicleLengthM
+      : v.kind === TrafficKind.metro
+        ? METRO.trainLengthM
+        : v.kind === TrafficKind.pedestrian
+          ? C.pedestrianLengthM
+          : v.kind === TrafficKind.truck || v.kind === TrafficKind.garbage
+            ? C.truckLengthM
+            : v.kind === TrafficKind.bus
+              ? C.busLengthM
+              : C.carLengthM;
   }
   private gap(v: Vehicle, other: Vehicle): number {
     return (

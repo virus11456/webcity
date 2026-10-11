@@ -672,3 +672,6 @@ TransitSystem 管理每條路線與個別乘客，RoutePlanner 將可搭直達�
 
 ### M4-02 地鐵
 TransitSystem 的向後相容 mode／stationIds 標記地下路線，共用個人乘客、步行任務與票款；TrafficKind.metro 使用已存在的 M3 地鐵模型。world/metro 生成地下 access 路段及土地／造價驗證，Worker 從車站位置重建並獨立占用軌道。軌道與路線一起提交，沒有主執行緒修改權威狀態；readTransit 仍是摘要，存檔保留列車實際進度。MetroTracks 僅於地下工具顯示 X-ray 軌道，地形沿用透明模式且保留拾取表面。見 METRO.md。
+
+### M4-03 道路電車
+TransitSystem 的 tram mode 使用既有道路 RouteLeg 與 TrafficKind.tram；同車道占用及路口規則不另開旁路。路線保存已支付軌道的路段與車道取樣，道路改變後只允許仍在已鋪軌路段的路徑，拆路移除相應軌道。createBusLine.preview 是純驗證報價，不配置 ID、派車或扣款，正式命令重驗狀態。TramTracks 依權威摘要繪製成單批線段，與 M3 原創 18 m 軌道車體共用素材；沒新增外部素材。見 TRAM.md。

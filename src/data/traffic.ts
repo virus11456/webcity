@@ -29,4 +29,5 @@ export const TrafficKind = {
   hearse: 7,
   pedestrian: 8,
   metro: 9,
+  tram: 10,
 } as const;

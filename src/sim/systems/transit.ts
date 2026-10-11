@@ -1,3 +1,4 @@
+import { TRAM } from '../../data/tram';
 import { METRO as M } from '../../data/metro';
 import { GAME_MODES } from '../../data/config';
 import { metroRoute, metroTrackCost, metroLandValid } from '../../world/metro';
@@ -79,6 +80,33 @@ export class TransitSystem {
       ),
     );
   }
+  private seats(l: BusLine) {
+    return l.mode === 'metro'
+      ? CAPACITY.metroPassengers
+      : l.mode === 'tram'
+        ? TRAM.passengers
+        : CAPACITY.busPassengers;
+  }
+  private fare(l: BusLine) {
+    return l.mode === 'metro' ? M.fare : l.mode === 'tram' ? TRAM.fare : C.fare;
+  }
+  private trackData(paths: Route[]) {
+    const tracks = new Map<
+      string,
+      { segment: number; points: import('../../world/roadLanes').LanePoint[] }
+    >();
+    for (const r of paths)
+      for (const leg of r.legs)
+        if (leg.segment > 0 || leg.fromLane)
+          tracks.set(leg.lane ?? leg.id, {
+            segment:
+              leg.segment > 0
+                ? leg.segment
+                : this.planner.paths.lane(leg.fromLane!, 'drive')!.segment,
+            points: leg.points.map((p) => ({ ...p })),
+          });
+    return [...tracks.values()];
+  }
   private capacity(id: number) {
     return this.depot(id)
       ? BUILDINGS.find((b) => b.id === 'bus_depot')!.capacity.vehicles
@@ -124,7 +152,7 @@ export class TransitSystem {
     }
     return paths;
   }
-  create(stops: Vec2[], mode?: 'metro'): Outcome {
+  create(stops: Vec2[], mode?: 'metro' | 'tram', preview = false): Outcome {
     if (
       this.s.transitLines.length >= C.maxLines ||
       stops.length < 2 ||
@@ -158,7 +186,7 @@ export class TransitSystem {
       if (!metroLandValid(stops, this.s.ownedTiles))
         return { ok: false, reason: 'err.landNotOwned' };
     }
-    const cost = mode === 'metro' ? metroTrackCost(stops) : 0;
+    let cost = mode === 'metro' ? metroTrackCost(stops) : 0;
     if (!GAME_MODES[this.s.settings.mode].unlimitedMoney && this.s.money < cost)
       return { ok: false, reason: 'err.notEnoughMoney' };
     const paths =
@@ -167,6 +195,28 @@ export class TransitSystem {
         : this.paths(stops);
     if (!paths) return { ok: false, reason: 'err.busRoute' };
     const length = paths.reduce((sum, r) => sum + r.length, 0);
+    let tracks: BusLine['tracks'];
+    if (mode === 'tram') {
+      if (
+        length > TRAM.maxLineM ||
+        paths.some((r) => r.legs.some((leg) => leg.kind === 'laneChange'))
+      )
+        return { ok: false, reason: 'err.tramRoute' };
+      tracks = this.trackData(paths);
+      const ids = new Set(tracks.map((t) => t.segment));
+      cost = this.s.segments
+        .filter((s) => ids.has(s.id))
+        .reduce(
+          (n, s) =>
+            n + Math.ceil(s.length / TRAM.trackUnitM) * TRAM.trackCostPer8M,
+          0,
+        );
+      if (
+        !GAME_MODES[this.s.settings.mode].unlimitedMoney &&
+        this.s.money < cost
+      )
+        return { ok: false, reason: 'err.notEnoughMoney' };
+    }
     const vehicles =
       mode === 'metro'
         ? 1
@@ -175,14 +225,23 @@ export class TransitSystem {
       (b) =>
         this.depot(b.id) && this.ingress(b.pos, stops[0]!, b.frontageSetbackM),
     );
-    if (!mode && !depots.length) return { ok: false, reason: 'err.busDepot' };
+    if (mode !== 'metro' && !depots.length)
+      return { ok: false, reason: 'err.busDepot' };
     const depot = depots.find((d) => vehicles <= this.available(d.id));
-    if (!mode && !depot) return { ok: false, reason: 'err.busCapacity' };
+    if (mode !== 'metro' && !depot)
+      return { ok: false, reason: 'err.busCapacity' };
+    if (preview) return { ok: true, cost };
     const id = this.s.nextId++;
     const line: BusLine = {
       id,
       depot: mode === 'metro' ? stationIds![0]! : depot!.id,
-      ...(mode ? { mode, stationIds } : {}),
+      ...(mode
+        ? {
+            mode,
+            ...(stationIds ? { stationIds } : {}),
+            ...(tracks ? { tracks } : {}),
+          }
+        : {}),
       color: (id - 1) % Object.keys(ZONE_PALETTE).length,
       stops: structuredClone(stops),
       length,
@@ -243,7 +302,7 @@ export class TransitSystem {
         target: 0,
         mission: 0,
         position: {
-          ...(l.mode === 'metro' ? l.stops.at(-1)! : this.depot(l.depot)!.pos),
+          ...(l.mode ? l.stops.at(-1)! : this.depot(l.depot)!.pos),
         },
       });
   }
@@ -285,11 +344,28 @@ export class TransitSystem {
     const revision = this.planner.paths.graphRevision;
     if (revision === this.revision) return;
     this.revision = revision;
+    const existingRoads = new Set(this.s.segments.map((s) => s.id));
     for (const l of this.s.transitLines) {
-      const paths =
+      if (l.mode === 'tram')
+        l.tracks = l.tracks?.filter((t) => existingRoads.has(t.segment));
+      let paths =
         l.mode === 'metro'
           ? this.railPaths(l.stops, l.id)
           : this.paths(l.stops);
+      if (paths && l.mode === 'tram') {
+        const ids = new Set(l.tracks?.map((t) => t.segment));
+        if (
+          paths.some((r) =>
+            r.legs.some(
+              (leg) =>
+                leg.kind === 'laneChange' ||
+                (leg.segment > 0 && !ids.has(leg.segment)),
+            ),
+          )
+        )
+          paths = null;
+        else l.tracks = this.trackData(paths);
+      }
       l.blocked = !paths;
       if (paths) {
         this.routes.set(l.id, paths);
@@ -479,26 +555,22 @@ export class TransitSystem {
             if (
               p.stage === 'waiting' &&
               p.from === bus.target &&
-              aboard <
-                (l.mode === 'metro'
-                  ? CAPACITY.metroPassengers
-                  : CAPACITY.busPassengers)
+              aboard < this.seats(l)
             ) {
               p.stage = 'riding';
               p.bus = bus.id;
               aboard++;
               l.passengers++;
-              l.revenue += l.mode === 'metro' ? M.fare : C.fare;
+              l.revenue += this.fare(l);
               this.s.economy.transitUnsettled =
-                (this.s.economy.transitUnsettled ?? 0) +
-                (l.mode === 'metro' ? M.fare : C.fare);
+                (this.s.economy.transitUnsettled ?? 0) + this.fare(l);
             }
           bus.target = (bus.target + 1) % l.stops.length;
         }
         if (bus.mission) continue;
         const prior = (bus.target + l.stops.length - 1) % l.stops.length;
         const route =
-          l.mode === 'metro' || distance(bus.position, l.stops[prior]!) < 1
+          l.mode !== undefined || distance(bus.position, l.stops[prior]!) < 1
             ? this.routes.get(l.id)?.[prior]
             : this.ingress(
                 bus.position,
@@ -515,7 +587,11 @@ export class TransitSystem {
           this.mission(
             route,
             id,
-            l.mode === 'metro' ? TrafficKind.metro : TrafficKind.bus,
+            l.mode === 'metro'
+              ? TrafficKind.metro
+              : l.mode === 'tram'
+                ? TrafficKind.tram
+                : TrafficKind.bus,
             l.id,
           )
         )

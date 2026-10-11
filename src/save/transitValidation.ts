@@ -1,3 +1,4 @@
+import { TRAM } from '../data/tram';
 import { METRO } from '../data/metro';
 import { TRANSIT as C } from '../data/transit';
 import { ZONE_PALETTE } from '../data/palette';
@@ -27,7 +28,7 @@ export function validateTransit(
   for (const l of s.transitLines) {
     check(
       l &&
-        (l.mode === undefined || l.mode === 'metro') &&
+        (l.mode === undefined || l.mode === 'metro' || l.mode === 'tram') &&
         integer(l.depot) &&
         integer(l.color) &&
         l.color < Object.keys(ZONE_PALETTE).length &&
@@ -77,13 +78,34 @@ export function validateTransit(
       );
     } else assigned.set(l.depot, (assigned.get(l.depot) ?? 0) + l.vehicles);
     check((assigned.get(l.depot) ?? 0) <= depotCapacity);
+    if (l.mode === 'tram')
+      check(
+        Array.isArray(l.tracks) &&
+          (l.tracks.length > 0 || l.blocked) &&
+          l.tracks.length <= TRAM.maxTrackSections &&
+          l.tracks.every(
+            (t) =>
+              integer(t.segment) &&
+              t.segment > 0 &&
+              t.segment < s.nextId &&
+              Array.isArray(t.points) &&
+              t.points.length >= 2 &&
+              t.points.every(
+                (p) =>
+                  point(p) &&
+                  typeof p.y === 'number' &&
+                  typeof p.distance === 'number' &&
+                  p.distance >= 0,
+              ),
+          ),
+      );
     const buses = new Set(l.buses.map((b) => b.id));
     const aboard = new Map<number, number>();
     for (const b of l.buses) {
       check(
         integer(b.target) && b.target < l.stops.length && point(b.position),
       );
-      add(b.mission, l.id, l.mode === 'metro' ? 9 : 2);
+      add(b.mission, l.id, l.mode === 'metro' ? 9 : l.mode === 'tram' ? 10 : 2);
     }
     for (const p of l.riders) {
       const j = p.journey,
@@ -123,7 +145,12 @@ export function validateTransit(
     check(
       [...aboard.values()].every(
         (n) =>
-          n <= (l.mode === 'metro' ? CAP.metroPassengers : CAP.busPassengers),
+          n <=
+          (l.mode === 'metro'
+            ? CAP.metroPassengers
+            : l.mode === 'tram'
+              ? TRAM.passengers
+              : CAP.busPassengers),
       ),
     );
   }

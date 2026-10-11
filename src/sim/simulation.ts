@@ -655,13 +655,18 @@ export class Simulation {
   /** Copy all arrays; callers cannot mutate the authoritative city. */
   busCommand(
     command:
-      | { t: 'createBusLine'; stops: Vec2[]; mode?: 'metro' }
+      | {
+          t: 'createBusLine';
+          stops: Vec2[];
+          mode?: 'metro' | 'tram';
+          preview?: boolean;
+        }
       | { t: 'setBusVehicles'; id: number; vehicles: number }
       | { t: 'deleteBusLine'; id: number },
   ): Omit<Result, 't' | 'reqId'> {
     const result =
       command.t === 'createBusLine'
-        ? this.transit.create(command.stops, command.mode)
+        ? this.transit.create(command.stops, command.mode, command.preview)
         : command.t === 'setBusVehicles'
           ? this.transit.setVehicles(command.id, command.vehicles)
           : this.transit.delete(command.id);
