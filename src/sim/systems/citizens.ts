@@ -524,6 +524,26 @@ export class CitizenSystem {
       const d = network.distance(reach, a);
       return d <= reach.radius ? d : Infinity;
     };
+    // Home and education determine road reach; personal age/ID/capacity decisions stay below.
+    // Rebuilt for every allocation, so road edits, budgets and disabled schools take effect.
+    const byHomeEducation = new Map<
+      number,
+      { id: number; distance: number }[]
+    >();
+    const options = (i: number) => {
+      const key = c.homeId[i]! * 4 + c.education[i]!;
+      let candidates = byHomeEducation.get(key);
+      if (!candidates) {
+        candidates = [];
+        for (const school of schools) {
+          const d = distance(i, school.id);
+          if (Number.isFinite(d))
+            candidates.push({ id: school.id, distance: d });
+        }
+        byHomeEducation.set(key, candidates);
+      }
+      return candidates;
+    };
     const eligible: number[] = [];
     for (let i = 0; i < c.count; i++) {
       const level = c.education[i]!,
@@ -543,7 +563,10 @@ export class CitizenSystem {
     // Reserve eligible existing pupils before admitting newcomers; capacity cuts use stable IDs.
     for (const i of eligible) {
       const old = c.schoolId[i]!;
-      if ((slots.get(old) ?? 0) > 0 && Number.isFinite(distance(i, old)))
+      if (
+        (slots.get(old) ?? 0) > 0 &&
+        options(i).some((school) => school.id === old)
+      )
         slots.set(old, slots.get(old)! - 1);
       else c.schoolId[i] = 0;
     }
@@ -551,12 +574,11 @@ export class CitizenSystem {
       if (c.schoolId[i]) continue;
       let chosen = 0,
         best = Infinity;
-      for (const b of schools) {
-        if (!slots.get(b.id)) continue;
-        const d = distance(i, b.id);
-        if (d < best) {
-          best = d;
-          chosen = b.id;
+      for (const school of options(i)) {
+        if (!slots.get(school.id)) continue;
+        if (school.distance < best) {
+          best = school.distance;
+          chosen = school.id;
         }
       }
       if (chosen) {

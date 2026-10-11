@@ -1,3 +1,4 @@
+import { polygonBounds } from './zoneGeometry';
 import { uniqueReason } from './unique';
 import { BUILDINGS, type BuildingDefinition } from '../data/buildings';
 import { SERVICES } from '../data/services';
@@ -25,6 +26,7 @@ interface Link {
   segment: RoadSegment;
   points: RoadSample[];
   length: number;
+  bounds: ReturnType<typeof polygonBounds>;
 }
 export interface ServiceAccess {
   road: number;
@@ -53,7 +55,12 @@ export class ServiceNetwork {
       if (!a || !b) continue;
       const points = sampleRoad(segment, a, b),
         length = points.at(-1)!.distance;
-      this.links.set(segment.id, { segment, points, length });
+      this.links.set(segment.id, {
+        segment,
+        points,
+        length,
+        bounds: polygonBounds(points),
+      });
       for (const [from, to] of [
         [a.id, b.id],
         [b.id, a.id],
@@ -74,10 +81,26 @@ export class ServiceNetwork {
         ROADS[link.segment.type].widthM / 2 +
         BULLDOZE.frontageToleranceM +
         setback;
+      const box = link.bounds;
+      if (
+        pos.x < box.minX - limit ||
+        pos.x > box.maxX + limit ||
+        pos.z < box.minZ - limit ||
+        pos.z > box.maxZ + limit
+      )
+        continue;
       for (let i = 1; i < link.points.length; i++) {
         const a = link.points[i - 1]!,
-          b = link.points[i]!,
-          p = closestPointOnSegment(pos, a, b);
+          b = link.points[i]!;
+        // Preserve nearest-road and equal-distance ordering; only reject impossible access.
+        if (
+          pos.x < Math.min(a.x, b.x) - limit ||
+          pos.x > Math.max(a.x, b.x) + limit ||
+          pos.z < Math.min(a.z, b.z) - limit ||
+          pos.z > Math.max(a.z, b.z) + limit
+        )
+          continue;
+        const p = closestPointOnSegment(pos, a, b);
         if (p.distance <= limit && p.distance < best) {
           best = p.distance;
           result = {
