@@ -1,3 +1,4 @@
+import { createCityStatistics } from './ui/cityStatistics';
 import { TerraformTool } from './tools/terraformTool';
 import { createTerraformControls } from './ui/terraformControls';
 import { TERRAFORM } from './data/terraform';
@@ -220,6 +221,7 @@ const debug =
     : undefined;
 let sim: SimClient | undefined;
 let tileControls: ReturnType<typeof createTileControls> | undefined;
+let cityStatistics: ReturnType<typeof createCityStatistics> | undefined;
 let financeControls: ReturnType<typeof createFinanceControls> | undefined;
 let simControls: ReturnType<typeof createSimControls> | undefined;
 try {
@@ -954,6 +956,7 @@ if (canvas && status) {
         city!.cameraController.flyTo(p, NOTIFICATIONS.focusDistanceM);
       });
       financeControls = createFinanceControls(root, sim!);
+      cityStatistics = createCityStatistics(root, sim!);
       tileControls = createTileControls(root, sim!);
       saveController = createSaveController(
         sim,
@@ -1135,6 +1138,7 @@ if (import.meta.hot)
     city?.dispose();
     debug?.dispose();
     financeControls?.dispose();
+    cityStatistics?.dispose();
     simControls?.dispose();
     tileControls?.dispose();
     sim?.dispose();
