@@ -1,3 +1,4 @@
+import { UTILITY_RULES } from '../../data/buildings';
 import { policyValue } from '../../world/policies';
 import { HAPPINESS as H } from '../../data/simulation';
 import { POWER } from '../../data/power';
@@ -6,9 +7,11 @@ import { ZONES, type ZoneType } from '../../data/zones';
 import type { Building } from '../../world/types';
 import type { BuildingPatch } from '../../world/snapshot';
 import type { SimState } from '../state';
-/** M2 assumes outside garbage collection until M4 supplies explicit coverage. */
+/** Durable stock determines garbage service once M4 initializes the building. */
 export function garbageCollected(b: Building): boolean {
-  return b.coverage?.garbage === undefined || b.coverage.garbage > 0;
+  return b.garbage
+    ? b.garbage.stock <= UTILITY_RULES.garbageOverflowUnits
+    : b.coverage?.garbage === undefined || b.coverage.garbage > 0;
 }
 export function buildingHappiness(
   b: Building,

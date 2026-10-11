@@ -115,7 +115,7 @@ it('renders crime at the exact threshold and clears it from a partial crime patc
   r.update(0, camera, 900, 900);
   expect(r.readStats().visible).toBe(1);
   expect(r.geometry.getAttribute('tile').getX(0)).toBe(7);
-  expect(r.material.vertexShader).toContain('(uv.x+tile)/10.0');
+  expect(r.material.vertexShader).toContain('(uv.x+tile)/11.0');
   r.accept({
     t: 'buildingsChanged',
     added: [],

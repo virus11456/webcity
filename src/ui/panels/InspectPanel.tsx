@@ -6,6 +6,7 @@ import {
   BUILDING_PROBLEMS,
   hasBuildingProblem,
 } from '../../world/buildingProblems';
+import { garbageCapacity } from '../../world/garbage';
 import { serviceDefinition } from '../../world/services';
 import type { ServiceId } from '../../data/services';
 import { render } from 'preact';
@@ -42,6 +43,7 @@ function Content({
     const v = info.value;
     const mission = v.citizenId < 0;
     const fire = v.purpose === 7;
+    const garbage = v.purpose === 9;
     const rows: [string, string | number][] =
       v.purpose === 8
         ? [
@@ -49,35 +51,53 @@ function Content({
             [t('bus.onboard'), v.bus?.passengers ?? 0],
             [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
           ]
-        : fire
+        : garbage
           ? [
-              [t('fire.station'), v.originId ?? 0],
+              [t('garbage.depot'), v.garbage?.depot ?? 0],
+              [t('garbage.load'), v.garbage?.units.toFixed(1) ?? 0],
+              [
+                t('vehicle.purpose'),
+                t(
+                  v.garbage?.phase === 'return'
+                    ? 'garbage.return'
+                    : 'garbage.collect',
+                ),
+              ],
               [t('vehicle.destination'), v.destinationId],
-              [t('vehicle.purpose'), t('fire.responding')],
               [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
             ]
-          : mission
+          : fire
             ? [
-                [t('cargo.origin'), v.originId || t('cargo.outside')],
-                [
-                  t('vehicle.destination'),
-                  v.destinationId || t('cargo.outside'),
-                ],
-                [t('cargo.units'), v.cargo?.units.toFixed(0) ?? 0],
-                [t('vehicle.purpose'), t(`cargo.${v.cargo?.kind ?? 'local'}`)],
+                [t('fire.station'), v.originId ?? 0],
+                [t('vehicle.destination'), v.destinationId],
+                [t('vehicle.purpose'), t('fire.responding')],
                 [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
               ]
-            : [
-                [t('vehicle.citizen'), v.citizenId],
-                [t('vehicle.home'), v.homeId],
-                [t('vehicle.work'), v.workId || t('inspect.none')],
-                [t('vehicle.destination'), v.destinationId],
-                [
-                  t('vehicle.purpose'),
-                  t(`vehicle.purpose${v.purpose as 1 | 2 | 3 | 4 | 5}`),
-                ],
-                [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
-              ];
+            : mission
+              ? [
+                  [t('cargo.origin'), v.originId || t('cargo.outside')],
+                  [
+                    t('vehicle.destination'),
+                    v.destinationId || t('cargo.outside'),
+                  ],
+                  [t('cargo.units'), v.cargo?.units.toFixed(0) ?? 0],
+                  [
+                    t('vehicle.purpose'),
+                    t(`cargo.${v.cargo?.kind ?? 'local'}`),
+                  ],
+                  [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
+                ]
+              : [
+                  [t('vehicle.citizen'), v.citizenId],
+                  [t('vehicle.home'), v.homeId],
+                  [t('vehicle.work'), v.workId || t('inspect.none')],
+                  [t('vehicle.destination'), v.destinationId],
+                  [
+                    t('vehicle.purpose'),
+                    t(`vehicle.purpose${v.purpose as 1 | 2 | 3 | 4 | 5}`),
+                  ],
+                  [t('vehicle.speed'), `${(v.speed * 3.6).toFixed(0)} km/h`],
+                ];
     return (
       <div
         class="inspect-data"
@@ -95,13 +115,15 @@ function Content({
                     ? 'tram.tab'
                     : 'bus.vehicle'
                 : 'bus.walker'
-              : fire
-                ? 'fire.truck'
-                : mission
-                  ? 'cargo.truck'
-                  : v.kind === 8
-                    ? 'vehicle.pedestrian'
-                    : 'vehicle.car',
+              : garbage
+                ? 'garbage.truck'
+                : fire
+                  ? 'fire.truck'
+                  : mission
+                    ? 'cargo.truck'
+                    : v.kind === 8
+                      ? 'vehicle.pedestrian'
+                      : 'vehicle.car',
           )}{' '}
           #{Math.abs(v.citizenId)}
         </strong>
@@ -119,7 +141,13 @@ function Content({
           )}
           {mission && v.originPos && (
             <Button onClick={() => locate?.(v.originPos!)}>
-              {t(fire ? 'fire.locateStation' : 'cargo.locateOrigin')}
+              {t(
+                garbage
+                  ? 'garbage.locateOrigin'
+                  : fire
+                    ? 'fire.locateStation'
+                    : 'cargo.locateOrigin',
+              )}
             </Button>
           )}
           {v.homePos && (
@@ -186,7 +214,7 @@ function Content({
             .join(' / '),
         ],
       );
-    if (b.kind === 'park' && b.defId !== 'tree')
+    if ((b.kind === 'park' && b.defId !== 'tree') || b.wasteFacility)
       rows.push([
         t('service.status'),
         t(b.enabled === false ? 'service.off' : 'service.on'),
@@ -294,6 +322,21 @@ function Content({
         ],
         [t('fire.damage'), `${Math.round(b.fire.damage * 100)}%`],
       );
+    if (b.garbage)
+      rows.push(
+        [t('garbage.stock'), b.garbage.stock.toFixed(1)],
+        [t('garbage.rate'), b.garbage.generated.toFixed(1)],
+      );
+    if (b.wasteFacility)
+      rows.push(
+        [
+          t('garbage.storage'),
+          `${b.wasteFacility.stock.toFixed(1)} / ${garbageCapacity(b)}`,
+        ],
+        [t('garbage.processed'), b.wasteFacility.processedToday.toFixed(1)],
+        [t('garbage.trucks'), String(b.wasteFacility.vehicles)],
+        [t('garbage.routeHint'), b.wasteFacility.full ? t('garbage.full') : ''],
+      );
     if (b.industry)
       rows.push([t('industry.product'), t(`industry.${b.industry}`)]);
     if (b.cargo)
@@ -304,7 +347,10 @@ function Content({
     const problems = Object.keys(PROBLEMS).filter(
       (key) =>
         (b.problemTimers[key as keyof typeof PROBLEMS] ?? 0) > 0 ||
-        ((key === 'crime' || key === 'fire' || key === 'sickness') &&
+        ((key === 'crime' ||
+          key === 'fire' ||
+          key === 'sickness' ||
+          key === 'garbage') &&
           hasBuildingProblem(b, key)),
     );
     rows.push([

@@ -187,7 +187,7 @@ export const BUILDINGS = [
     cost: 6000,
     upkeepPerWeek: 240,
     unlock: 1,
-    footprintCells: null,
+    footprintCells: [4, 4],
     garbage: {
       storageUnits: 80000,
       processingUnitsPerDay: null,
@@ -200,7 +200,7 @@ export const BUILDINGS = [
     cost: 32000,
     upkeepPerWeek: 960,
     unlock: 4,
-    footprintCells: null,
+    footprintCells: [4, 4],
     garbage: {
       storageUnits: null,
       processingUnitsPerDay: 2000,
@@ -217,7 +217,7 @@ export const BUILDINGS = [
     cost: 18000,
     upkeepPerWeek: 640,
     unlock: 6,
-    footprintCells: null,
+    footprintCells: [4, 4],
     garbage: {
       storageUnits: null,
       processingUnitsPerDay: 1000,
