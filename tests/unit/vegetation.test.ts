@@ -1,4 +1,4 @@
-import { PerspectiveCamera, InstancedMesh } from 'three';
+import { PerspectiveCamera, InstancedMesh, Matrix4 } from 'three';
 import { VegetationRenderer } from '../../src/render/vegetation/vegetation';
 import { expect, it } from 'vitest';
 import {
@@ -134,4 +134,35 @@ it('changes density through completed batches and disposes every instanced GPU b
   forest.dispose();
   expect(released).toBe(48);
   expect(forest.group.children).toHaveLength(0);
+});
+
+it('rebuilds natural vegetation on edited ground and hides submerged plants', () => {
+  let height = 60;
+  const forest = new VegetationRenderer({ ...terrain, heightAt: () => height }),
+    camera = new PerspectiveCamera();
+  const finish = () => {
+    let frames = 0;
+    while (forest.readStats().pending && frames++ < 1000) forest.update(camera);
+    expect(frames).toBeLessThan(1000);
+  };
+  camera.position.set(0, 200, 0);
+  finish();
+  height = 90;
+  forest.terrainChanged();
+  finish();
+  const matrix = new Matrix4();
+  const mesh = forest.group.children.find(
+    (o) => o instanceof InstancedMesh && o.visible && o.count > 0,
+  ) as InstancedMesh;
+  mesh.getMatrixAt(0, matrix);
+  expect(matrix.elements[13]).toBe(90);
+  height = 0;
+  forest.terrainChanged();
+  finish();
+  expect(forest.readStats().rendered).toBe(0);
+  height = 60;
+  forest.terrainChanged();
+  finish();
+  expect(forest.readStats().rendered).toBe(60000);
+  forest.dispose();
 });

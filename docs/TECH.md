@@ -703,3 +703,6 @@ WorldSnapshot.tileLimit 是 4／9；SimClient 的當前裝置限制隨每次 ini
 
 ### M4-11 獨特建築
 `data/unique` 提供十二筆建築資料，`world/unique` 共用唯一性／解鎖判斷。ServiceTool 與 Worker place 共用預覽，卡片只顯示唯讀狀態。地標沿用 parkField 地價／幸福度、預算、停用、拆除與保存，使用 unique kind；facilityModels 保留原 M3 模型 ID 與 landmark 索引，無重複資產。詳見 UNIQUE_BUILDINGS.md。
+
+### M4-12 地形指令
+`terraform` 接收有限長 TerraformDraft，由 world/terraform 同時供預覽與 Worker 驗證。Simulation 只接受沙盒，產生稀疏 TerrainPatch，重用 roadsChanged.terrain 同步鏡像與渲染；重建 zone grid 及 utility fields。建築／道路支撐三角形在任何寫入前受保護。自然植被重分批時重新取地面高度並略過水下位置；水面沿 revision 更新 texture。詳見 TERRAFORM.md。

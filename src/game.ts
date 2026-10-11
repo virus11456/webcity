@@ -1,3 +1,6 @@
+import { TerraformTool } from './tools/terraformTool';
+import { createTerraformControls } from './ui/terraformControls';
+import { TERRAFORM } from './data/terraform';
 import { deviceTileLimit } from './world/tiles';
 import { createTileControls } from './ui/tileControls';
 import { createPolicyControls } from './ui/policyControls';
@@ -78,6 +81,10 @@ import { App } from './ui/App';
 
 declare global {
   interface Window {
+    __webcityTerrain?: (
+      x: number,
+      z: number,
+    ) => { height: number; revision: number; waterVersion: number };
     __webcityDistricts?: () => ReturnType<SimClient['mirror']['readDistricts']>;
     __webcityTransit?: () => ReturnType<SimClient['mirror']['readTransit']>;
     __webcityGraphics?: () => ReturnType<CityRenderer['readGraphics']>;
@@ -137,6 +144,8 @@ let inspectPreview: BulldozePreview | undefined;
 let facilityAssets: FacilityAssets | undefined;
 let serviceRenderer: ServiceRenderer | undefined;
 let policyControls: ReturnType<typeof createPolicyControls> | undefined;
+let terraformTool: TerraformTool | undefined;
+let terraformControls: ReturnType<typeof createTerraformControls> | undefined;
 let districtTool: DistrictTool | undefined;
 let districtRenderer: DistrictRenderer | undefined;
 let districtControls: ReturnType<typeof createDistrictControls> | undefined;
@@ -601,6 +610,40 @@ if (canvas && status) {
       districtRenderer = new DistrictRenderer(city.scene, (x, z) =>
         city!.terrain.heightAt(x, z),
       );
+      let terraformPreviewActive = false;
+      terraformTool = new TerraformTool(sim!, powerContext.pick, (s) => {
+        roadControls?.updateTerraform(s.active, s.pending);
+        terraformControls?.update(s);
+        const p = s.draft.points.at(-1);
+        if (s.active || terraformPreviewActive)
+          serviceRenderer?.show(
+            s.active && p
+              ? {
+                  points: Array.from(
+                    { length: TERRAFORM.ringSegments },
+                    (_, i) => ({
+                      x:
+                        p.x +
+                        Math.cos((i * Math.PI * 2) / TERRAFORM.ringSegments) *
+                          s.draft.radius,
+                      z:
+                        p.z +
+                        Math.sin((i * Math.PI * 2) / TERRAFORM.ringSegments) *
+                          s.draft.radius,
+                    }),
+                  ),
+                  valid: !!s.preview && !s.preview.reason,
+                  reason: null,
+                  closed: true,
+                  cost: 0,
+                  output: 0,
+                  radius: 0,
+                  roads: [],
+                }
+              : null,
+          );
+        terraformPreviewActive = s.active;
+      });
       districtTool = new DistrictTool(sim!, powerContext.pick, (s) => {
         roadControls?.updateDistrict(s.active, s.pending);
         districtControls?.update(s);
@@ -725,6 +768,11 @@ if (canvas && status) {
           tools!.select(zoneTool!);
           canvas.focus({ preventScroll: true });
         },
+        terraform() {
+          mode(true);
+          tools!.select(terraformTool!);
+          canvas.focus({ preventScroll: true });
+        },
         district() {
           mode(true);
           tools!.select(districtTool!);
@@ -824,6 +872,11 @@ if (canvas && status) {
         },
       );
       metroControls.update(metroTool.readState());
+      terraformControls = createTerraformControls(
+        roadControls.terraformHost,
+        terraformTool!,
+      );
+      terraformControls.update(terraformTool!.readState());
       districtControls = createDistrictControls(
         roadControls.districtHost,
         districtTool,
@@ -959,6 +1012,7 @@ if (canvas && status) {
       };
       window.__webcityDistricts = () => sim!.mirror.readDistricts();
       window.__webcityTransit = () => sim!.mirror.readTransit();
+      window.__webcityTerrain = (x, z) => city!.readTerrain(x, z);
       window.__webcityStats = () => sim!.mirror.readStats();
       window.__webcityBuildings = () => sim!.mirror.readBuildings();
       window.__webcityProblemIcons = () => problemIcons!.readStats();
@@ -988,6 +1042,7 @@ if (import.meta.hot)
     delete window.__webcityBuildings;
     delete window.__webcityDistricts;
     delete window.__webcityTransit;
+    delete window.__webcityTerrain;
     delete window.__webcityStats;
     delete window.__webcityGraphics;
     delete window.__webcityCamera;
@@ -1014,6 +1069,8 @@ if (import.meta.hot)
     inspectPreview?.dispose();
     unsubscribeServices?.();
     policyControls?.dispose();
+    terraformTool?.dispose();
+    terraformControls?.dispose();
     districtTool?.dispose();
     districtControls?.dispose();
     districtRenderer?.dispose();

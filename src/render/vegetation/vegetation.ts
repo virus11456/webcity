@@ -7,7 +7,7 @@ import {
   type Material,
   type PerspectiveCamera,
 } from 'three';
-import { QUALITY, type QualityLevel } from '../../data/config';
+import { SEA_LEVEL, QUALITY, type QualityLevel } from '../../data/config';
 import { VEGETATION as V } from '../../data/vegetation';
 import {
   generateVegetation,
@@ -44,7 +44,9 @@ export class VegetationRenderer {
   private rendered = 0;
   private excluded = 0;
   private readonly lodCounts = new Uint32Array(3);
-  constructor(terrain: Pick<Terrain, 'seed' | 'heightAt' | 'resources'>) {
+  constructor(
+    private readonly terrain: Pick<Terrain, 'seed' | 'heightAt' | 'resources'>,
+  ) {
     this.generation = generateVegetation(terrain, this.data);
     this.installBillboard();
   }
@@ -63,6 +65,9 @@ export class VegetationRenderer {
   }
   sync(world: VegetationWorld): void {
     this.occupancy = this.mask.sync(world);
+    this.invalidate();
+  }
+  terrainChanged(): void {
     this.invalidate();
   }
   private invalidate(): void {
@@ -109,9 +114,9 @@ export class VegetationRenderer {
     for (let i = 0; i < this.data.count; i++) {
       if (i % V.workSlice === 0) yield;
       const px = this.data.positions[i * 3]!,
-        py = this.data.positions[i * 3 + 1]!,
-        pz = this.data.positions[i * 3 + 2]!;
-      if (this.mask.blocked(px, pz)) {
+        pz = this.data.positions[i * 3 + 2]!,
+        py = this.terrain.heightAt(px, pz);
+      if (py <= SEA_LEVEL + V.waterClearanceM || this.mask.blocked(px, pz)) {
         excluded++;
         continue;
       }

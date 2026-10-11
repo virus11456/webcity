@@ -285,3 +285,18 @@
 .policy-row small {
   color: var(--color-secondary);
 }
+
+.terraform-controls select,
+.terraform-controls button {
+  min-height: 44px;
+  min-width: 44px;
+  font-size: 14px;
+}
+.terraform-controls p,
+.terraform-controls output {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.terraform-controls select {
+  max-width: 100%;
+}

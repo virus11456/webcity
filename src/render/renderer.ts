@@ -214,6 +214,14 @@ export class CityRenderer {
     this.vegetation.group.visible = enabled;
     this.canvas.dataset.construction = String(enabled);
   }
+  /** Read-only diagnostics for edited terrain and water texture uploads. */
+  readTerrain(x: number, z: number) {
+    return {
+      height: this.terrain.heightAt(x, z),
+      revision: this.terrain.revision,
+      waterVersion: this.water.heightTexture.version,
+    };
+  }
   /** Copy worker-owned heights into rendering/picking terrain and refresh changed terrain chunks. */
   syncTerrain(heights: Float32Array): void {
     let changed = false;
@@ -225,6 +233,7 @@ export class CityRenderer {
     if (changed) {
       this.terrain.revision++;
       this.land.sync();
+      this.vegetation.terrainChanged();
     }
   }
   /** Register late-created world materials with current and future shadow quality tiers. */
