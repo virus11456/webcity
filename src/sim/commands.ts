@@ -19,6 +19,7 @@ import type { CitySettings } from '../world/snapshot';
 import { Simulation } from './simulation';
 
 const futureCommands = new Set([
+  'tutorial',
   'setDisasters',
   'rebuild',
   'load',
@@ -156,6 +157,7 @@ export class CommandDispatcher {
         // createState validates every init field before generating a map.
         const next = new Simulation(
           {
+            ...('tutorial' in value ? { tutorial: value.tutorial } : {}),
             seed: value.seed,
             mapId: value.mapId,
             mode: value.mode,
@@ -192,6 +194,24 @@ export class CommandDispatcher {
     }
     if (!this.simulation) {
       fail('err.notReady');
+      return;
+    }
+    if (value.t === 'tutorial') {
+      if (
+        !('action' in value) ||
+        !['pan', 'rotate', 'zoom', 'finance', 'skip', 'dismiss'].includes(
+          value.action as string,
+        )
+      )
+        fail('err.invalidCommand');
+      else
+        this.emit({
+          t: 'result',
+          reqId,
+          ...this.simulation.tutorialAction(
+            value.action as import('../data/tutorial').TutorialAction,
+          ),
+        });
       return;
     }
     if (value.t === 'buyTile') {

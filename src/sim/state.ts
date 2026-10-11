@@ -1,3 +1,4 @@
+import { createTutorial } from '../world/tutorial';
 import { emptyDisasters } from '../world/disasters';
 import { emptyDeathcare } from '../world/deathcare';
 import { emptyGarbage } from '../world/garbage';
@@ -27,6 +28,8 @@ export interface SimState extends Omit<WorldSnapshot, 'terrain'> {
 export function createState(settings: CitySettings): SimState {
   const preset = resolveMap(settings.mapId, settings.seed);
   if (
+    (settings.tutorial !== undefined &&
+      typeof settings.tutorial !== 'boolean') ||
     !preset ||
     !Number.isSafeInteger(settings.seed) ||
     !['normal', 'easy', 'sandbox'].includes(settings.mode) ||
@@ -39,6 +42,7 @@ export function createState(settings: CitySettings): SimState {
     ECONOMY.startingMoney[settings.mode === 'easy' ? 'easy' : 'normal'];
   const field = () => new Float32Array(WORLD.fieldCells ** 2);
   const state: SimState = {
+    tutorial: createTutorial(settings.tutorial === true),
     seed: settings.seed,
     settings: { ...settings, cityName: settings.cityName.trim() },
     clock: { day: 0, tickInDay: 0, ticks: 0, speed: SIM_RUNTIME.initialSpeed },
@@ -108,6 +112,7 @@ export function createState(settings: CitySettings): SimState {
     nextId: 1,
   };
   if (settings.starterRoads) addStarterCity(state);
+  if (settings.tutorial) state.clock.speed = 0;
   updateDemand(state);
   return state;
 }

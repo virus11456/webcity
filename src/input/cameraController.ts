@@ -13,6 +13,7 @@ export interface InputTool {
   onAngleModifier?(disabled: boolean): void;
 }
 export interface InputOptions {
+  onCameraAction?: (action: 'pan' | 'rotate' | 'zoom') => void;
   onTap?: (p: InputPointer) => void;
   onLongPress?: (p: InputPointer) => void;
   onShortcut?: (action: Shortcut) => void;
@@ -32,7 +33,7 @@ export class CameraController {
   constructor(
     private readonly canvas: HTMLCanvasElement,
     private readonly camera: RtsCamera,
-    options: InputOptions = {},
+    private readonly options: InputOptions = {},
   ) {
     this.state = camera.readState();
     this.gestures = new Gestures({
@@ -47,7 +48,10 @@ export class CameraController {
       drag: (p, dx, dy) => {
         if (p.button === 2) {
           if (p.ctrl) camera.tilt(dy * INPUT.tiltPerPixel);
-          else camera.rotate(-dx * INPUT.rotatePerPixel);
+          else {
+            camera.rotate(-dx * INPUT.rotatePerPixel);
+            if (dx) options.onCameraAction?.('rotate');
+          }
         } else if (p.button === 0 && this.tool) {
           if (this.toolActive) this.tool.onPointerMove(p);
         } else this.panPixels(-dx, -dy);
@@ -68,8 +72,14 @@ export class CameraController {
         if (tilt) camera.tilt(dy * INPUT.tiltPerPixel);
         else {
           if (dx || dy) this.panPixels(-dx, -dy);
-          if (angle) camera.rotate(-angle);
-          if (scale !== 1) camera.zoom(scale, this.ndc(center));
+          if (angle) {
+            camera.rotate(-angle);
+            options.onCameraAction?.('rotate');
+          }
+          if (scale !== 1) {
+            camera.zoom(scale, this.ndc(center));
+            options.onCameraAction?.('zoom');
+          }
         }
       },
     });
@@ -112,6 +122,7 @@ export class CameraController {
     const s = Math.sin(this.state.azimuth),
       c = Math.cos(this.state.azimuth);
     this.camera.pan(c * right + s * down, -s * right + c * down);
+    if (right || down) this.options.onCameraAction?.('pan');
   }
   private readonly wheel = (e: WheelEvent): void => {
     e.preventDefault();
@@ -125,6 +136,7 @@ export class CameraController {
       -INPUT.wheelMaxPx,
       Math.min(INPUT.wheelMaxPx, e.deltaY * unit),
     );
+    if (pixels) this.options.onCameraAction?.('zoom');
     this.camera.zoom(
       Math.exp(pixels * INPUT.wheelScale),
       this.ndc({ x: e.clientX, y: e.clientY }),
@@ -198,7 +210,10 @@ export class CameraController {
     }
     const rotate = k.held('KeyE') - k.held('KeyQ'),
       tilt = k.held('KeyR') - k.held('KeyF');
-    if (rotate) this.camera.rotate(rotate * INPUT.rotatePerSecond * dt);
+    if (rotate) {
+      this.camera.rotate(rotate * INPUT.rotatePerSecond * dt);
+      this.options.onCameraAction?.('rotate');
+    }
     if (tilt) this.camera.tilt(tilt * INPUT.tiltPerSecond * dt);
   }
   /** Remove subscriptions, release captures and cancel unfinished actions. */

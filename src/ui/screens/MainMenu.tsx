@@ -152,6 +152,7 @@ function MainMenu({
   const [mapId, setMapId] = useState<string>(MAP_PRESETS[0].id);
   const [seed, setSeed] = useState(String(MAP_PRESETS[0].seed));
   const [name, setName] = useState(t('menu.defaultName'));
+  const [tutorial, setTutorial] = useState(true);
   const [mode, setMode] = useState<CitySettings['mode']>('normal');
   const [install, setInstall] = useState(
     !sessionStorage.getItem('webcity-install-dismissed'),
@@ -210,6 +211,7 @@ function MainMenu({
               )
                 start({
                   starterRoads: true,
+                  tutorial,
                   cityName: name.trim(),
                   mapId,
                   seed: Number(seed),
@@ -276,6 +278,14 @@ function MainMenu({
                   </option>
                 ))}
               </select>
+            </label>
+            <label class="menu-check">
+              <input
+                type="checkbox"
+                checked={tutorial}
+                onChange={(e) => setTutorial(e.currentTarget.checked)}
+              />
+              {t('tutorial.enable')}
             </label>
             <Button type="submit" variant="primary">
               {t('menu.start')}

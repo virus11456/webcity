@@ -1,4 +1,10 @@
 import {
+  CAMERA_LESSONS,
+  TUTORIAL,
+  type TutorialAction,
+} from '../data/tutorial';
+import { createTutorial, tutorialStepReady } from '../world/tutorial';
+import {
   ConstructionHistory,
   captureConstruction,
   constructionChange,
@@ -172,6 +178,7 @@ export class Simulation {
         );
         if (change) this.constructionHistory.push(change);
         this.emit({ t: 'undoState', view: this.constructionHistory.view() });
+        this.refreshTutorial();
       }
       return result;
     } finally {
@@ -273,7 +280,10 @@ export class Simulation {
       const copy = structuredClone(restored),
         terrain = this.state.terrain;
       Object.assign(terrain, copy.terrain);
-      Object.assign(this.state, copy, { terrain });
+      Object.assign(this.state, copy, {
+        terrain,
+        tutorial: copy.tutorial ?? createTutorial(),
+      });
     }
     this.state.tileLimit = tileLimit ?? this.state.tileLimit;
     updateIndustry(this.state);
@@ -1026,6 +1036,43 @@ export class Simulation {
     this.refreshPower();
     return { ok: true, cost };
   }
+  tutorialAction(action: TutorialAction): Omit<Result, 't' | 'reqId'> {
+    const t = (this.state.tutorial ??= createTutorial());
+    if (action === 'dismiss' && t.status === 'completed') t.dismissed = true;
+    else if (t.status === 'active') {
+      if (action === 'skip') t.status = 'skipped';
+      else if (
+        t.step === 0 &&
+        CAMERA_LESSONS.includes(action as (typeof CAMERA_LESSONS)[number])
+      ) {
+        t.camera |=
+          1 <<
+          CAMERA_LESSONS.indexOf(action as (typeof CAMERA_LESSONS)[number]);
+        if (t.camera === (1 << CAMERA_LESSONS.length) - 1) t.step++;
+      } else if (
+        action === 'finance' &&
+        t.step === TUTORIAL.steps - 1 &&
+        !this.gameOver
+      ) {
+        t.step = TUTORIAL.steps;
+        t.status = 'completed';
+        this.state.money += TUTORIAL.reward;
+        this.state.stats.money = this.state.money;
+        this.emit({ t: 'fundsChanged', money: this.state.money });
+        this.emit({ t: 'economy', finance: financeView(this.state) });
+      }
+    }
+    this.refreshTutorial();
+    this.emit({ t: 'tutorial', state: { ...t } });
+    return { ok: true };
+  }
+  private refreshTutorial(): void {
+    const t = this.state.tutorial;
+    if (!t || t.status !== 'active' || this.gameOver) return;
+    const prior = t.step;
+    while (tutorialStepReady(this.state, t.step)) t.step++;
+    if (prior !== t.step) this.emit({ t: 'tutorial', state: { ...t } });
+  }
   snapshot(): WorldSnapshot {
     this.cargo.reconcile();
     this.garbage?.reconcile();
@@ -1542,6 +1589,7 @@ export class Simulation {
         updated: cargoPatches,
       });
     if (cargoPatches.some((p) => p.fire !== undefined)) this.refreshPower();
+    if (this.state.tutorial?.step === 6) this.refreshTutorial();
     if (!dayCompleted) return;
     this.state.stats.day = this.state.clock.day;
     this.state.stats.money = this.state.money;
