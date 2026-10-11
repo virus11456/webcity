@@ -16,9 +16,14 @@ export function DemandBars({
   demand: CityStats['demand'] | undefined;
 }) {
   return (
-    <div class="hud-demand" aria-label={t('hud.demand')}>
+    <div
+      class="hud-demand"
+      aria-label={t('hud.demand')}
+      data-tooltip={t('help.demand')}
+      tabIndex={0}
+    >
       {(['R', 'C', 'I', 'O'] as const).map((zone) => (
-        <div key={zone} class="hud-demand-item" title={t(`hud.demand${zone}`)}>
+        <div key={zone} class="hud-demand-item">
           <span>{zone}</span>
           <div
             class="hud-demand-track"
