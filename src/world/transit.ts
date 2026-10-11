@@ -17,8 +17,9 @@ export interface BusRun {
   position: Vec2;
 }
 export interface BusLine {
-  mode?: 'metro';
+  mode?: 'metro' | 'tram';
   stationIds?: number[];
+  tracks?: { segment: number; points: import('./roadLanes').LanePoint[] }[];
   id: number;
   depot: number;
   color: number;

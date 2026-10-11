@@ -657,7 +657,7 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
         (v.journey.purpose !== 8 ||
           transitMissions.get(-v.journey.citizenId)?.kind === v.kind) &&
         v.kind >= 0 &&
-        v.kind <= 9 &&
+        v.kind <= 10 &&
         Number.isSafeInteger(v.route) &&
         v.route >= 0 &&
         v.route < traffic.routes.length &&

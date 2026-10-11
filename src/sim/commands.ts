@@ -201,7 +201,10 @@ export class CommandDispatcher {
     ) {
       if (
         value.t === 'createBusLine' &&
-        (!('mode' in value) || value.mode === 'metro') &&
+        (!('mode' in value) ||
+          value.mode === 'metro' ||
+          value.mode === 'tram') &&
+        (!('preview' in value) || typeof value.preview === 'boolean') &&
         'stops' in value &&
         Array.isArray(value.stops) &&
         value.stops.every(finitePoint)
@@ -212,7 +215,10 @@ export class CommandDispatcher {
           ...this.simulation.busCommand({
             t: value.t,
             stops: value.stops,
-            ...('mode' in value ? { mode: 'metro' as const } : {}),
+            preview: 'preview' in value ? (value.preview as boolean) : false,
+            ...('mode' in value
+              ? { mode: value.mode as 'metro' | 'tram' }
+              : {}),
           }),
         });
       else if (

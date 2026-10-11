@@ -1,5 +1,13 @@
 export const ZH_TW = {
   'service.bus_depot': '公車總站',
+  'tram.tab': '電車',
+  'tram.quote': '計算鋪軌費用',
+  'tram.finish': '沿路鋪軌並開通',
+  'tram.hint':
+    '選站完成後沿既有道路鋪軌，每條使用道路 $30／8m；公車總站共用車位，列車遵守號誌。',
+  'tram.add': '增加電車',
+  'tram.remove': '減少電車',
+  'err.tramRoute': '電車路線最多 6,400m，路徑不可包含變換車道；請調整站點。',
   'metro.tab': '地鐵',
   'metro.station': '建造地鐵站',
   'metro.finish': '鋪軌並開通環線',
@@ -299,8 +307,7 @@ export const ZH_TW = {
   'toolbar.perWeek': ' / 週',
   'toolbar.straight': '道路模式：直線',
   'toolbar.future': '後續開放的分類',
-  'toolbar.futureItems':
-    '行政區、進階垃圾與殯葬、電車、獨特建築與政策尚未開放。',
+  'toolbar.futureItems': '行政區、進階垃圾與殯葬、獨特建築與政策尚未開放。',
   'toolbar.shortcuts':
     '1–3 速度 · 4 道路 · 5 分區 · 6 電力 · 7 水務 · 8 拆除 · Esc 取消',
 

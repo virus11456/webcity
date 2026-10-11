@@ -10,6 +10,7 @@ import type { Vec2 } from '../world/types';
 import type { BusLineView } from '../world/transit';
 import type { Tool, ToolPointer } from './tool';
 export interface BusToolState {
+  quote?: number;
   active: boolean;
   pending: boolean;
   stops: Vec2[];
@@ -35,9 +36,10 @@ export class BusTool implements Tool {
     private sim: SimClient,
     private pick: (x: number, y: number) => Vec2 | null,
     private changed: (s: BusToolState) => void,
-    readonly mode?: 'metro',
+    readonly mode?: 'metro' | 'tram',
   ) {
     const refresh = () => {
+      this.state.quote = undefined;
       const w = sim.mirror.readRoadWorld();
       this.network = w ? new ServiceNetwork(w.nodes, w.segments) : undefined;
       this.state.lines = sim.mirror
@@ -135,6 +137,7 @@ export class BusTool implements Tool {
       )
     )
       return;
+    this.state.quote = undefined;
     this.state.stops.push(selected);
     this.state.reason = null;
     this.publish();
@@ -146,6 +149,7 @@ export class BusTool implements Tool {
     if (this.state.pending) return;
     this.armed = false;
     this.state.stops = [];
+    this.state.quote = undefined;
     this.state.reason = null;
     this.publish();
   }
@@ -155,6 +159,7 @@ export class BusTool implements Tool {
         {
           t: 'createBusLine',
           stops: this.state.stops,
+          preview: this.mode === 'tram' && this.state.quote === undefined,
           ...(this.mode ? { mode: this.mode } : {}),
         },
         true,
@@ -169,7 +174,12 @@ export class BusTool implements Tool {
       const r = await this.sim.send(command);
       if (r.t === 'result') {
         this.state.reason = r.ok ? null : (r.reason ?? 'err.invalidCommand');
-        if (r.ok && clear) this.state.stops = [];
+        if (r.ok && command.t === 'createBusLine' && command.preview)
+          this.state.quote = r.cost;
+        else if (r.ok && clear) {
+          this.state.stops = [];
+          this.state.quote = undefined;
+        }
       }
     } catch {
       this.state.reason = 'sim.failed';

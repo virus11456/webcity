@@ -11,6 +11,7 @@ import { NOTIFICATIONS } from './data/notifications';
 import { InfoOverlays } from './render/overlays';
 import { createInfoControls } from './ui/infoControls';
 import { FireRenderer } from './render/fire';
+import { TramTracks } from './render/tramTracks';
 import { MetroTracks } from './render/metroTracks';
 import { BusTool } from './tools/busTool';
 import { BusStops } from './render/busStops';
@@ -128,6 +129,10 @@ let inspectPanel: ReturnType<typeof createInspectPanel> | undefined;
 let inspectPreview: BulldozePreview | undefined;
 let facilityAssets: FacilityAssets | undefined;
 let serviceRenderer: ServiceRenderer | undefined;
+let tramTool: BusTool | undefined;
+let tramStops: BusStops | undefined;
+let tramTracks: TramTracks | undefined;
+let tramControls: ReturnType<typeof createBusControls> | undefined;
 let metroOverlayActive = false;
 let metroTool: BusTool | undefined;
 let metroTracks: MetroTracks | undefined;
@@ -574,6 +579,21 @@ if (canvas && status) {
         busControls?.update(s);
         busStops?.update(s.active, s.stops, s.lines);
       });
+      tramStops = new BusStops(city.scene, (x, z) =>
+        city!.terrain.heightAt(x, z),
+      );
+      tramTracks = new TramTracks(city.scene);
+      tramTool = new BusTool(
+        sim,
+        powerContext.pick,
+        (s) => {
+          roadControls?.updateTram(s.active, s.pending);
+          tramControls?.update(s);
+          tramStops?.update(s.active, s.stops, s.lines);
+          tramTracks?.update(s.lines);
+        },
+        'tram',
+      );
       metroTracks = new MetroTracks(city.scene, (x, z) =>
         city!.terrain.heightAt(x, z),
       );
@@ -668,6 +688,11 @@ if (canvas && status) {
           tools!.select(zoneTool!);
           canvas.focus({ preventScroll: true });
         },
+        tram() {
+          mode(true);
+          tools!.select(tramTool!);
+          canvas.focus({ preventScroll: true });
+        },
         metro() {
           mode(true);
           tools!.select(metroTool!);
@@ -748,6 +773,12 @@ if (canvas && status) {
         },
       );
       metroControls.update(metroTool.readState());
+      tramControls = createBusControls(roadControls.tramHost, tramTool, () => {
+        tools!.select(serviceTool!);
+        serviceTool!.setDefinition('bus_depot');
+        canvas.focus({ preventScroll: true });
+      });
+      tramControls.update(tramTool.readState());
       serviceControls = createServiceControls(roadControls.serviceHost, {
         mode: (id) => serviceTool!.setDefinition(id),
         rotate: () => serviceTool!.rotate(),
@@ -923,6 +954,10 @@ if (import.meta.hot)
     buildingThumbnails?.dispose();
     inspectPreview?.dispose();
     unsubscribeServices?.();
+    tramTool?.dispose();
+    tramControls?.dispose();
+    tramTracks?.dispose();
+    tramStops?.dispose();
     metroTool?.dispose();
     metroControls?.dispose();
     metroTracks?.dispose();

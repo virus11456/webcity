@@ -1,3 +1,4 @@
+import { TRAM } from '../../data/tram';
 import { METRO } from '../../data/metro';
 import { distance } from '../../core/math';
 import { CELL_SIZE, GAME_MODES, TIME } from '../../data/config';
@@ -119,7 +120,9 @@ export function weeklyAccounts(s: SimState) {
       (line.blocked ? 0 : line.buses.length) *
         (line.mode === 'metro'
           ? METRO.upkeepPerWeek
-          : TRANSIT.busUpkeepPerWeek),
+          : line.mode === 'tram'
+            ? TRAM.upkeepPerWeek
+            : TRANSIT.busUpkeepPerWeek),
     0,
   );
   for (const z of Object.keys(taxIncome) as ZoneType[])

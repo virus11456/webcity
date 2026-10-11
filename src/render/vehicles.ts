@@ -280,8 +280,7 @@ export class VehicleRenderer {
       const o = i * TRAFFIC_RUNTIME.streamStride,
         id = data[o]!,
         kind = data[o + 2]!;
-      if (o + 9 >= data.length || kind < 0 || kind > TrafficKind.metro)
-        continue;
+      if (o + 9 >= data.length || kind < 0 || kind > TrafficKind.tram) continue;
       let a = this.agents.get(id);
       if (!a) {
         a = {

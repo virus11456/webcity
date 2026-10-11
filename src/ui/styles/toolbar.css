@@ -213,11 +213,13 @@
   line-height: 1.5;
 }
 .bus-controls button,
-.metro-controls button {
+.metro-controls button,
+.tram-controls button {
   min-height: 44px;
 }
 .bus-controls output,
-.metro-controls output {
+.metro-controls output,
+.tram-controls output {
   display: block;
   font-size: 12px;
 }
