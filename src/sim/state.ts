@@ -62,6 +62,7 @@ export function createState(settings: CitySettings): SimState {
       BUDGET_DEPARTMENTS.map((key) => [key, SIM_RUNTIME.defaultBudget]),
     ) as WorldSnapshot['budgets'],
     terrain: new Terrain(settings.seed, preset),
+    tileLimit: WORLD.maxOwnedTiles.desktop,
     ownedTiles: [WORLD.startTile[1] * MAP_TILES + WORLD.startTile[0]],
     nodes: [],
     segments: [],

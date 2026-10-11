@@ -57,7 +57,15 @@ export class ZoneTool implements Tool {
   ) {
     this.unsubscribe = ctx.sim.onEvent((e) => {
       if (e.t === 'zonesChanged' && e.occupancyOnly) return;
-      if (['ready', 'roadsChanged', 'zonesChanged', 'milestone'].includes(e.t))
+      if (
+        [
+          'ready',
+          'tilesChanged',
+          'roadsChanged',
+          'zonesChanged',
+          'milestone',
+        ].includes(e.t)
+      )
         this.refresh();
       else if (e.t === 'error') {
         this.failed = true;

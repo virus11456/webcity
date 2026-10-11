@@ -66,7 +66,7 @@ export class ServiceTool implements Tool {
     };
     this.unsubscribe = ctx.sim.onEvent((e) => {
       if (
-        ['ready', 'milestone', 'roadsChanged'].includes(e.t) ||
+        ['ready', 'tilesChanged', 'milestone', 'roadsChanged'].includes(e.t) ||
         (e.t === 'buildingsChanged' && buildingsChangeFootprints(e))
       )
         refresh();

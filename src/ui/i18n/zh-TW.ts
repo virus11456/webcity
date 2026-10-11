@@ -1,4 +1,18 @@
 export const ZH_TW = {
+  'tiles.title': '購買土地',
+  'tiles.close': '關閉土地地圖',
+  'tiles.tile': '地塊',
+  'tiles.owned': '已購／已解鎖上限',
+  'tiles.ownedShort': '已購',
+  'tiles.deviceLimit': '裝置上限',
+  'tiles.hint':
+    '選擇俯視地圖上的地塊，再確認購買。必須與現有土地共用一條邊；價格逐塊增加，沙盒免費。',
+  'tiles.buy': '確認購買土地',
+  'tiles.purchased': '土地已購入，可以開始建造',
+  'err.tileOwned': '已擁有這塊土地',
+  'err.tileAdjacent': '只能購買與現有土地共用邊界的地塊',
+  'err.tileLimit': '已達此裝置的土地數量上限',
+
   'milestone.title': '城市里程碑',
   'milestone.reward': '已發放獎金',
   'milestone.unlocks': '新解鎖內容',

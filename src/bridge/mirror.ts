@@ -36,6 +36,18 @@ export class WorldMirror {
       })
     );
   }
+  readTileWorld() {
+    const s = this.state;
+    return (
+      s && {
+        ownedTiles: [...s.ownedTiles],
+        unlocked: [...s.unlocked],
+        tileLimit: s.tileLimit,
+        money: s.money,
+        settings: { mode: s.settings.mode },
+      }
+    );
+  }
   readOwnedTiles(): number[] {
     return [...(this.state?.ownedTiles ?? [])];
   }
@@ -305,6 +317,9 @@ export class WorldMirror {
           tick: event.tick,
           speed: event.speed,
         };
+        break;
+      case 'tilesChanged':
+        state.ownedTiles = [...event.ownedTiles];
         break;
       case 'milestone':
         state.stats.milestone = Math.max(state.stats.milestone, event.index);

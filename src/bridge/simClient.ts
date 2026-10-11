@@ -36,7 +36,10 @@ export class SimClient {
   private listeners = new Set<(event: SimEvent) => void>();
   private stopped = false;
 
-  constructor(private readonly worker: SimTransport) {
+  constructor(
+    private readonly worker: SimTransport,
+    private readonly tileLimit: 4 | 9 = 9,
+  ) {
     worker.addEventListener('message', this.receive);
     worker.addEventListener('error', this.failed);
     worker.addEventListener('messageerror', this.failed);
@@ -54,7 +57,13 @@ export class SimClient {
       }, SIM_RUNTIME.requestTimeoutMs);
       this.pending.set(reqId, { resolve, reject, timer });
       try {
-        this.worker.postMessage({ ...command, reqId });
+        this.worker.postMessage({
+          ...command,
+          ...(['init', 'load'].includes(command.t)
+            ? { tileLimit: this.tileLimit }
+            : {}),
+          reqId,
+        });
       } catch (error) {
         clearTimeout(timer);
         this.pending.delete(reqId);

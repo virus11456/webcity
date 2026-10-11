@@ -33,8 +33,8 @@ import type {
 
 export type CommandInput =
   | ({ t: 'district' } & import('../world/districts').DistrictAction)
-  | ({ t: 'init' } & CitySettings)
-  | { t: 'load'; data: ArrayBuffer }
+  | ({ t: 'init'; tileLimit?: 4 | 9 } & CitySettings)
+  | { t: 'load'; data: ArrayBuffer; tileLimit?: 4 | 9 }
   | { t: 'save' }
   | {
       t: 'createBusLine';
@@ -79,6 +79,7 @@ export type CommandInput =
   | { t: 'inspect'; target: { kind: string; id: Id } };
 export type Command = CommandInput & { reqId: number };
 export type FailureReason =
+  | import('../world/tiles').TileReason
   | PowerReason
   | ConstructionReason
   | ZoningReason
@@ -163,5 +164,6 @@ export type SimEvent =
       pos?: Vec2;
       params?: Record<string, unknown>;
     }
+  | { t: 'tilesChanged'; ownedTiles: number[] }
   | { t: 'milestone'; index: number }
   | { t: 'error'; message: string };

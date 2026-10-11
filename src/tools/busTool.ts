@@ -50,6 +50,7 @@ export class BusTool implements Tool {
     this.stop = sim.onEvent((e) => {
       if (
         e.t === 'ready' ||
+        e.t === 'tilesChanged' ||
         e.t === 'milestone' ||
         e.t === 'roadsChanged' ||
         (this.mode === 'metro' &&
