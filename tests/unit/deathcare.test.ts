@@ -62,6 +62,66 @@ function fixture(restored?: WorldSnapshot) {
   };
 }
 describe('physical deathcare collection', () => {
+  it('preserves the rotating target cursor while no facility exists, then uses newly added facilities', () => {
+    const f = fixture();
+    const second = { ...structuredClone(f.home), id: 10020 };
+    const third = { ...structuredClone(f.home), id: 10021 };
+    f.s.buildings = [f.home, second];
+    f.deathcare.tick();
+    expect(f.s.deathcare.missions).toHaveLength(0);
+    f.facility.pos.x = 100; // Reduced budget also reduces the cemetery service radius.
+    f.s.buildings.push(third, f.facility);
+    f.s.budgets.deathcare = 1 / 4;
+    f.deathcare.tick();
+    expect(f.s.deathcare.missions).toHaveLength(1);
+    expect(f.s.deathcare.missions[0]!.to).toBe(third.id);
+  });
+  it('reserves fleet and storage between targets and uses the next equal-distance provider by ID', () => {
+    const f = fixture();
+    const other = { ...structuredClone(f.facility), id: 10030 };
+    f.facility.mortuary!.stock = 2000 - 1;
+    other.mortuary!.stock = 2000 - 1;
+    f.s.buildings = [
+      other,
+      f.home,
+      f.facility,
+      ...Array.from({ length: 5 }, (_, i) => ({
+        ...structuredClone(f.home),
+        id: 10040 + i,
+      })),
+    ];
+    f.deathcare.tick();
+    expect(f.s.deathcare.missions.map((m) => m.from)).toEqual([
+      f.facility.id,
+      other.id,
+    ]);
+    expect(f.s.deathcare.missions.every((m) => m.units === 1)).toBe(true);
+    f.deathcare.tick();
+    expect(f.s.deathcare.missions).toHaveLength(2);
+  });
+  it('counts both collection and returning reservations, then releases them after depot removal', () => {
+    const f = fixture();
+    f.facility.mortuary!.stock = 2000 - 2;
+    f.s.buildings.push({ ...structuredClone(f.home), id: 10020 });
+    f.deathcare.tick();
+    expect(f.s.deathcare.missions).toHaveLength(2);
+    f.s.deathcare.missions[0]!.phase = 'return';
+    f.s.buildings.push({ ...structuredClone(f.home), id: 10021 });
+    f.deathcare.tick();
+    expect(f.s.deathcare.missions).toHaveLength(2);
+    f.s.buildings = f.s.buildings.filter((b) => b.id !== f.facility.id);
+    f.deathcare.tick();
+    expect(f.s.deathcare.missions).toHaveLength(0);
+    const replacement = { ...structuredClone(f.facility), id: 10022 };
+    replacement.mortuary!.stock = 0;
+    f.s.buildings.push(replacement);
+    f.deathcare.tick();
+    expect(f.s.deathcare.missions.length).toBeGreaterThan(0);
+    expect(f.s.deathcare.missions.every((m) => m.from === replacement.id)).toBe(
+      true,
+    );
+  });
+
   it('records actual deaths once at the home after MS2, while emigrants and pre-unlock deaths create no demand', () => {
     for (const unlocked of [false, true]) {
       const { s } = deathcareState();

@@ -32,11 +32,6 @@ export class GarbageSystem {
         )
       : 0;
   }
-  private reserved(id: number) {
-    return this.s.garbage.missions
-      .filter((m) => m.from === id)
-      .reduce((n, m) => n + m.units, 0);
-  }
   private status() {
     for (const b of this.buildings.values())
       if (b.wasteFacility) {
@@ -177,6 +172,18 @@ export class GarbageSystem {
       m.retryTick = this.s.clock.ticks + G.retryTicks;
       if (route) this.start(m, route);
     }
+    // Rebuild after arrivals/retries; reservations include both outbound and returning loads.
+    const facilities = this.s.buildings.filter((b) => b.wasteFacility);
+    const reservations = new Map<number, { vehicles: number; units: number }>();
+    for (const m of this.s.garbage.missions) {
+      let entry = reservations.get(m.from);
+      if (!entry) {
+        entry = { vehicles: 0, units: 0 };
+        reservations.set(m.from, entry);
+      }
+      entry.vehicles++;
+      entry.units += m.units;
+    }
     const assigned = new Set(
       this.s.garbage.missions
         .filter((m) => m.phase === 'collect')
@@ -196,13 +203,13 @@ export class GarbageSystem {
       n++
     ) {
       const to = targets[this.cursor++ % targets.length]!;
-      const providers = this.s.buildings
+      const providers = facilities
         .filter(
           (b) =>
-            b.wasteFacility &&
-            this.fleet(b) >
-              this.s.garbage.missions.filter((m) => m.from === b.id).length &&
-            garbageCapacity(b) - b.wasteFacility.stock - this.reserved(b.id) >=
+            this.fleet(b) > (reservations.get(b.id)?.vehicles ?? 0) &&
+            garbageCapacity(b) -
+              b.wasteFacility!.stock -
+              (reservations.get(b.id)?.units ?? 0) >=
               G.minimumPickup,
         )
         .sort(
@@ -224,7 +231,7 @@ export class GarbageSystem {
             to.garbage!.stock,
             garbageCapacity(from) -
               from.wasteFacility!.stock -
-              this.reserved(from.id),
+              (reservations.get(from.id)?.units ?? 0),
           ),
           requestedTick: this.s.clock.ticks,
           retryTick: this.s.clock.ticks,
@@ -233,6 +240,13 @@ export class GarbageSystem {
         if (!route) continue;
         m.id = this.traffic.reserveMission();
         this.s.garbage.missions.push(m);
+        const reservation = reservations.get(from.id) ?? {
+          vehicles: 0,
+          units: 0,
+        };
+        reservation.vehicles++;
+        reservation.units += m.units;
+        reservations.set(from.id, reservation);
         this.start(m, route);
         break;
       }

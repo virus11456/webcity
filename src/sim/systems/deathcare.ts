@@ -32,11 +32,6 @@ export class DeathcareSystem {
         )
       : 0;
   }
-  private reserved(id: number) {
-    return this.s.deathcare.missions
-      .filter((m) => m.from === id)
-      .reduce((n, m) => n + m.units, 0);
-  }
   private status() {
     for (const b of this.buildings.values())
       if (b.mortuary) {
@@ -174,6 +169,18 @@ export class DeathcareSystem {
       m.retryTick = this.s.clock.ticks + G.retryTicks;
       if (route) this.start(m, route);
     }
+    // Rebuild after arrivals/retries; reservations include both outbound and returning loads.
+    const facilities = this.s.buildings.filter((b) => b.mortuary);
+    const reservations = new Map<number, { vehicles: number; units: number }>();
+    for (const m of this.s.deathcare.missions) {
+      let entry = reservations.get(m.from);
+      if (!entry) {
+        entry = { vehicles: 0, units: 0 };
+        reservations.set(m.from, entry);
+      }
+      entry.vehicles++;
+      entry.units += m.units;
+    }
     const assigned = new Set(
       this.s.deathcare.missions
         .filter((m) => m.phase === 'collect')
@@ -193,13 +200,13 @@ export class DeathcareSystem {
       n++
     ) {
       const to = targets[this.cursor++ % targets.length]!;
-      const providers = this.s.buildings
+      const providers = facilities
         .filter(
           (b) =>
-            b.mortuary &&
-            this.fleet(b) >
-              this.s.deathcare.missions.filter((m) => m.from === b.id).length &&
-            deathcareCapacity(b) - b.mortuary.stock - this.reserved(b.id) >=
+            this.fleet(b) > (reservations.get(b.id)?.vehicles ?? 0) &&
+            deathcareCapacity(b) -
+              b.mortuary!.stock -
+              (reservations.get(b.id)?.units ?? 0) >=
               G.minimumPickup,
         )
         .sort(
@@ -221,7 +228,7 @@ export class DeathcareSystem {
             to.bodies!.pending,
             deathcareCapacity(from) -
               from.mortuary!.stock -
-              this.reserved(from.id),
+              (reservations.get(from.id)?.units ?? 0),
           ),
           requestedTick: this.s.clock.ticks,
           retryTick: this.s.clock.ticks,
@@ -236,6 +243,13 @@ export class DeathcareSystem {
           continue;
         m.id = this.traffic.reserveMission();
         this.s.deathcare.missions.push(m);
+        const reservation = reservations.get(from.id) ?? {
+          vehicles: 0,
+          units: 0,
+        };
+        reservation.vehicles++;
+        reservation.units += m.units;
+        reservations.set(from.id, reservation);
         this.start(m, route);
         break;
       }

@@ -60,6 +60,65 @@ function fixture(restored?: WorldSnapshot) {
   };
 }
 describe('physical garbage collection', () => {
+  it('preserves the rotating target cursor while no facility exists, then uses newly added facilities', () => {
+    const f = fixture();
+    const second = { ...structuredClone(f.home), id: 10020 };
+    const third = { ...structuredClone(f.home), id: 10021 };
+    f.s.buildings = [f.home, second];
+    f.garbage.tick();
+    expect(f.s.garbage.missions).toHaveLength(0);
+    f.s.buildings.push(third, f.facility);
+    f.s.budgets.garbage = 1 / 6;
+    f.garbage.tick();
+    expect(f.s.garbage.missions).toHaveLength(1);
+    expect(f.s.garbage.missions[0]!.to).toBe(third.id);
+  });
+  it('reserves fleet and storage between targets and uses the next equal-distance provider by ID', () => {
+    const f = fixture();
+    const other = { ...structuredClone(f.facility), id: 10030 };
+    f.facility.wasteFacility!.stock = 80000 - 100;
+    other.wasteFacility!.stock = 80000 - 100;
+    f.s.buildings = [
+      other,
+      f.home,
+      f.facility,
+      ...Array.from({ length: 5 }, (_, i) => ({
+        ...structuredClone(f.home),
+        id: 10040 + i,
+      })),
+    ];
+    f.garbage.tick();
+    expect(f.s.garbage.missions.map((m) => m.from)).toEqual([
+      f.facility.id,
+      other.id,
+    ]);
+    expect(f.s.garbage.missions.every((m) => m.units === 100)).toBe(true);
+    f.garbage.tick();
+    expect(f.s.garbage.missions).toHaveLength(2);
+  });
+  it('counts both collection and returning reservations, then releases them after depot removal', () => {
+    const f = fixture();
+    f.facility.wasteFacility!.stock = 80000 - 200;
+    f.s.buildings.push({ ...structuredClone(f.home), id: 10020 });
+    f.garbage.tick();
+    expect(f.s.garbage.missions).toHaveLength(2);
+    f.s.garbage.missions[0]!.phase = 'return';
+    f.s.buildings.push({ ...structuredClone(f.home), id: 10021 });
+    f.garbage.tick();
+    expect(f.s.garbage.missions).toHaveLength(2);
+    f.s.buildings = f.s.buildings.filter((b) => b.id !== f.facility.id);
+    f.garbage.tick();
+    expect(f.s.garbage.missions).toHaveLength(0);
+    const replacement = { ...structuredClone(f.facility), id: 10022 };
+    replacement.wasteFacility!.stock = 0;
+    f.s.buildings.push(replacement);
+    f.garbage.tick();
+    expect(f.s.garbage.missions.length).toBeGreaterThan(0);
+    expect(f.s.garbage.missions.every((m) => m.from === replacement.id)).toBe(
+      true,
+    );
+  });
+
   it('keeps garbage until pickup, then retains truck load until it returns to the depot', () => {
     const f = fixture();
     expect(hasBuildingProblem(f.home, 'garbage')).toBe(true);
