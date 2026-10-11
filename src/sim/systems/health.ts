@@ -1,3 +1,4 @@
+import { policyValue } from '../../world/policies';
 import { clamp } from '../../core/math';
 import { HEALTH as H } from '../../data/health';
 import { CITIZENS } from '../../data/simulation';
@@ -52,7 +53,11 @@ export function updateHealth(s: SimState, daily = false): BuildingPatch[] {
       c.health[i] = Math.floor(value / H.precision);
       c.healthFraction[i] = value % H.precision;
     }
-    const value = c.health[i]! + c.healthFraction[i]! / H.precision;
+    const value = Math.min(
+      CITIZENS.healthRange[1],
+      (c.health[i]! + c.healthFraction[i]! / H.precision) *
+        policyValue(s, homes.get(home)!.pos, 'healthMultiplier', 1),
+    );
     summary.average += value;
     summary.residents++;
     sum += value;

@@ -131,12 +131,18 @@ describe('bus system', () => {
   it('uses the bus for the return home journey as well', () => {
     const x = setup();
     x.transit.create(busStops);
+    const boarded = new Set<number>();
     let row = -1;
     for (let n = 0; n < 1500 && row < 0; n++) {
       x.step();
+      for (const p of x.s.transitLines[0]!.riders)
+        if (p.stage === 'riding') boarded.add(p.journey.citizenId);
       row = Array.from(
         x.s.citizens.locationId.subarray(0, x.s.citizens.count),
-      ).findIndex((id) => id === x.s.buildings[1]!.id);
+      ).findIndex(
+        (id, i) =>
+          id === x.s.buildings[1]!.id && boarded.has(x.s.citizens.id[i]!),
+      );
     }
     expect(row).toBeGreaterThanOrEqual(0);
     const c = x.s.citizens;

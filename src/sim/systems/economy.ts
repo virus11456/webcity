@@ -1,3 +1,4 @@
+import { policyValue, policyFee } from '../../world/policies';
 import { TRAM } from '../../data/tram';
 import { METRO } from '../../data/metro';
 import { distance } from '../../core/math';
@@ -86,7 +87,8 @@ export function weeklyAccounts(s: SimState) {
         units *
         rate *
         ECONOMY.levelMultipliers[b.level - 1]! *
-        s.taxRates[zone];
+        s.taxRates[zone] *
+        (zone === 'CL' ? policyValue(s, b.pos, 'taxRevenueMultiplier', 1) : 1);
     } else {
       const d = definitions.get(b.defId);
       if (!d) continue;
@@ -97,7 +99,12 @@ export function weeklyAccounts(s: SimState) {
           : d.water
             ? 'water'
             : (d.service ?? 'parks');
-      if (b.enabled !== false) upkeep[dept] += d.upkeepPerWeek;
+      if (b.enabled !== false)
+        upkeep[dept] +=
+          d.upkeepPerWeek *
+          (dept === 'parks'
+            ? policyValue(s, b.pos, 'parkUpkeepMultiplier', 1)
+            : 1);
     }
   }
   for (const r of s.segments.filter((road) => !road.regional))
@@ -129,10 +136,12 @@ export function weeklyAccounts(s: SimState) {
     taxIncome[z] = moneyRound(taxIncome[z]);
   for (const dept of BUDGET_DEPARTMENTS)
     upkeep[dept] = moneyRound(upkeep[dept] * s.budgets[dept]);
+  const policyExpenses = moneyRound(policyFee(s, s.buildings));
   const debtPayment = moneyRound(
     s.loans.reduce((sum, loan) => sum + loanPayment(loan).total, 0),
   );
   return {
+    policyExpenses,
     taxIncome,
     upkeep,
     debtPayment,
@@ -143,7 +152,10 @@ export function weeklyAccounts(s: SimState) {
       ),
     ),
     expenses: moneyRound(
-      Object.values(upkeep).reduce((a, b) => a + b, debtPayment),
+      Object.values(upkeep).reduce(
+        (a, b) => a + b,
+        debtPayment + policyExpenses,
+      ),
     ),
   };
 }
@@ -159,6 +171,7 @@ export function settleEconomy(s: SimState): void {
     taxIncome: a.taxIncome,
     upkeep: a.upkeep,
     debtPayment: a.debtPayment,
+    policyExpenses: a.policyExpenses,
   };
   s.stats.income = a.income;
   s.stats.expenses = a.expenses;

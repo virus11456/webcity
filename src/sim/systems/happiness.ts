@@ -1,4 +1,4 @@
-import { POLICIES } from '../../data/policies';
+import { policyValue } from '../../world/policies';
 import { HAPPINESS as H } from '../../data/simulation';
 import { POWER } from '../../data/power';
 import { WATER_UTILITY as W } from '../../data/waterUtility';
@@ -39,14 +39,6 @@ export function buildingHappiness(
 export function updateHappiness(s: SimState): BuildingPatch[] {
   const patches: BuildingPatch[] = [],
     homes = new Map<number, number>();
-  const policyDelta = POLICIES.reduce(
-    (sum, p) =>
-      sum +
-      (s.policies.includes(p.id) && 'happinessDelta' in p.effects
-        ? p.effects.happinessDelta
-        : 0),
-    0,
-  );
   let total = 0,
     people = 0;
   for (const b of s.buildings) {
@@ -56,7 +48,7 @@ export function updateHappiness(s: SimState): BuildingPatch[] {
         ? buildingHappiness(
             b,
             s.taxRates[b.defId as ZoneType] * H.range[1],
-            policyDelta,
+            policyValue(s, b.pos, 'happinessDelta', 0),
           )
         : 0;
     if (b.happiness !== value) {

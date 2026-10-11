@@ -1,3 +1,5 @@
+import { policyValue } from '../../world/policies';
+import { POLICIES } from '../../data/policies';
 import { ABANDONMENT } from '../../data/simulation';
 import { Rng } from '../../core/rng';
 import { TIME } from '../../data/config';
@@ -112,7 +114,15 @@ export class GrowthSystem {
     const rng = new Rng(s.seed ^ Math.imul(s.clock.ticks, 0x9e3779b1));
     const blockById = new Map(s.zoneBlocks.map((b) => [b.id, b]));
     for (const demand of ['R', 'C', 'I', 'O'] as const) {
-      const value = s.stats.demand[demand];
+      const base = s.stats.demand[demand];
+      const bonus =
+        demand === 'C' &&
+        (s.policies.includes('small_business') ||
+          s.districts.some((d) => d.policies?.small_business))
+          ? POLICIES.find((p) => p.id === 'small_business')!.effects
+              .lowCommercialDemandDelta
+          : 0;
+      const value = base + bonus;
       const attempts = Number.isFinite(value)
         ? Math.min(
             GROWTH.maxAttemptsPerTick,
@@ -136,12 +146,27 @@ export class GrowthSystem {
         }
         const lot = this.finder.find(zone, rng);
         if (!lot) continue;
+        const localValue =
+          base +
+          (zone === 'CL'
+            ? policyValue(s, lot.pos, 'lowCommercialDemandDelta', 0)
+            : 0);
+        if (
+          attempt >=
+          Math.max(0, Math.floor(localValue / GROWTH.demandPerAttempt))
+        )
+          continue;
         const id = s.nextId++;
         const b: Building = {
           id,
           kind: 'zoned',
           defId: zone,
           level: 1,
+          floorLimit: Number.isFinite(
+            policyValue(s, lot.pos, 'maxFloors', Infinity),
+          )
+            ? policyValue(s, lot.pos, 'maxFloors', Infinity)
+            : undefined,
           pos: lot.pos,
           rotation: lot.rotation,
           lotW: lot.lotW,

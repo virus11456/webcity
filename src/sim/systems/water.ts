@@ -1,3 +1,4 @@
+import { policyValue } from '../../world/policies';
 import { fieldIndex } from '../../world/fieldSampling';
 import { WATER_UTILITY as W } from '../../data/waterUtility';
 import { POWER } from '../../data/power';
@@ -149,6 +150,7 @@ export function updateWater(s: SimState): BuildingPatch[] {
       )) {
         const load =
           demand(b) *
+          policyValue(s, b.pos, 'waterMultiplier', 1) *
           (kind === 'sewage' ? UTILITY_RULES.sewageToWaterRatio : 1);
         if (load > remaining + POWER.epsilon) break;
         remaining -= load;
@@ -179,7 +181,7 @@ export function updateWater(s: SimState): BuildingPatch[] {
     const d = capacities(b);
     if (d?.output === 'water') produced += d.capacityM3PerWeek;
     else if (d) capacity += d.capacityM3PerWeek;
-    const load = demand(b);
+    const load = demand(b) * policyValue(s, b.pos, 'waterMultiplier', 1);
     consumed += load;
     if (load > 0 && !supplied.has(b.id)) unserved++;
     if (load > 0 && !drained.has(b.id)) uncollected++;

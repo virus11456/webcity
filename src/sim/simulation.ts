@@ -1,3 +1,5 @@
+import { setPolicy, updateGarbageProduction } from './systems/policies';
+import type { PolicyId } from '../data/policies';
 import { districtCommand } from './systems/districts';
 import { districtViews, type DistrictAction } from '../world/districts';
 import { TransitSystem } from './systems/transit';
@@ -187,6 +189,7 @@ export class Simulation {
       const population = updatePopulation(this.state, true);
       const power = [...updatePower(this.state), ...updateWater(this.state)];
       this.cargo.daily();
+      const garbage = updateGarbageProduction(this.state, true);
       const servicePatches = [
         ...this.services.update(),
         ...updateEducationSummary(this.state),
@@ -225,6 +228,7 @@ export class Simulation {
       updateDemand(this.state);
       const updates = new Map<number, BuildingPatch>();
       for (const p of [
+        ...garbage,
         ...priorHappiness,
         ...population,
         ...servicePatches,
@@ -398,7 +402,11 @@ export class Simulation {
         ...updateEducationSummary(this.state),
         ...updateLandValue(this.state),
       );
-    patches.push(...updateHappiness(this.state), ...updateLevels(this.state));
+    patches.push(
+      ...updateGarbageProduction(this.state),
+      ...updateHappiness(this.state),
+      ...updateLevels(this.state),
+    );
     const merged = new Map<number, BuildingPatch>();
     for (const p of patches) merged.set(p.id, { ...merged.get(p.id), ...p });
     const updated = [...merged.values()];
@@ -685,8 +693,45 @@ export class Simulation {
       this.emit({ t: 'transit', lines: busLineViews(this.state.transitLines) });
     return result;
   }
+  setPolicy(
+    policy: PolicyId,
+    district: number | null,
+    on: boolean | null,
+  ): Omit<Result, 't' | 'reqId'> {
+    const r = setPolicy(this.state, policy, district, on);
+    if (r.ok) {
+      const patches = updateLevels(this.state);
+      if (patches.length)
+        this.emit({
+          t: 'buildingsChanged',
+          added: [],
+          removed: [],
+          updated: patches,
+        });
+      this.refreshPopulation();
+      this.cargo.policiesChanged();
+      this.emit({ t: 'policies', policies: [...this.state.policies] });
+      this.emit({
+        t: 'districts',
+        districts: districtViews(this.state.districts, this.state.buildings),
+      });
+    }
+    return r;
+  }
   districtCommand(command: DistrictAction): Omit<Result, 't' | 'reqId'> {
     const r = districtCommand(this.state, command);
+    if (r.ok) {
+      const patches = updateLevels(this.state);
+      if (patches.length)
+        this.emit({
+          t: 'buildingsChanged',
+          added: [],
+          removed: [],
+          updated: patches,
+        });
+      this.refreshPopulation();
+      this.cargo.policiesChanged();
+    }
     if (r.ok)
       this.emit({
         t: 'districts',

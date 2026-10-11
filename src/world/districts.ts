@@ -1,7 +1,9 @@
+import type { PolicyId } from '../data/policies';
 import { DISTRICTS as D } from '../data/districts';
 import { MAP_SIZE, MAP_TILES, TILE_SIZE } from '../data/config';
 import type { Building, Vec2 } from './types';
 export interface District {
+  policies?: Partial<Record<PolicyId, boolean>>;
   id: number;
   name: string;
   cells: number[];

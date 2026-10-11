@@ -87,6 +87,8 @@ export interface HealthSummary {
   residents: number;
 }
 export interface Building {
+  floorLimit?: number;
+  garbage?: { stock: number; lastDay: number; generated: number };
   happiness?: number;
   development?: {
     lastDay: number;

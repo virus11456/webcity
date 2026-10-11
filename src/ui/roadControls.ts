@@ -16,6 +16,7 @@ interface RoadActions {
   metro?(): void;
   tram?(): void;
   district?(): void;
+  policy?(): void;
   bulldoze(): void;
   demo(): void;
   confirm(): void;
@@ -84,6 +85,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     service = button('service.tab', () => actions.service?.()),
     bus = button('bus.tab', () => actions.bus?.()),
     metro = button('metro.tab', () => actions.metro?.()),
+    policy = button('policy.title', () => actions.policy?.()),
     district = button('district.tab', () => actions.district?.()),
     tram = button('tram.tab', () => actions.tram?.()),
     bulldoze = button('bulldoze.tab', actions.bulldoze),
@@ -112,6 +114,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     draw,
     zones,
     district,
+    policy,
     power,
     water,
     service,
@@ -393,7 +396,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       latest = state;
       districtHost.hidden = !districtActive;
       district.setAttribute('aria-pressed', String(districtActive));
-      district.disabled =
+      policy.disabled = district.disabled =
         !state.ready ||
         state.pending ||
         districtPending ||

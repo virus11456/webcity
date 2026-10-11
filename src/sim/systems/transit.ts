@@ -1,3 +1,4 @@
+import { policyValue, wantsBus } from '../../world/policies';
 import { TRAM } from '../../data/tram';
 import { METRO as M } from '../../data/metro';
 import { GAME_MODES } from '../../data/config';
@@ -87,8 +88,12 @@ export class TransitSystem {
         ? TRAM.passengers
         : CAPACITY.busPassengers;
   }
-  private fare(l: BusLine) {
-    return l.mode === 'metro' ? M.fare : l.mode === 'tram' ? TRAM.fare : C.fare;
+  private fare(l: BusLine, stop: number) {
+    return l.mode === 'metro'
+      ? M.fare
+      : l.mode === 'tram'
+        ? TRAM.fare
+        : policyValue(this.s, l.stops[stop]!, 'busFare', C.fare);
   }
   private trackData(paths: Route[]) {
     const tracks = new Map<
@@ -411,6 +416,7 @@ export class TransitSystem {
     if (!from || !to || distance(from.pos, to.pos) < C.minTripM) return false;
     for (const l of this.s.transitLines) {
       if (l.blocked || !l.vehicles || !this.operational(l)) continue;
+      if (!l.mode && !wantsBus(this.s, from.pos, j.citizenId)) continue;
       const near = (p: Vec2) =>
         l.stops
           .map((s, i) => ({ i, d: distance(p, s) }))
@@ -561,9 +567,9 @@ export class TransitSystem {
               p.bus = bus.id;
               aboard++;
               l.passengers++;
-              l.revenue += this.fare(l);
+              l.revenue += this.fare(l, p.from);
               this.s.economy.transitUnsettled =
-                (this.s.economy.transitUnsettled ?? 0) + this.fare(l);
+                (this.s.economy.transitUnsettled ?? 0) + this.fare(l, p.from);
             }
           bus.target = (bus.target + 1) % l.stops.length;
         }

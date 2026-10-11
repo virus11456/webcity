@@ -76,12 +76,22 @@ export function createFinanceControls(parent: HTMLElement, client: SimClient) {
   const body = document.createElement('tbody');
   const ledgerRows: {
     key: string;
-    kind: 'taxIncome' | 'upkeep' | 'debtPayment' | 'transitIncome';
+    kind:
+      | 'taxIncome'
+      | 'upkeep'
+      | 'debtPayment'
+      | 'transitIncome'
+      | 'policyExpenses';
     value: HTMLTableCellElement;
   }[] = [];
   const addRow = (
     key: string,
-    kind: 'taxIncome' | 'upkeep' | 'debtPayment' | 'transitIncome',
+    kind:
+      | 'taxIncome'
+      | 'upkeep'
+      | 'debtPayment'
+      | 'transitIncome'
+      | 'policyExpenses',
     label: string,
   ) => {
     const row = document.createElement('tr'),
@@ -94,6 +104,7 @@ export function createFinanceControls(parent: HTMLElement, client: SimClient) {
     body.append(row);
     ledgerRows.push({ key, kind, value });
   };
+  addRow('policies', 'policyExpenses', t('policy.expenses'));
   addRow('transit', 'transitIncome', t('bus.fareIncome'));
   for (const z of Object.keys(ZONES) as ZoneType[])
     addRow(z, 'taxIncome', `${t('finance.income')} · ${t(`zone.${z}`)}`);
@@ -195,15 +206,17 @@ export function createFinanceControls(parent: HTMLElement, client: SimClient) {
     summary.textContent = `${t('finance.week')} ${format(stats.income - stats.expenses)} · ${t('finance.income')} ${format(stats.income)} · ${t('finance.expenses')} ${format(stats.expenses)}`;
     for (const row of ledgerRows) {
       const amount =
-        row.kind === 'transitIncome'
-          ? (s.economy.transitIncome ?? 0)
-          : row.kind === 'debtPayment'
-            ? s.economy.debtPayment
-            : row.kind === 'taxIncome'
-              ? s.economy.taxIncome[row.key as ZoneType]
-              : s.economy.upkeep[
-                  row.key as (typeof BUDGET_DEPARTMENTS)[number]
-                ];
+        row.kind === 'policyExpenses'
+          ? (s.economy.policyExpenses ?? 0)
+          : row.kind === 'transitIncome'
+            ? (s.economy.transitIncome ?? 0)
+            : row.kind === 'debtPayment'
+              ? s.economy.debtPayment
+              : row.kind === 'taxIncome'
+                ? s.economy.taxIncome[row.key as ZoneType]
+                : s.economy.upkeep[
+                    row.key as (typeof BUDGET_DEPARTMENTS)[number]
+                  ];
       row.value.textContent = format(amount);
     }
     warning.hidden = s.economy.status === 'normal';

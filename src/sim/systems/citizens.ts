@@ -1,3 +1,4 @@
+import { policyValue } from '../../world/policies';
 import { ServiceNetwork } from '../../world/services';
 import { SpatialHash } from '../../core/spatial';
 import { BUILDINGS, type BuildingDefinition } from '../../data/buildings';
@@ -249,7 +250,13 @@ export class CitizenSystem {
         c.schoolDays[i]!++;
         if (
           c.schoolDays[i]! >=
-          CITIZEN_RULES.schoolDaysToGraduate[c.education[i]!]!
+          CITIZEN_RULES.schoolDaysToGraduate[c.education[i]!]! /
+            policyValue(
+              s,
+              byId.get(c.homeId[i]!)?.pos ?? school.pos,
+              'educationMultiplier',
+              1,
+            )
         ) {
           this.adjustSummary(i, -1, byId);
           this.dirty = true;

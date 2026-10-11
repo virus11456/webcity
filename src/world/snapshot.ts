@@ -60,6 +60,7 @@ export type InspectInfo =
   | { kind: 'network'; net: NetworkKind; value: NetworkSegment };
 
 export interface EconomyState {
+  policyExpenses?: number;
   transitUnsettled?: number;
   transitIncome?: number;
   distressWeeks: number;

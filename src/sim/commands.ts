@@ -1,3 +1,4 @@
+import { POLICIES, type PolicyId } from '../data/policies';
 import { PARKS } from '../data/parks';
 import { TRAFFIC_RUNTIME } from '../data/traffic';
 import { SIM_RUNTIME } from '../data/simRuntime';
@@ -193,6 +194,29 @@ export class CommandDispatcher {
     }
     if (this.simulation.gameOver) {
       fail('err.gameOver');
+      return;
+    }
+    if (value.t === 'setPolicy') {
+      if (
+        !('policy' in value) ||
+        !POLICIES.some((p) => p.id === value.policy) ||
+        !('district' in value) ||
+        (value.district !== null && !Number.isSafeInteger(value.district)) ||
+        !('on' in value) ||
+        (typeof value.on !== 'boolean' && value.on !== null)
+      ) {
+        fail('err.invalidCommand');
+        return;
+      }
+      this.emit({
+        t: 'result',
+        reqId,
+        ...this.simulation.setPolicy(
+          value.policy as PolicyId,
+          value.district as number | null,
+          value.on,
+        ),
+      });
       return;
     }
     if (value.t === 'district') {

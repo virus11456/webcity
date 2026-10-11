@@ -70,7 +70,12 @@ export type CommandInput =
   | { t: 'takeLoan'; bank: number }
   | { t: 'repayLoan'; index: number }
   | { t: 'buyTile'; tx: number; tz: number }
-  | { t: 'setPolicy'; policy: PolicyId; district: Id | null; on: boolean }
+  | {
+      t: 'setPolicy';
+      policy: PolicyId;
+      district: Id | null;
+      on: boolean | null;
+    }
   | { t: 'inspect'; target: { kind: string; id: Id } };
 export type Command = CommandInput & { reqId: number };
 export type FailureReason =
@@ -109,6 +114,7 @@ export type Response =
     }
   | { t: 'inspectResult'; reqId: number; info: InspectInfo };
 export type SimEvent =
+  | { t: 'policies'; policies: import('../data/policies').PolicyId[] }
   | { t: 'districts'; districts: import('../world/districts').DistrictView[] }
   | { t: 'transit'; lines: import('../world/transit').BusLineView[] }
   | Response
