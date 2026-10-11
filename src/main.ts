@@ -2,6 +2,7 @@ import { cityMusic } from './audio/music';
 import { cityAudio } from './audio/manager';
 import { attachAudioControls } from './audio/controls';
 import { readPreferences, type Preferences } from './ui/preferences';
+import { attachTooltips } from './ui/tooltips';
 import { decorateControls } from './ui/icons';
 import './ui/styles/art.css';
 import { t } from './ui/i18n/t';
@@ -25,6 +26,8 @@ if (new URLSearchParams(location.search).get('debug') === '1') {
   window.__webcityAudio = () => cityAudio.readStats();
   window.__webcityMusic = () => cityMusic.readStats();
 }
+const stopTooltips = attachTooltips(root);
+window.addEventListener('pagehide', stopTooltips, { once: true });
 const stopIcons = decorateControls(root);
 window.addEventListener('pagehide', stopIcons, { once: true });
 if (new URLSearchParams(location.search).get('asset-gallery') === '1')

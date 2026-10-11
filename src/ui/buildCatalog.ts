@@ -84,8 +84,10 @@ export function createBuildCatalog(
         ?.querySelector('canvas')
         ?.focus({ preventScroll: true });
     };
+    const description = `${name.textContent}\n${t(`help.catalog.${category}`)}\n${price.textContent}\n${maintenance.textContent}`;
+    button.dataset.tooltip = description;
     host.append(button);
-    return { option, button, lock, unlock };
+    return { option, button, lock, unlock, description };
   });
   return {
     host,
@@ -93,7 +95,7 @@ export function createBuildCatalog(
       unlocked?: readonly number[],
       reasons: Record<string, FailureReason | undefined> = {},
     ) {
-      for (const { option, button, lock, unlock } of entries) {
+      for (const { option, button, lock, unlock, description } of entries) {
         if (unlocked) option.disabled = !unlocked.includes(unlock);
         if (reasons[option.value]) option.disabled = true;
         lock.textContent = reasons[option.value]
@@ -105,6 +107,9 @@ export function createBuildCatalog(
           String(select.value === option.value),
         );
         lock.hidden = !option.disabled;
+        const help =
+          description + (option.disabled ? `\n${lock.textContent}` : '');
+        if (button.dataset.tooltip !== help) button.dataset.tooltip = help;
       }
     },
   };
