@@ -35,7 +35,7 @@ export type CommandInput =
   | ({ t: 'init' } & CitySettings)
   | { t: 'load'; data: ArrayBuffer }
   | { t: 'save' }
-  | { t: 'createBusLine'; stops: Vec2[] }
+  | { t: 'createBusLine'; stops: Vec2[]; mode?: 'metro' }
   | { t: 'setBusVehicles'; id: number; vehicles: number }
   | { t: 'deleteBusLine'; id: number }
   | { t: 'setSpeed'; speed: SimSpeed }
@@ -72,6 +72,7 @@ export type FailureReason =
   | ConstructionReason
   | ZoningReason
   | BulldozeReason
+  | 'err.metroStations'
   | 'err.busDepot'
   | 'err.busRoute'
   | 'err.busCapacity'

@@ -1,8 +1,17 @@
 export const ZH_TW = {
   'service.bus_depot': '公車總站',
-  'bus.fareIncome': '公車票價收入',
+  'metro.tab': '地鐵',
+  'metro.station': '建造地鐵站',
+  'metro.finish': '鋪軌並開通環線',
+  'metro.hint': '地下圖層：依序點選至少兩座車站，確認後付費鋪軌；每線一列車。',
+  'metro.cost': '環線軌道造價',
+  'metro.empty': '先沿道路建造地鐵站，再點選站體連接地下軌道。',
+  'metro.blocked': '車站停用／拆除或道路中斷',
+  'err.metroStations': '請選擇至少兩座不同且運作中的地鐵站。',
+  'service.metro_station': '地鐵站',
+  'bus.fareIncome': '大眾運輸票價收入',
   'bus.vehicle': '公車',
-  'bus.walker': '往返公車站的行人',
+  'bus.walker': '往返大眾運輸站的行人',
   'bus.tab': '公車路線',
   'bus.title': '公車路線',
   'bus.depot': '建造公車總站',
@@ -291,7 +300,7 @@ export const ZH_TW = {
   'toolbar.straight': '道路模式：直線',
   'toolbar.future': '後續開放的分類',
   'toolbar.futureItems':
-    '行政區、進階垃圾與殯葬、地鐵／電車、獨特建築與政策尚未開放。',
+    '行政區、進階垃圾與殯葬、電車、獨特建築與政策尚未開放。',
   'toolbar.shortcuts':
     '1–3 速度 · 4 道路 · 5 分區 · 6 電力 · 7 水務 · 8 拆除 · Esc 取消',
 

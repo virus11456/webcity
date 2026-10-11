@@ -88,8 +88,10 @@ function Content({
         <strong>
           {t(
             v.purpose === 8
-              ? v.kind === 2
-                ? 'bus.vehicle'
+              ? v.kind === 2 || v.kind === 9
+                ? v.kind === 9
+                  ? 'metro.tab'
+                  : 'bus.vehicle'
                 : 'bus.walker'
               : fire
                 ? 'fire.truck'

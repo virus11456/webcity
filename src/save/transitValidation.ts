@@ -1,3 +1,4 @@
+import { METRO } from '../data/metro';
 import { TRANSIT as C } from '../data/transit';
 import { ZONE_PALETTE } from '../data/palette';
 import { BUILDINGS, TRANSIT as CAP } from '../data/buildings';
@@ -26,6 +27,7 @@ export function validateTransit(
   for (const l of s.transitLines) {
     check(
       l &&
+        (l.mode === undefined || l.mode === 'metro') &&
         integer(l.depot) &&
         integer(l.color) &&
         l.color < Object.keys(ZONE_PALETTE).length &&
@@ -52,15 +54,36 @@ export function validateTransit(
         Array.isArray(l.riders) &&
         l.riders.length <= C.maxPassengers,
     );
-    assigned.set(l.depot, (assigned.get(l.depot) ?? 0) + l.vehicles);
-    check(assigned.get(l.depot)! <= depotCapacity);
+    if (l.mode === 'metro') {
+      check(
+        l.vehicles <= METRO.maxVehicles &&
+          Array.isArray(l.stationIds) &&
+          l.stationIds.length === l.stops.length &&
+          l.stationIds.every((id, i) => {
+            const station = s.buildings.find((b) => b.id === id);
+            return (
+              integer(id) &&
+              id > 0 &&
+              id < s.nextId &&
+              (!station ||
+                (station.defId === 'metro_station' &&
+                  Math.hypot(
+                    station.pos.x - l.stops[i]!.x,
+                    station.pos.z - l.stops[i]!.z,
+                  ) < 1))
+            );
+          }) &&
+          new Set(l.stationIds).size === l.stops.length,
+      );
+    } else assigned.set(l.depot, (assigned.get(l.depot) ?? 0) + l.vehicles);
+    check((assigned.get(l.depot) ?? 0) <= depotCapacity);
     const buses = new Set(l.buses.map((b) => b.id));
     const aboard = new Map<number, number>();
     for (const b of l.buses) {
       check(
         integer(b.target) && b.target < l.stops.length && point(b.position),
       );
-      add(b.mission, l.id, 2);
+      add(b.mission, l.id, l.mode === 'metro' ? 9 : 2);
     }
     for (const p of l.riders) {
       const j = p.journey,
@@ -97,7 +120,12 @@ export function validateTransit(
       }
       add(p.mission, p.stage === 'egress' ? j.destinationId : l.id, 8);
     }
-    check([...aboard.values()].every((n) => n <= CAP.busPassengers));
+    check(
+      [...aboard.values()].every(
+        (n) =>
+          n <= (l.mode === 'metro' ? CAP.metroPassengers : CAP.busPassengers),
+      ),
+    );
   }
   check(citizens.size <= C.maxPassengers);
   return missions;

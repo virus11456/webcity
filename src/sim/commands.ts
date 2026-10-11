@@ -201,6 +201,7 @@ export class CommandDispatcher {
     ) {
       if (
         value.t === 'createBusLine' &&
+        (!('mode' in value) || value.mode === 'metro') &&
         'stops' in value &&
         Array.isArray(value.stops) &&
         value.stops.every(finitePoint)
@@ -208,7 +209,11 @@ export class CommandDispatcher {
         this.emit({
           t: 'result',
           reqId,
-          ...this.simulation.busCommand({ t: value.t, stops: value.stops }),
+          ...this.simulation.busCommand({
+            t: value.t,
+            stops: value.stops,
+            ...('mode' in value ? { mode: 'metro' as const } : {}),
+          }),
         });
       else if (
         value.t === 'deleteBusLine' &&

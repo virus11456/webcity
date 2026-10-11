@@ -669,3 +669,6 @@ M3-20：離線 GLB 稽核核對內容雜湊、命名與各 LOD 面數；Playwrig
 
 ### M4-01 公車權威
 TransitSystem 管理每條路線與個別乘客，RoutePlanner 將可搭直達公車的居民請求交由它處理；TrafficSystem 仍是車輛與接駁行人的位置權威，新增 purpose 8 任務。createBusLine／setBusVehicles／deleteBusLine 皆經 Worker 邊界驗證。transit event 僅送路線摘要，完整乘客／派車狀態隨 Worker 存檔；WorldMirror.readTransit 回傳防禦拷貝，UI 不寫模擬。停止服務會將真實位置保存在 traffic.stranded，跨存檔不回到住宅起點。新增票款待結算欄位向後相容，讀檔核對乘客與交通任務所有權。見 BUS.md。
+
+### M4-02 地鐵
+TransitSystem 的向後相容 mode／stationIds 標記地下路線，共用個人乘客、步行任務與票款；TrafficKind.metro 使用已存在的 M3 地鐵模型。world/metro 生成地下 access 路段及土地／造價驗證，Worker 從車站位置重建並獨立占用軌道。軌道與路線一起提交，沒有主執行緒修改權威狀態；readTransit 仍是摘要，存檔保留列車實際進度。MetroTracks 僅於地下工具顯示 X-ray 軌道，地形沿用透明模式且保留拾取表面。見 METRO.md。

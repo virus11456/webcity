@@ -11,6 +11,7 @@ import { NOTIFICATIONS } from './data/notifications';
 import { InfoOverlays } from './render/overlays';
 import { createInfoControls } from './ui/infoControls';
 import { FireRenderer } from './render/fire';
+import { MetroTracks } from './render/metroTracks';
 import { BusTool } from './tools/busTool';
 import { BusStops } from './render/busStops';
 import { createBusControls } from './ui/busControls';
@@ -127,6 +128,10 @@ let inspectPanel: ReturnType<typeof createInspectPanel> | undefined;
 let inspectPreview: BulldozePreview | undefined;
 let facilityAssets: FacilityAssets | undefined;
 let serviceRenderer: ServiceRenderer | undefined;
+let metroOverlayActive = false;
+let metroTool: BusTool | undefined;
+let metroTracks: MetroTracks | undefined;
+let metroControls: ReturnType<typeof createBusControls> | undefined;
 let busTool: BusTool | undefined;
 let busStops: BusStops | undefined;
 let busControls: ReturnType<typeof createBusControls> | undefined;
@@ -536,9 +541,9 @@ if (canvas && status) {
           waterControls?.update(s);
           const underground =
             s.active && (s.mode === 'pipe' || s.mode === 'roads');
-          city!.setWaterOverlay(underground);
+          city!.setWaterOverlay(underground || metroOverlayActive);
           waterUtilities?.setUnderground(underground);
-          root.dataset.underground = String(underground);
+          root.dataset.underground = String(underground || metroOverlayActive);
         },
       );
       serviceRenderer = new ServiceRenderer(
@@ -569,6 +574,24 @@ if (canvas && status) {
         busControls?.update(s);
         busStops?.update(s.active, s.stops, s.lines);
       });
+      metroTracks = new MetroTracks(city.scene, (x, z) =>
+        city!.terrain.heightAt(x, z),
+      );
+      metroTool = new BusTool(
+        sim,
+        powerContext.pick,
+        (s) => {
+          roadControls?.updateMetro(s.active, s.pending);
+          metroControls?.update(s);
+          metroTracks?.update(s.active, s.stops, s.lines);
+          if (metroOverlayActive !== s.active) {
+            metroOverlayActive = s.active;
+            city!.setWaterOverlay(s.active);
+            root.dataset.underground = String(s.active);
+          }
+        },
+        'metro',
+      );
       inspectPreview = new BulldozePreview(city.scene, UI_PALETTE.accent);
       followControls = createFollowControls(root, () => followCamera?.cancel());
       followCamera = new FollowCamera(
@@ -645,6 +668,11 @@ if (canvas && status) {
           tools!.select(zoneTool!);
           canvas.focus({ preventScroll: true });
         },
+        metro() {
+          mode(true);
+          tools!.select(metroTool!);
+          canvas.focus({ preventScroll: true });
+        },
         bus() {
           mode(true);
           tools!.select(busTool!);
@@ -710,6 +738,16 @@ if (canvas && status) {
         canvas.focus({ preventScroll: true });
       });
       busControls.update(busTool.readState());
+      metroControls = createBusControls(
+        roadControls.metroHost,
+        metroTool,
+        () => {
+          tools!.select(serviceTool!);
+          serviceTool!.setDefinition('metro_station');
+          canvas.focus({ preventScroll: true });
+        },
+      );
+      metroControls.update(metroTool.readState());
       serviceControls = createServiceControls(roadControls.serviceHost, {
         mode: (id) => serviceTool!.setDefinition(id),
         rotate: () => serviceTool!.rotate(),
@@ -753,9 +791,9 @@ if (canvas && status) {
           tools!.select(null);
         }
         const underground = view === 'water' || view === 'sewage';
-        city!.setWaterOverlay(underground);
+        city!.setWaterOverlay(underground || metroOverlayActive);
         waterUtilities!.setUnderground(underground);
-        root.dataset.underground = String(underground);
+        root.dataset.underground = String(underground || metroOverlayActive);
         infoOverlays!.set(view);
       });
       notifications = createNotifications(root, sim, (p) => {
@@ -885,6 +923,9 @@ if (import.meta.hot)
     buildingThumbnails?.dispose();
     inspectPreview?.dispose();
     unsubscribeServices?.();
+    metroTool?.dispose();
+    metroControls?.dispose();
+    metroTracks?.dispose();
     busTool?.dispose();
     busControls?.dispose();
     busStops?.dispose();

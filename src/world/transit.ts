@@ -17,6 +17,8 @@ export interface BusRun {
   position: Vec2;
 }
 export interface BusLine {
+  mode?: 'metro';
+  stationIds?: number[];
   id: number;
   depot: number;
   color: number;

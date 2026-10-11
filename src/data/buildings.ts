@@ -444,7 +444,7 @@ export const BUILDINGS = [
     cost: 9000,
     upkeepPerWeek: 360,
     unlock: 7,
-    footprintCells: null,
+    footprintCells: [4, 4],
     service: 'transit',
   },
 ] as const satisfies readonly BuildingDefinition[];

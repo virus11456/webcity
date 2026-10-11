@@ -1,3 +1,5 @@
+import { buildingsChangeFootprints } from '../bridge/buildingChanges';
+import { METRO } from '../data/metro';
 import type { SimClient } from '../bridge/simClient';
 import type { CommandInput, FailureReason } from '../bridge/protocol';
 import { ROADS } from '../data/roads';
@@ -15,7 +17,9 @@ export interface BusToolState {
   reason: FailureReason | 'sim.failed' | null;
 }
 export class BusTool implements Tool {
-  readonly id = 'bus';
+  get id() {
+    return this.mode ?? 'bus';
+  }
   private armed = false;
   private state: BusToolState = {
     active: false,
@@ -31,17 +35,27 @@ export class BusTool implements Tool {
     private sim: SimClient,
     private pick: (x: number, y: number) => Vec2 | null,
     private changed: (s: BusToolState) => void,
+    readonly mode?: 'metro',
   ) {
     const refresh = () => {
       const w = sim.mirror.readRoadWorld();
       this.network = w ? new ServiceNetwork(w.nodes, w.segments) : undefined;
-      this.state.lines = sim.mirror.readTransit();
+      this.state.lines = sim.mirror
+        .readTransit()
+        .filter((l) => l.mode === this.mode);
       this.publish();
     };
     this.stop = sim.onEvent((e) => {
-      if (e.t === 'ready' || e.t === 'roadsChanged') refresh();
+      if (
+        e.t === 'ready' ||
+        e.t === 'roadsChanged' ||
+        (this.mode === 'metro' &&
+          e.t === 'buildingsChanged' &&
+          buildingsChangeFootprints(e))
+      )
+        refresh();
       if (e.t === 'transit') {
-        this.state.lines = e.lines;
+        this.state.lines = e.lines.filter((l) => l.mode === this.mode);
         this.publish();
       }
     });
@@ -90,8 +104,17 @@ export class BusTool implements Tool {
         selected = { x: q.x + nx * side * curb, z: q.z + nz * side * curb };
       }
     }
+    if (this.mode === 'metro') {
+      selected = this.sim.mirror
+        .readBuildings()
+        .filter((b) => b.defId === 'metro_station')
+        .map((b) => ({ p: b.pos, d: Math.hypot(b.pos.x - p.x, b.pos.z - p.z) }))
+        .filter((v) => v.d <= METRO.stationSnapM)
+        .sort((a, b) => a.d - b.d)[0]?.p;
+    }
     if (!selected) {
-      this.state.reason = 'err.busRoute';
+      this.state.reason =
+        this.mode === 'metro' ? 'err.metroStations' : 'err.busRoute';
       this.publish();
       return;
     }
@@ -128,7 +151,14 @@ export class BusTool implements Tool {
   }
   onConfirm() {
     if (this.state.stops.length >= 2)
-      void this.command({ t: 'createBusLine', stops: this.state.stops }, true);
+      void this.command(
+        {
+          t: 'createBusLine',
+          stops: this.state.stops,
+          ...(this.mode ? { mode: this.mode } : {}),
+        },
+        true,
+      );
   }
   async command(command: CommandInput, clear = false) {
     if (this.state.pending) return;
