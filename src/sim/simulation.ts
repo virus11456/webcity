@@ -1,3 +1,4 @@
+import { GarbageSystem } from './systems/garbage';
 import { updateIndustry } from './systems/industry';
 import { setPolicy, updateGarbageProduction } from './systems/policies';
 import type { PolicyId } from '../data/policies';
@@ -98,6 +99,7 @@ export class Simulation {
   readonly routePlanner: RoutePlanner;
   readonly traffic: TrafficSystem;
   readonly services: ServiceSystem;
+  readonly garbage: GarbageSystem;
   readonly cargo: CargoSystem;
   readonly fire: FireSystem;
   readonly fields: FieldsSystem;
@@ -176,6 +178,11 @@ export class Simulation {
       this.routePlanner,
       this.traffic,
     );
+    this.garbage = new GarbageSystem(
+      this.state,
+      this.routePlanner,
+      this.traffic,
+    );
     this.services = new ServiceSystem(this.state);
     this.services.update();
     updateHealth(this.state);
@@ -190,6 +197,7 @@ export class Simulation {
       const industries = updateIndustry(this.state);
       const priorHappiness = updateHappiness(this.state);
       const population = updatePopulation(this.state, true);
+      this.garbage.daily();
       const power = [...updatePower(this.state), ...updateWater(this.state)];
       this.cargo.daily();
       const garbage = updateGarbageProduction(this.state, true);
@@ -240,6 +248,7 @@ export class Simulation {
         ...healthPatches,
         ...firePatches,
         ...power,
+        ...this.garbage.patches(),
         ...this.cargo.patches(),
         ...problems,
         ...reconciliation,
@@ -292,6 +301,7 @@ export class Simulation {
         value.citizenId < 0
           ? s.cargo.shipments.find((j) => j.id === -value.citizenId)
           : undefined;
+      const garbage = s.garbage.missions.find((m) => m.id === -value.citizenId);
       const busLine =
         value.purpose === 8
           ? s.transitLines.find((l) =>
@@ -303,6 +313,13 @@ export class Simulation {
         kind,
         value: {
           ...value,
+          garbage: garbage
+            ? {
+                units: garbage.phase === 'return' ? garbage.units : 0,
+                phase: garbage.phase,
+                depot: garbage.from,
+              }
+            : undefined,
           bus:
             busLine && bus
               ? {
@@ -384,10 +401,12 @@ export class Simulation {
   }
   private refreshPower(): void {
     this.cargo.reconcile();
+    this.garbage?.reconcile();
     this.fire?.reconcile();
     const patches = [
       ...updateIndustry(this.state),
       ...this.services.update(),
+      ...this.garbage.patches(),
       ...this.cargo.patches(),
       ...updatePower(this.state),
       ...updateWater(this.state),
@@ -752,6 +771,7 @@ export class Simulation {
   }
   snapshot(): WorldSnapshot {
     this.cargo.reconcile();
+    this.garbage?.reconcile();
     this.fire?.reconcile();
     this.transit.tick();
     return structuredClone({ ...this.state, traffic: this.traffic.snapshot() });
@@ -1199,13 +1219,18 @@ export class Simulation {
     }
     this.fire.tick();
     this.cargo.tick();
+    this.garbage.tick();
     this.transit.tick();
     if (
       this.state.transitLines.length > 0 &&
       this.state.clock.ticks % TRANSIT.refreshTicks === 0
     )
       this.emit({ t: 'transit', lines: busLineViews(this.state.transitLines) });
-    const cargoPatches = [...this.fire.patches(), ...this.cargo.patches()];
+    const cargoPatches = [
+      ...this.fire.patches(),
+      ...this.cargo.patches(),
+      ...this.garbage.patches(),
+    ];
     if (cargoPatches.length)
       this.emit({
         t: 'buildingsChanged',

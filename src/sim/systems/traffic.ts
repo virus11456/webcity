@@ -361,7 +361,10 @@ export class TrafficSystem {
     if (arrival >= 0) this.missionArrivals.splice(arrival, 1);
   }
   spawnMission(job: PlannedJourney, kind: number = TrafficKind.truck): boolean {
-    if (job.journey.citizenId >= 0 || ![6, 7, 8].includes(job.journey.purpose))
+    if (
+      job.journey.citizenId >= 0 ||
+      ![6, 7, 8, 9].includes(job.journey.purpose)
+    )
       return false;
     return this.admit(job, kind);
   }

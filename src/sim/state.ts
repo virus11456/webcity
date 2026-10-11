@@ -1,3 +1,4 @@
+import { emptyGarbage } from '../world/garbage';
 import { emptyFire } from '../world/fire';
 import { emptyCargo } from '../world/cargo';
 import { emptyTraffic } from '../world/traffic';
@@ -78,6 +79,7 @@ export function createState(settings: CitySettings): SimState {
     },
     citizens: createCitizens(),
     traffic: emptyTraffic(),
+    garbage: emptyGarbage(),
     cargo: emptyCargo(),
     fire: emptyFire(),
     transitLines: [],

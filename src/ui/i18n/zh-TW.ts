@@ -1,4 +1,23 @@
 export const ZH_TW = {
+  'garbage.truck': '垃圾車',
+  'garbage.depot': '所屬處理設施',
+  'garbage.load': '車上垃圾',
+  'garbage.collect': '前往收集垃圾',
+  'garbage.return': '載運垃圾返回設施',
+  'garbage.locateOrigin': '前往本趟起點',
+
+  'service.garbage_landfill': '垃圾掩埋場',
+  'service.garbage_incinerator': '焚化廠',
+  'service.garbage_recycling': '回收中心',
+  'notice.garbage': '垃圾堆積或設施滿載，請查看收運',
+  'garbage.stock': '待收垃圾',
+  'garbage.rate': '每日垃圾產量',
+  'garbage.storage': '垃圾儲存量',
+  'garbage.processed': '今日處理量',
+  'garbage.trucks': '出勤垃圾車',
+  'garbage.full': '已滿載，請另建或啟用處理設施',
+  'garbage.routeHint': '垃圾車經道路往返收運，抵達才收集及入庫',
+
   'industry.select': '工業特化',
   'industry.general': '一般工業',
   'industry.industry_forestry': '林業・木材',

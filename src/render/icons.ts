@@ -33,6 +33,7 @@ const kinds: ProblemIcon[] = [
   'crime',
   'fire',
   'sickness',
+  'garbage',
 ];
 interface Entry {
   b: Building;

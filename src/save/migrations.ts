@@ -1,3 +1,4 @@
+import { validateGarbage } from './garbageValidation';
 import { INDUSTRY_SPECIALIZATIONS } from '../data/policies';
 import { POLICIES } from '../data/policies';
 import { DISTRICTS } from '../data/districts';
@@ -610,6 +611,9 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     fireIds.set(m.id, m);
     fireTargets.add(m.to);
   }
+  const garbageIds = validateGarbage(s);
+  for (const id of garbageIds.keys())
+    requireValue(!shipmentIds.has(id) && !fireIds.has(id));
   // No traffic collection existed before M2-10.
   if (!Object.hasOwn(s, 'traffic')) s.traffic = emptyTraffic();
   const traffic = s.traffic;
@@ -619,7 +623,12 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     traffic?.version === 1 &&
       Number.isSafeInteger(traffic.nextMissionId) &&
       traffic.nextMissionId >
-        Math.max(0, ...shipmentIds.keys(), ...fireIds.keys()) &&
+        Math.max(
+          0,
+          ...shipmentIds.keys(),
+          ...fireIds.keys(),
+          ...garbageIds.keys(),
+        ) &&
       traffic.nextMissionId <= TRAFFIC_RUNTIME.maxVehicleId &&
       Number.isSafeInteger(traffic.nextId) &&
       traffic.nextId > 0 &&
@@ -695,6 +704,14 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
         ((j.purpose === 6 &&
           shipmentIds.get(-j.citizenId)?.from === j.originId &&
           shipmentIds.get(-j.citizenId)?.to === j.destinationId) ||
+          (j.purpose === 9 &&
+            garbageIds.has(-j.citizenId) &&
+            (garbageIds.get(-j.citizenId)!.phase === 'collect'
+              ? garbageIds.get(-j.citizenId)!.from
+              : garbageIds.get(-j.citizenId)!.to) === j.originId &&
+            (garbageIds.get(-j.citizenId)!.phase === 'collect'
+              ? garbageIds.get(-j.citizenId)!.to
+              : garbageIds.get(-j.citizenId)!.from) === j.destinationId) ||
           (j.purpose === 7 &&
             fireIds.get(-j.citizenId)?.from === j.originId &&
             fireIds.get(-j.citizenId)?.to === j.destinationId)))) &&
@@ -703,7 +720,7 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
     Number.isSafeInteger(j.destinationId) &&
     (j.destinationId > 0 || (j.citizenId < 0 && j.destinationId === 0)) &&
     (j.citizenId < 0
-      ? [6, 7, 8].includes(j.purpose)
+      ? [6, 7, 8, 9].includes(j.purpose)
       : [1, 2, 3, 4, 5].includes(j.purpose)) &&
     [0, 1].includes(j.mode) &&
     Number.isSafeInteger(j.requestedTick) &&
@@ -718,6 +735,7 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
         journeyValid(v.journey) &&
         !travelling.has(v.journey.citizenId) &&
         Number.isSafeInteger(v.kind) &&
+        (v.journey.purpose !== 9 || v.kind === 6) &&
         (v.journey.purpose !== 8 ||
           transitMissions.get(-v.journey.citizenId)?.kind === v.kind) &&
         v.kind >= 0 &&
@@ -755,7 +773,10 @@ export function migrateSave(value: unknown, version: number): WorldSnapshot {
   }
   for (const id of transitMissions.keys())
     requireValue(
-      travelling.has(-id) && !shipmentIds.has(id) && !fireIds.has(id),
+      travelling.has(-id) &&
+        !shipmentIds.has(id) &&
+        !fireIds.has(id) &&
+        !garbageIds.has(id),
     );
   return s;
 }

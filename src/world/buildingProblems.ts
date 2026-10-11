@@ -1,3 +1,4 @@
+import { UTILITY_RULES } from '../data/buildings';
 import { POWER } from '../data/power';
 import { WATER_UTILITY } from '../data/waterUtility';
 import { PROBLEM_THRESHOLDS } from '../data/simulation';
@@ -13,6 +14,7 @@ export const BUILDING_PROBLEMS = [
   'crime',
   'fire',
   'sickness',
+  'garbage',
 ] as const;
 export type BuildingProblem = (typeof BUILDING_PROBLEMS)[number];
 export type ProblemIcon = BuildingProblem | 'abandoned';
@@ -27,6 +29,10 @@ export function hasBuildingProblem(
       !!b.health?.residents &&
       b.health.sick / b.health.residents > PROBLEM_THRESHOLDS.sickResidentsAbove
     );
+  if (problem === 'garbage')
+    return b.wasteFacility
+      ? b.wasteFacility.full
+      : (b.garbage?.stock ?? 0) > UTILITY_RULES.garbageOverflowUnits;
   if (problem === 'fire') return !!b.fire?.burning;
   if (problem === 'crime')
     return (b.crime ?? 0) >= PROBLEM_THRESHOLDS.crimeAbove;
