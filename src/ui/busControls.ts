@@ -1,3 +1,5 @@
+import { METRO } from '../data/metro';
+import { metroTrackCost } from '../world/metro';
 import { TRANSIT } from '../data/transit';
 import { TRANSIT as CAPACITY } from '../data/buildings';
 import type { BusTool, BusToolState } from '../tools/busTool';
@@ -10,7 +12,7 @@ export function createBusControls(
   depot: () => void,
 ) {
   const host = document.createElement('div');
-  host.className = 'bus-controls';
+  host.className = tool.mode === 'metro' ? 'metro-controls' : 'bus-controls';
   const button = (key: Parameters<typeof t>[0], run: () => void) => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -20,14 +22,19 @@ export function createBusControls(
   };
   const row = document.createElement('div');
   row.className = 'road-row';
-  const build = button('bus.depot', depot),
-    finish = button('bus.finish', () => tool.onConfirm()),
+  const build = button(
+      tool.mode === 'metro' ? 'metro.station' : 'bus.depot',
+      depot,
+    ),
+    finish = button(tool.mode === 'metro' ? 'metro.finish' : 'bus.finish', () =>
+      tool.onConfirm(),
+    ),
     cancel = button('bus.cancel', () => tool.clearDraft());
   build.prepend(createIcon('bus'));
   row.append(build, finish, cancel);
   const hint = document.createElement('p');
   hint.className = 'power-hint';
-  hint.textContent = `${t('bus.hint')} ${t('bus.fareCapacity')} $${TRANSIT.fare} / ${CAPACITY.busPassengers}`;
+  hint.textContent = `${t(tool.mode === 'metro' ? 'metro.hint' : 'bus.hint')} ${t('bus.fareCapacity')} $${tool.mode === 'metro' ? METRO.fare : TRANSIT.fare} / ${tool.mode === 'metro' ? CAPACITY.metroPassengers : CAPACITY.busPassengers}`;
   const status = document.createElement('output');
   status.setAttribute('role', 'status');
   const list = document.createElement('div');
@@ -43,7 +50,7 @@ export function createBusControls(
       finish.disabled = s.pending || s.stops.length < 2;
       status.textContent = s.reason
         ? t(s.reason)
-        : `${t('bus.stops')} ${s.stops.length}`;
+        : `${t('bus.stops')} ${s.stops.length}${tool.mode === 'metro' && s.stops.length > 1 ? ` · ${t('metro.cost')} $${metroTrackCost(s.stops)}` : ''}`;
       // Do not replace focused buttons on every stream event.
       const key = JSON.stringify([s.lines, s.pending]);
       if (key === signature) return;
@@ -55,7 +62,7 @@ export function createBusControls(
       list.replaceChildren();
       if (!s.lines.length) {
         const p = document.createElement('p');
-        p.textContent = t('bus.empty');
+        p.textContent = t(tool.mode === 'metro' ? 'metro.empty' : 'bus.empty');
         list.append(p);
       }
       for (const l of s.lines) {
@@ -67,7 +74,7 @@ export function createBusControls(
         title.style.borderLeftColor =
           Object.values(ZONE_PALETTE)[l.color]!.normal;
         const values = document.createElement('p');
-        values.textContent = `${t(l.blocked ? 'bus.blocked' : 'bus.running')} · ${t('bus.vehicles')} ${l.vehicles} · ${t('bus.waiting')} ${l.waiting} · ${t('bus.onboard')} ${l.onboard}`;
+        values.textContent = `${t(l.blocked ? (tool.mode === 'metro' ? 'metro.blocked' : 'bus.blocked') : 'bus.running')} · ${t('bus.vehicles')} ${l.vehicles} · ${t('bus.waiting')} ${l.waiting} · ${t('bus.onboard')} ${l.onboard}`;
         const stats = document.createElement('p');
         stats.className = 'bus-stats';
         stats.textContent = `${t('bus.week')} ${l.passengers} / $${l.revenue} · ${t('bus.lastWeek')} ${l.lastPassengers} / $${l.lastRevenue}`;
@@ -97,6 +104,7 @@ export function createBusControls(
             () => void tool.command({ t: 'deleteBusLine', id: l.id }),
           ],
         ] as const) {
+          if (tool.mode === 'metro' && key !== 'bus.delete') continue;
           const b = button(key, run);
           b.dataset.busAction = `${l.id}:${key}`;
           b.disabled = s.pending || (key === 'bus.remove' && l.vehicles === 0);

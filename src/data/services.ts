@@ -3,6 +3,7 @@ import { PARKS } from './parks';
 export const SERVICES = {
   ids: [
     'bus_depot',
+    'metro_station',
     'police_station',
     'police_hq',
     'fire_station',

@@ -28,4 +28,5 @@ export const TrafficKind = {
   garbage: 6,
   hearse: 7,
   pedestrian: 8,
+  metro: 9,
 } as const;

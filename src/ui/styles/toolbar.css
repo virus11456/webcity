@@ -212,10 +212,12 @@
   font-size: 12px;
   line-height: 1.5;
 }
-.bus-controls button {
+.bus-controls button,
+.metro-controls button {
   min-height: 44px;
 }
-.bus-controls output {
+.bus-controls output,
+.metro-controls output {
   display: block;
   font-size: 12px;
 }
