@@ -1,4 +1,5 @@
-export type Shortcut = 'pause' | 'cancel' | 'speed1' | 'speed2' | 'speed3';
+export type Shortcut =
+  'undo' | 'pause' | 'cancel' | 'speed1' | 'speed2' | 'speed3';
 const shortcuts: Record<string, Shortcut> = {
   Space: 'pause',
   Escape: 'cancel',
@@ -31,6 +32,18 @@ export class KeyboardInput {
     document.addEventListener('visibilitychange', this.clear);
   }
   private readonly down = (e: KeyboardEvent): void => {
+    if (
+      document.activeElement === this.canvas &&
+      (e.ctrlKey || e.metaKey) &&
+      e.code === 'KeyZ' &&
+      !e.shiftKey &&
+      !e.altKey &&
+      !e.isComposing
+    ) {
+      e.preventDefault();
+      if (!e.repeat) this.shortcut('undo');
+      return;
+    }
     if (
       document.activeElement !== this.canvas ||
       e.ctrlKey ||

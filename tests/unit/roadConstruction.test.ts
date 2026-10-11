@@ -53,6 +53,7 @@ describe('authoritative road construction', () => {
       'roadsChanged',
       'zonesChanged',
       'fundsChanged',
+      'undoState',
     ]);
     const actual = sim.snapshot(),
       view = mirror.readRoadWorld()!;

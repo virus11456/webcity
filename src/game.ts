@@ -1,3 +1,4 @@
+import { createUndoControls } from './ui/undoControls';
 import { createCityStatistics } from './ui/cityStatistics';
 import { TerraformTool } from './tools/terraformTool';
 import { createTerraformControls } from './ui/terraformControls';
@@ -221,6 +222,7 @@ const debug =
     : undefined;
 let sim: SimClient | undefined;
 let tileControls: ReturnType<typeof createTileControls> | undefined;
+let undoControls: ReturnType<typeof createUndoControls> | undefined;
 let cityStatistics: ReturnType<typeof createCityStatistics> | undefined;
 let financeControls: ReturnType<typeof createFinanceControls> | undefined;
 let simControls: ReturnType<typeof createSimControls> | undefined;
@@ -360,6 +362,7 @@ if (canvas && status) {
       },
       onShortcut: (action) => {
         if (action === 'cancel') inspectTool?.clear();
+        if (action === 'undo') void undoControls?.undo();
         const speed = sim?.mirror.clock?.speed;
         if (action === 'pause') void simControls?.setSpeed(speed === 0 ? 1 : 0);
         else if (action === 'speed1') void simControls?.setSpeed(1);
@@ -957,6 +960,10 @@ if (canvas && status) {
       });
       financeControls = createFinanceControls(root, sim!);
       cityStatistics = createCityStatistics(root, sim!);
+      undoControls = createUndoControls(root, sim!, () => {
+        tools?.select(null);
+        inspectTool?.clear();
+      });
       tileControls = createTileControls(root, sim!);
       saveController = createSaveController(
         sim,
@@ -1139,6 +1146,7 @@ if (import.meta.hot)
     debug?.dispose();
     financeControls?.dispose();
     cityStatistics?.dispose();
+    undoControls?.dispose();
     simControls?.dispose();
     tileControls?.dispose();
     sim?.dispose();

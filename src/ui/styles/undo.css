@@ -1,0 +1,23 @@
+.undo-status {
+  position: fixed;
+  bottom: max(88px, calc(env(safe-area-inset-bottom) + 72px));
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: var(--font-size-body);
+  z-index: 20;
+  pointer-events: none;
+}
+.undo-status[hidden] {
+  display: none;
+}
+@media (max-height: 500px) {
+  .undo-status {
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
