@@ -428,6 +428,8 @@ M5-03 第八批：污染擴散內部格直接讀取八個鄰格，保留原本�
 
 M5-03 第九批：ScheduleSystem 使用兩個固定 Float64Array，按班表 × SCHEDULES.departureBuckets（原常數 101）保存當前 tick 的週期與結束時間，每 tick 全量覆寫。個人 ID 偏移、學生早班、夜班跨日、已出勤／旅行／休息與目的地判斷不變。這只是共用時鐘算術，不合併 agent；不進存檔，目前 payload 4,848 bytes，不代表整體 heap。
 
+M5-03 第十批：parkField 在 WeakMap 按 SimState 保留單一場，使用來源數值副本逐項、依序比較，預算／尺寸／幾何／啟用狀態改變立即重算；保留原 Float32 累加與樹木封頂順序。呼叫端總是取得獨立副本，快取不序列化。PERFORMANCE 限制 retained field 1 MiB、來源 4,096 筆，超限釋放快取並回到完整計算；不代表整體 heap 上限。
+
 ---
 
 ## 11. PWA
