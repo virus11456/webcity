@@ -33,16 +33,29 @@ export function diffusePollution(
     for (let x = 0; x < size; x++) {
       const i = z * size + x;
       let neighbors = 0;
-      for (let dz = -1; dz <= 1; dz++)
-        for (let dx = -1; dx <= 1; dx++) {
-          if (!dx && !dz) continue;
-          neighbors +=
-            source[
-              z + dz < 0 || z + dz >= size || x + dx < 0 || x + dx >= size
-                ? i
-                : (z + dz) * size + x + dx
-            ]!;
-        }
+      if (z > 0 && z < size - 1 && x > 0 && x < size - 1) {
+        // Eight interior neighbors need no border checks; retain the exact summation order.
+        neighbors =
+          source[i - size - 1]! +
+          source[i - size]! +
+          source[i - size + 1]! +
+          source[i - 1]! +
+          source[i + 1]! +
+          source[i + size - 1]! +
+          source[i + size]! +
+          source[i + size + 1]!;
+      } else {
+        for (let dz = -1; dz <= 1; dz++)
+          for (let dx = -1; dx <= 1; dx++) {
+            if (!dx && !dz) continue;
+            neighbors +=
+              source[
+                z + dz < 0 || z + dz >= size || x + dx < 0 || x + dx >= size
+                  ? i
+                  : (z + dz) * size + x + dx
+              ]!;
+          }
+      }
       next[i] = clamp(
         (source[i]! * (1 - E.diffusion) +
           (neighbors * E.diffusion) / 8 +
