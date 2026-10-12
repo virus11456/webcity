@@ -430,6 +430,8 @@ M5-03 第九批：ScheduleSystem 使用兩個固定 Float64Array，按班表 × 
 
 M5-03 第十批：parkField 在 WeakMap 按 SimState 保留單一場，使用來源數值副本逐項、依序比較，預算／尺寸／幾何／啟用狀態改變立即重算；保留原 Float32 累加與樹木封頂順序。呼叫端總是取得獨立副本，快取不序列化。PERFORMANCE 限制 retained field 1 MiB、來源 4,096 筆，超限釋放快取並回到完整計算；不代表整體 heap 上限。
 
+M5-03 第十一批：hasPolicy 每次查詢只呼叫一次 districtAt，再按 ID 找行政區；空 collection 直接使用全市政策。沒有新增跨查詢快取，明確 false 覆寫、繼承與既有 collection 替換失效契約不變。64 區／10 萬查詢單項及無行政區城市非回歸數據見 PERFORMANCE.md，不能以單項提升推定全城已達標。
+
 ---
 
 ## 11. PWA
