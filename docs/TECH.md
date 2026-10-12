@@ -426,6 +426,8 @@ M5-03 第七批：ServiceNetwork 建構時把道路取樣線段依序分成 PERF
 
 M5-03 第八批：污染擴散內部格直接讀取八個鄰格，保留原本由上到下、由左到右的加總順序；邊緣仍逐鄰格反射到自身。排放、衰減及 Float32 輸出維持原式，來源不原地修改；逐格等價與獨立 kernel 量測見 PERFORMANCE.md。
 
+M5-03 第九批：ScheduleSystem 使用兩個固定 Float64Array，按班表 × SCHEDULES.departureBuckets（原常數 101）保存當前 tick 的週期與結束時間，每 tick 全量覆寫。個人 ID 偏移、學生早班、夜班跨日、已出勤／旅行／休息與目的地判斷不變。這只是共用時鐘算術，不合併 agent；不進存檔，目前 payload 4,848 bytes，不代表整體 heap。
+
 ---
 
 ## 11. PWA
