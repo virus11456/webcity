@@ -6,6 +6,7 @@ export const SCHEDULES = {
   hoursPerDay: 24,
   shiftStartHours: [6, 14, 22],
   departureSpreadHours: 3,
+  departureBuckets: 101,
   shiftDurationHours: 10,
   minimumStayHours: 1,
   sleepHours: 8,

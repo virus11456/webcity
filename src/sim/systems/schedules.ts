@@ -17,6 +17,10 @@ import { citizenSystem } from './citizens';
 /** A destination request is not arrival. Only the movement system may acknowledge arrival. */
 export class ScheduleSystem {
   private cursor = 0;
+  private readonly shiftCycles = new Float64Array(
+    SCHEDULES.shiftStartHours.length * SCHEDULES.departureBuckets,
+  );
+  private readonly shiftEnds = new Float64Array(this.shiftCycles.length);
   private readonly buildings = new Map<number, Building>();
   private readonly optionalTargets: Building[] = [];
   private readonly optionalByOrigin = new Map<number, number>();
@@ -105,6 +109,22 @@ export class ScheduleSystem {
             b.defId === 'CH')
         )
           this.optionalTargets.push(b);
+    // Every resident keeps their own ID offset; only the shared clock arithmetic is reused.
+    // Refresh all shift/offset windows each tick, including midnight and clock jumps after load.
+    const buckets = SCHEDULES.departureBuckets,
+      duration = hourTicks(SCHEDULES.shiftDurationHours);
+    for (let shift = 0; shift < SCHEDULES.shiftStartHours.length; shift++)
+      for (let offset = 0; offset < buckets; offset++) {
+        const start =
+            SCHEDULES.shiftStartHours[shift]! +
+            (offset / buckets) * SCHEDULES.departureSpreadHours,
+          startTick = hourTicks(start),
+          cycle = Math.floor((tick - startTick) / SCHEDULES.ticksPerDay),
+          key = shift * buckets + offset;
+        this.shiftCycles[key] = cycle;
+        this.shiftEnds[key] =
+          cycle * SCHEDULES.ticksPerDay + startTick + duration;
+      }
     for (let i = 0; i < c.count; i++) {
       if (!c.locationId[i]) c.locationId[i] = c.homeId[i]!;
       if (c.tripStatus[i] !== Status.none) continue; // Never reset a trip at midnight or fiscal-day boundaries.
@@ -114,22 +134,19 @@ export class ScheduleSystem {
         continue;
       }
       const destination = c.schoolId[i] || c.workId[i]!;
-      const start =
-        SCHEDULES.shiftStartHours[c.schoolId[i] ? 0 : c.shiftId[i]!]! +
-        ((c.id[i]! % 101) / 101) * SCHEDULES.departureSpreadHours;
-      const cycle = Math.floor(
-        (tick - hourTicks(start)) / SCHEDULES.ticksPerDay,
-      );
-      const departure = cycle * SCHEDULES.ticksPerDay + hourTicks(start);
+      const key =
+          (c.schoolId[i] ? 0 : c.shiftId[i]!) * buckets + (c.id[i]! % buckets),
+        cycle = this.shiftCycles[key]!,
+        shiftEnd = this.shiftEnds[key]!;
       // A missed shift can start within this shift's interval; overnight shifts keep their own cycle.
       if (
         destination &&
         cycle >= 0 &&
         c.lastShiftCycle[i]! < cycle + 1 &&
-        tick < departure + hourTicks(SCHEDULES.shiftDurationHours)
+        tick < shiftEnd
       ) {
         c.lastShiftCycle[i] = cycle + 1;
-        c.shiftEndTick[i] = departure + hourTicks(SCHEDULES.shiftDurationHours);
+        c.shiftEndTick[i] = shiftEnd;
         this.request(
           i,
           destination,
@@ -137,9 +154,9 @@ export class ScheduleSystem {
         );
         continue;
       }
-      const key = shopping ? 'lastShoppingCycle' : 'lastLeisureCycle';
-      if ((shopping || leisure) && c[key][i]! < day + 1) {
-        c[key][i] = day + 1;
+      const activityKey = shopping ? 'lastShoppingCycle' : 'lastLeisureCycle';
+      if ((shopping || leisure) && c[activityKey][i]! < day + 1) {
+        c[activityKey][i] = day + 1;
         const chance = shopping
           ? CITIZENS.schedule.shoppingChance
           : CITIZENS.schedule.leisureChance;
