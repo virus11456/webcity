@@ -15,3 +15,15 @@
 2026-10-12 凌晨唯讀檢查：MCP 仍回覆既有 scope 的 403；改用已登入 CLI，明確指定同一 team／project，以 `/v7/deployments` 的 `since=1791734400000`（台北 10 月 12 日 00:00）查詢，回覆 `deployments: []`、`count: 0`、`next: null`。本輪沒有本機部署嘗試。每日次數雖已換日，前述平台要求等待 24 小時的期限要到台北 10 月 12 日 03:34 才滿，因此本輪未發送部署請求。期限屆滿也須先重新查詢當日次數，不能直接把等待結束當成部署成功；本輪沒有建立排程。
 
 2026-10-12 01:33 左右再次唯讀確認：MCP scope 仍為 403，同 team／project 的已登入 CLI 回覆今日部署零筆、無下一頁。第四批服務覆蓋效能修改沒有發送部署請求；平台 03:34 等待期限尚未滿，未建立排程。
+
+## 2026-10-12 正式發布
+
+- 台北 20:29:39 建立，約 20:30 完成。今日第 1 次部署嘗試；發布前同 team／project 的當日清單為空、無下一頁，本機今日沒有其他嘗試。既有 03:34 等待期限已過。
+- 發布 commit：`df35454721ad981faeffccbdfc5aa8faa01d9cb1`（PR #111 合併），tree `d51d17b1ed1972b55a0ebaeffce7bb82db7a3a3d`，與本機通過測試的 tree 完全一致。包含先前累積修改及 M5-03 第八批；此段發布紀錄不另外部署。
+- 使用既有已登入 CLI 從乾淨 checkout 執行 production deploy。MCP 對既有 scope 的唯讀查詢仍回覆 403，CLI project inspect 已確認團隊與專案；沒有新建專案或改動部署保護。
+- Deployment：`dpl_13URfcPn88257wDuf1Sni1LbYccJ`；CLI inspect 狀態 **Ready**，target **production**。
+- 正式網址：https://webcity-theta.vercel.app/webcity/
+- 本次版本網址：https://webcity-27w9wm3s0-virus11456s-projects.vercel.app/webcity/
+- 本機檢查：1,124 項單元測試、5 項效能測試、lint、typecheck、production build 通過。Vercel 遠端建置也通過；仍有既有 chunk 大於 500 kB 提醒。
+- 台北 20:30–20:32 實際瀏覽器驗證：先套用既有 PWA 的更新提示，DOM 腳本確認為 `/webcity/assets/index-BrlTIqP2.js`，與本機 dist／正式站 HTTP 回應一致。新遊戲地形預覽、新手教學、3D 地形與工具列成功載入；測試城市以 ×1 運行，日期由 1/1 前進到 1/15，之後暫停。瀏覽器未記錄 error／warn。沒有覆寫既有存檔。
+- 此次為發布 smoke check，不代表 iPhone 真機效能、完整自然城市或 M5-03 所有效能預算已驗收；M5-03 保留未完成。
