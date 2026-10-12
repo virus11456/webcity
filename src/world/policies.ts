@@ -14,9 +14,10 @@ export interface PolicyWorld {
 }
 const definitions: readonly PolicyDefinition[] = POLICIES;
 export function hasPolicy(s: PolicyWorld, id: PolicyId, pos: Vec2): boolean {
-  const district = s.districts.find(
-    (d) => d.id === districtAt(s.districts, pos),
-  );
+  if (!s.districts.length) return s.policies.includes(id);
+  // Resolve cell ownership once, not again for every district tested by find.
+  const districtId = districtAt(s.districts, pos);
+  const district = s.districts.find((d) => d.id === districtId);
   return district?.policies?.[id] ?? s.policies.includes(id);
 }
 export function policyValue(
