@@ -1,3 +1,4 @@
+import { measurePathAccess } from '../tests/fixtures/measurePathAccess';
 import { measureSchoolRetention } from '../tests/fixtures/measureSchoolRetention';
 import { strict as assert } from 'node:assert';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -5,6 +6,8 @@ import { measurePollutionPerformance } from '../tests/fixtures/measurePollutionP
 import { measureServicePerformance } from '../tests/fixtures/measureServicePerformance';
 
 // Run the same workloads without Vitest's module instrumentation. Build time is excluded.
+const pathAccess = measurePathAccess();
+for (const row of pathAccess) assert.equal(new Set(row.hashes).size, 1);
 const pollution = measurePollutionPerformance();
 const services = measureServicePerformance();
 const schoolRetention = measureSchoolRetention();
@@ -22,6 +25,7 @@ writeFileSync(
       pollution,
       services,
       schoolRetention,
+      pathAccess,
     },
     null,
     2,

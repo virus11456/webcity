@@ -1,5 +1,6 @@
 import { closestPointOnSegment } from '../../core/math';
 import { PATHFINDING as C } from '../../data/pathfinding';
+import { ROAD_GRAPH_PRECISION } from '../../data/roadGraph';
 import { ROADS } from '../../data/roads';
 import { TRAFFIC } from '../../data/simulation';
 import {
@@ -338,12 +339,27 @@ export class Pathfinder {
     for (const id of candidates) {
       const s = this.roadById.get(id)!,
         points = this.profiles.get(id)!;
+      const reach = ROADS[s.type].widthM / 2 + C.frontageToleranceM + setback,
+        padding = Math.min(reach, best) + ROAD_GRAPH_PRECISION.positionM,
+        minX = point.x - padding,
+        maxX = point.x + padding,
+        minZ = point.z - padding,
+        maxZ = point.z + padding;
       let d = Infinity;
-      for (let i = 1; i < points.length; i++)
-        d = Math.min(
-          d,
-          closestPointOnSegment(point, points[i - 1]!, points[i]!).distance,
-        );
+      for (let i = 1; i < points.length; i++) {
+        const a = points[i - 1]!,
+          b = points[i]!;
+        // Conservative axis bounds only reject samples that cannot win. Keep
+        // exact projection and original order for frontage boundaries and ties.
+        if (
+          (a.x < minX && b.x < minX) ||
+          (a.x > maxX && b.x > maxX) ||
+          (a.z < minZ && b.z < minZ) ||
+          (a.z > maxZ && b.z > maxZ)
+        )
+          continue;
+        d = Math.min(d, closestPointOnSegment(point, a, b).distance);
+      }
       if (
         d <= ROADS[s.type].widthM / 2 + C.frontageToleranceM + setback &&
         (d < best || (d === best && id < selected))
