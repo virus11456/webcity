@@ -1,3 +1,4 @@
+import { measureServiceRaster } from '../tests/fixtures/measureServiceRaster';
 import { measurePathAccess } from '../tests/fixtures/measurePathAccess';
 import { measureSchoolRetention } from '../tests/fixtures/measureSchoolRetention';
 import { strict as assert } from 'node:assert';
@@ -6,6 +7,8 @@ import { measurePollutionPerformance } from '../tests/fixtures/measurePollutionP
 import { measureServicePerformance } from '../tests/fixtures/measureServicePerformance';
 
 // Run the same workloads without Vitest's module instrumentation. Build time is excluded.
+const serviceRaster = measureServiceRaster();
+assert.equal(new Set(serviceRaster.flatMap((row) => row.hashes)).size, 1);
 const pathAccess = measurePathAccess();
 for (const row of pathAccess) assert.equal(new Set(row.hashes).size, 1);
 const pollution = measurePollutionPerformance();
@@ -26,6 +29,7 @@ writeFileSync(
       services,
       schoolRetention,
       pathAccess,
+      serviceRaster,
     },
     null,
     2,
