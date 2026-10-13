@@ -436,6 +436,8 @@ M5-03 第十二批：ServiceSystem 每次 update 依接入道路分組活躍建�
 
 M5-03 第十三批：每日與 refreshPower 建築 patch 以 mergeBuildingPatches 合併，首筆複製、後續就地覆寫當次累積物件，保留 Map 首見順序與 shallow／last-write 規則（包括 undefined）。不得修改原始 patch；合併結果不是跨邊界副本，兩處事件仍須 structuredClone。暫存不跨呼叫，效能與事件等價資料見 PERFORMANCE.md。
 
+M5-03 第十四批：污染擴散把內部格與邊界格分開遍歷，每格只寫入一次；八鄰格加總、邊界反射、排放、衰減及 Float32 輸出順序不變。固定係數在呼叫內讀取一次，沒有跨 tick 快取或額外網格。`npm run perf:bundle` 使用既有 Vite 產生 minified SSR bundle，與 Vitest 共用污染及 10 萬人口量測流程；兩種 runner 分開報告，打包時間不列入。它仍是 Node CPU 資料，不能取代瀏覽器 Worker／IPC／GPU 或真機預算驗收。
+
 ---
 
 ## 11. PWA
