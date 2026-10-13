@@ -434,6 +434,8 @@ M5-03 第十一批：hasPolicy 每次查詢只呼叫一次 districtAt，再按 I
 
 M5-03 第十二批：ServiceSystem 每次 update 依接入道路分組活躍建築。只排除非來源路段且兩端均不在 reach.distances 的組，其餘仍跑原精確 coverage；保留目標按原建築索引排序，需求加總順序不變。覆蓋值以當次 Float64Array 共用至效率套用，分組與暫存不跨更新、空間 O(建築數)，不進存檔。道路網路仍由 networkChanged 重建；不可排除兩端都在半徑外的來源路段。
 
+M5-03 第十三批：每日與 refreshPower 建築 patch 以 mergeBuildingPatches 合併，首筆複製、後續就地覆寫當次累積物件，保留 Map 首見順序與 shallow／last-write 規則（包括 undefined）。不得修改原始 patch；合併結果不是跨邊界副本，兩處事件仍須 structuredClone。暫存不跨呼叫，效能與事件等價資料見 PERFORMANCE.md。
+
 ---
 
 ## 11. PWA
