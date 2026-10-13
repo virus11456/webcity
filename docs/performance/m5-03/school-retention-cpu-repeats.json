@@ -1,0 +1,1476 @@
+{
+  "baseCommit": "1710643804b3a1c5addabbad35e8ea1d949054f6",
+  "before": [
+    {
+      "services": {
+        "population": 100000,
+        "schools": 96,
+        "enrolled": 14872,
+        "coverage": {
+          "firstMs": 90.37637499999994,
+          "samples": [
+            28.469875000000002, 19.90062499999999, 20.183042,
+            19.201999999999998, 18.48533299999997
+          ],
+          "meanMs": 21.248174999999993
+        },
+        "reconcile": {
+          "firstMs": 50.88554199999999,
+          "samples": [
+            36.07600000000002, 27.468250000000012, 24.4893330000001,
+            20.68791699999997, 19.786707999999976
+          ],
+          "meanMs": 25.701641600000016
+        },
+        "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+        "populationEnd": 99066,
+        "tick": {
+          "samples": [
+            9.957625000000007, 14.670832999999902, 5.773500000000013,
+            14.493208999999979, 5.454500000000053, 5.525000000000091,
+            196.150625, 42.14995900000008, 7.719583000000057,
+            26.336291999999958, 8.642208999999866, 14.39512499999978,
+            7.693666000000121, 20.61299999999983, 7.145250000000033,
+            6.568457999999737, 148.53995799999984, 9.795583000000079,
+            7.019500000000335, 24.224500000000262, 9.505125000000135,
+            18.543624999999793, 13.562374999999975, 20.186041999999816,
+            7.4520840000000135, 7.155166000000008, 201.39058299999988,
+            17.298041999999896, 11.34191699999974, 42.50762500000019,
+            9.846416999999747, 20.925709000000097, 10.193083999999999,
+            15.379291000000194, 9.032000000000153, 11.251500000000306,
+            158.13020800000004, 15.021792000000005, 15.799583000000439,
+            32.12554199999977, 6.763708999999835, 10.449791999999889,
+            6.772707999999966, 14.068582999999762, 8.53625000000011,
+            7.740374999999858, 122.458709, 11.547749999999724,
+            7.167374999999993, 25.175834000000123, 7.181791999999859,
+            10.208832999999686, 6.5225829999999405, 14.630916999999954,
+            6.908124999999927, 22.86804200000006, 230.29437499999995,
+            19.27404200000001, 11.232500000000073, 51.20716700000003
+          ],
+          "meanMs": 30.50875909999998,
+          "maxMs": 230.29437499999995,
+          "p95Ms": 158.13020800000004
+        },
+        "daily": {
+          "samples": [
+            196.150625, 148.53995799999984, 201.39058299999988,
+            158.13020800000004, 122.458709, 230.29437499999995
+          ],
+          "meanMs": 176.16074299999994,
+          "maxMs": 230.29437499999995,
+          "p95Ms": 230.29437499999995
+        },
+        "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+        "buildingEventCount": 72,
+        "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+        "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+      },
+      "schoolRetention": [
+        {
+          "interleaved": false,
+          "pupils": 100000,
+          "samples": [
+            6.417458999999994, 3.483125000000001, 3.2587500000000063,
+            3.205709000000013, 3.980000000000018, 3.146708000000018,
+            3.148541000000023, 3.136792000000014, 3.046625000000006
+          ],
+          "meanMs": 3.274732142857157,
+          "hashes": [
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        },
+        {
+          "interleaved": true,
+          "pupils": 100000,
+          "samples": [
+            5.380167, 3.383958000000007, 3.777165999999994, 3.5326670000000036,
+            3.783083999999974, 4.279084000000012, 3.4997079999999983,
+            4.034041000000002, 4.042041999999981
+          ],
+          "meanMs": 3.849684571428566,
+          "hashes": [
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        }
+      ],
+      "bundled": {
+        "runtime": "v24.19.0",
+        "note": "Minified Vite SSR bundle, Node CPU only. Same workloads as the Vitest kernels; excludes build, browser IPC, rendering and GPU. This is not a browser performance budget acceptance test.",
+        "pollution": {
+          "size": 300,
+          "steps": 20,
+          "samples": [
+            0.6320354000000009, 0.2978541499999977, 0.29097289999999987,
+            0.2809624999999983, 0.27053960000000077, 0.2873104499999982,
+            0.28104165000000025
+          ],
+          "meanMs": 0.2821654199999995,
+          "resultSha256": "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+          "note": "Seven runs of twenty evolving field updates; time per update, runs 3–7 mean. Deterministic fractional emissions, kernel only; excludes other simulation and browser work.",
+          "hashes": [
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d"
+          ]
+        },
+        "services": {
+          "population": 100000,
+          "schools": 96,
+          "enrolled": 14872,
+          "coverage": {
+            "firstMs": 65.32333299999999,
+            "samples": [
+              11.931041999999934, 14.545582999999965, 12.376040999999987,
+              10.531499999999937, 11.409625000000005
+            ],
+            "meanMs": 12.158758199999966
+          },
+          "reconcile": {
+            "firstMs": 33.554666,
+            "samples": [
+              27.452541999999994, 25.837541999999985, 17.266665999999987,
+              17.237292000000025, 19.243291999999997
+            ],
+            "meanMs": 21.407466799999998
+          },
+          "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+          "populationEnd": 99066,
+          "tick": {
+            "samples": [
+              14.186374999999998, 14.895416999999952, 3.4107919999999012,
+              9.457083000000011, 4.029541999999992, 2.9694999999999254,
+              168.64550000000008, 9.48541699999987, 3.9707919999998467,
+              14.268290999999863, 5.704082999999855, 6.593916000000036,
+              4.812541999999894, 9.658208000000059, 3.582125000000133,
+              3.79429099999993, 116.36362500000018, 5.293249999999944,
+              3.3541669999999613, 12.723124999999982, 3.895667000000003,
+              5.561707999999953, 3.8029999999998836, 6.73700000000008,
+              3.21349999999984, 3.170667000000094, 131.58920899999998,
+              5.620416999999861, 3.373833000000104, 11.089416000000028,
+              4.218291000000136, 5.147207999999864, 3.4557089999998425,
+              5.641750000000002, 3.4538339999999152, 3.8058340000000044,
+              98.23179100000016, 5.160207999999784, 3.833499999999731,
+              9.681125000000065, 3.298999999999978, 6.202249999999822,
+              3.045333000000028, 5.527041000000281, 3.1492080000002716,
+              2.9411250000002838, 99.49270799999977, 5.245542000000114,
+              3.1262079999996786, 11.785875000000033, 3.7562079999997877,
+              5.723749999999654, 3.106499999999869, 5.794417000000067,
+              3.914541999999983, 3.199707999999646, 106.95233300000018,
+              6.869458000000122, 4.111332999999831, 12.939125000000331
+            ],
+            "meanMs": 17.301056199999973,
+            "maxMs": 168.64550000000008,
+            "p95Ms": 106.95233300000018
+          },
+          "daily": {
+            "samples": [
+              168.64550000000008, 116.36362500000018, 131.58920899999998,
+              98.23179100000016, 99.49270799999977, 106.95233300000018
+            ],
+            "meanMs": 120.21252766666673,
+            "maxMs": 168.64550000000008,
+            "p95Ms": 168.64550000000008
+          },
+          "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+          "buildingEventCount": 72,
+          "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+          "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+        },
+        "schoolRetention": [
+          {
+            "interleaved": false,
+            "pupils": 100000,
+            "samples": [
+              5.542084000000159, 3.1284999999998035, 3.3174169999997503,
+              3.3905829999998787, 2.989292000000205, 3.664249999999811,
+              3.1635000000001128, 3.269000000000233, 3.1092499999999745
+            ],
+            "meanMs": 3.271898857142852,
+            "hashes": [
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          },
+          {
+            "interleaved": true,
+            "pupils": 100000,
+            "samples": [
+              5.925000000000182, 4.196125000000393, 4.18258300000025,
+              3.8318340000000717, 7.280166999999892, 4.201082999999926,
+              4.075334000000112, 3.7035420000001977, 3.4794999999999163
+            ],
+            "meanMs": 4.393434714285767,
+            "hashes": [
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          }
+        ]
+      }
+    },
+    {
+      "services": {
+        "population": 100000,
+        "schools": 96,
+        "enrolled": 14872,
+        "coverage": {
+          "firstMs": 76.15070800000001,
+          "samples": [
+            16.187167000000045, 16.422916999999984, 16.906332999999904,
+            16.85720900000001, 16.73529199999996
+          ],
+          "meanMs": 16.62178359999998
+        },
+        "reconcile": {
+          "firstMs": 36.54733299999998,
+          "samples": [
+            26.987499999999955, 27.283416999999986, 21.259709000000043,
+            21.156332999999904, 19.449375000000146
+          ],
+          "meanMs": 23.227266800000006
+        },
+        "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+        "populationEnd": 99066,
+        "tick": {
+          "samples": [
+            10.10916700000007, 12.170082999999977, 5.618791999999985,
+            13.685374999999794, 5.504957999999988, 5.1720000000000255,
+            159.3124170000001, 16.37350000000015, 7.038000000000011, 42.736042,
+            22.130083999999897, 23.11762499999986, 17.539625000000115,
+            28.055499999999938, 9.250374999999849, 7.976207999999815,
+            242.880625, 34.6098750000001, 11.520542000000205, 27.02683300000035,
+            7.272291999999652, 13.930292000000009, 6.885791000000154,
+            13.515249999999924, 6.782999999999902, 6.870583000000352,
+            167.378334, 14.021250000000236, 6.575083999999606,
+            24.412540999999692, 7.934374999999818, 10.165208999999777,
+            7.651124999999865, 13.391125000000102, 6.450291000000107,
+            6.261249999999563, 106.96341699999994, 9.125, 7.385791000000154,
+            21.06583300000011, 6.130041999999776, 9.462500000000091,
+            6.280582999999751, 13.782874999999876, 6.164167000000361,
+            7.0132919999996375, 107.23900000000003, 9.120250000000397,
+            7.293083000000024, 21.76433300000008, 6.714500000000044,
+            8.994083000000046, 6.1529169999998885, 13.182874999999967,
+            6.987958000000162, 6.270708000000013, 115.07779100000016,
+            8.806583000000046, 6.390667000000121, 22.072291000000405
+          ],
+          "meanMs": 26.012765950000002,
+          "maxMs": 242.880625,
+          "p95Ms": 115.07779100000016
+        },
+        "daily": {
+          "samples": [
+            159.3124170000001, 242.880625, 167.378334, 106.96341699999994,
+            107.23900000000003, 115.07779100000016
+          ],
+          "meanMs": 149.80859733333338,
+          "maxMs": 242.880625,
+          "p95Ms": 242.880625
+        },
+        "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+        "buildingEventCount": 72,
+        "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+        "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+      },
+      "schoolRetention": [
+        {
+          "interleaved": false,
+          "pupils": 100000,
+          "samples": [
+            6.766249999999999, 3.008042000000003, 3.136583999999999,
+            3.224125000000001, 3.159708000000009, 2.9301249999999897,
+            3.1322919999999783, 2.9507499999999993, 3.3179159999999968
+          ],
+          "meanMs": 3.121642857142853,
+          "hashes": [
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        },
+        {
+          "interleaved": true,
+          "pupils": 100000,
+          "samples": [
+            5.861874999999998, 3.2548749999999984, 4.119958999999994,
+            3.492874999999998, 3.5049999999999955, 3.439749999999975,
+            3.6415000000000077, 3.6223329999999976, 3.5480830000000196
+          ],
+          "meanMs": 3.624214285714284,
+          "hashes": [
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        }
+      ],
+      "bundled": {
+        "runtime": "v24.19.0",
+        "note": "Minified Vite SSR bundle, Node CPU only. Same workloads as the Vitest kernels; excludes build, browser IPC, rendering and GPU. This is not a browser performance budget acceptance test.",
+        "pollution": {
+          "size": 300,
+          "steps": 20,
+          "samples": [
+            0.6760895999999988, 0.2698145499999981, 0.28324164999999935,
+            0.27505829999999776, 0.27625204999999936, 0.27750415000000145,
+            0.2726187500000009
+          ],
+          "meanMs": 0.2769349799999998,
+          "resultSha256": "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+          "note": "Seven runs of twenty evolving field updates; time per update, runs 3–7 mean. Deterministic fractional emissions, kernel only; excludes other simulation and browser work.",
+          "hashes": [
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d"
+          ]
+        },
+        "services": {
+          "population": 100000,
+          "schools": 96,
+          "enrolled": 14872,
+          "coverage": {
+            "firstMs": 55.73279199999996,
+            "samples": [
+              14.006334000000038, 12.09375, 16.92441599999995,
+              12.909124999999904, 12.341707999999926
+            ],
+            "meanMs": 13.655066599999964
+          },
+          "reconcile": {
+            "firstMs": 44.34308400000003,
+            "samples": [
+              28.181707999999958, 25.403999999999996, 21.223291000000017,
+              20.89345800000001, 18.570041999999944
+            ],
+            "meanMs": 22.854499799999985
+          },
+          "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+          "populationEnd": 99066,
+          "tick": {
+            "samples": [
+              6.69729099999995, 8.701167000000169, 4.59699999999998,
+              7.738540999999941, 2.752542000000176, 2.215208000000075,
+              145.12908300000004, 9.54670800000008, 4.0025419999999485,
+              16.95012500000007, 4.284917000000178, 6.115665999999919,
+              3.908292000000074, 10.29708299999993, 3.9509579999999005,
+              6.0000830000001315, 120.63995899999986, 5.181958000000122,
+              3.3604159999999865, 13.186874999999873, 3.9732500000000073,
+              6.623583000000053, 3.816000000000031, 6.953666999999996,
+              3.324542000000065, 5.659875000000056, 140.911875,
+              5.634457999999995, 3.3763340000000426, 12.337541999999985,
+              3.571083000000044, 5.0284580000000005, 3.137000000000171,
+              5.588999999999942, 3.2973339999998643, 3.165666999999985,
+              89.26329100000021, 4.733999999999924, 2.9374169999998685,
+              9.349958000000015, 3.8202920000001086, 4.727541999999858,
+              3.048583000000008, 5.370290999999952, 3.096499999999878,
+              2.898915999999872, 86.54841699999997, 4.573041999999987,
+              2.836207999999715, 10.40383299999985, 2.83462499999996,
+              5.6788329999999405, 3.0388749999997344, 5.470374999999876,
+              3.0152499999999236, 2.9525830000002316, 84.06375000000025,
+              4.689458000000286, 3.2180419999999685, 12.152291999999761
+            ],
+            "meanMs": 16.039640916666663,
+            "maxMs": 145.12908300000004,
+            "p95Ms": 89.26329100000021
+          },
+          "daily": {
+            "samples": [
+              145.12908300000004, 120.63995899999986, 140.911875,
+              89.26329100000021, 86.54841699999997, 84.06375000000025
+            ],
+            "meanMs": 111.09272916666673,
+            "maxMs": 145.12908300000004,
+            "p95Ms": 145.12908300000004
+          },
+          "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+          "buildingEventCount": 72,
+          "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+          "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+        },
+        "schoolRetention": [
+          {
+            "interleaved": false,
+            "pupils": 100000,
+            "samples": [
+              5.418750000000273, 3.2958340000000135, 3.1264580000001843,
+              3.916458000000148, 3.9695839999999407, 3.2000840000000608,
+              3.3382079999996677, 3.5370419999999285, 3.3267080000000533
+            ],
+            "meanMs": 3.487791714285712,
+            "hashes": [
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          },
+          {
+            "interleaved": true,
+            "pupils": 100000,
+            "samples": [
+              6.437417000000096, 4.531875000000127, 3.8427919999999176,
+              4.103375000000142, 7.440542000000278, 3.8688750000001164,
+              3.6128749999998035, 3.4608330000000933, 3.598207999999886
+            ],
+            "meanMs": 4.275357142857176,
+            "hashes": [
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          }
+        ]
+      }
+    },
+    {
+      "services": {
+        "population": 100000,
+        "schools": 96,
+        "enrolled": 14872,
+        "coverage": {
+          "firstMs": 75.84450000000004,
+          "samples": [
+            20.353415999999925, 17.483375000000024, 15.944916000000035,
+            16.853083000000083, 17.149833000000058
+          ],
+          "meanMs": 17.556924600000023
+        },
+        "reconcile": {
+          "firstMs": 37.51762499999995,
+          "samples": [
+            29.785541999999964, 31.703709000000003, 23.242665999999986,
+            25.74837500000001, 23.953292000000033
+          ],
+          "meanMs": 26.8867168
+        },
+        "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+        "populationEnd": 99066,
+        "tick": {
+          "samples": [
+            11.503250000000207, 12.545875000000024, 6.02516700000001,
+            13.844749999999976, 5.460791000000199, 5.188875000000053,
+            201.0322920000001, 18.468916000000036, 7.373916000000008,
+            26.858624999999847, 7.603791999999885, 14.091458999999986,
+            7.492999999999938, 18.842916999999943, 6.534792000000152,
+            6.670540999999957, 164.86908299999982, 10.090250000000196,
+            7.4014579999998205, 23.700874999999996, 7.086749999999938,
+            9.988415999999688, 6.362875000000258, 13.350750000000062,
+            6.49087499999996, 6.811166999999841, 105.00195900000017,
+            8.785083999999642, 6.139165999999932, 22.678665999999794,
+            6.4379579999999805, 9.40079199999991, 6.627042000000074,
+            12.807334000000083, 6.309500000000298, 6.349500000000262,
+            103.27399999999989, 11.485083999999915, 6.583540999999968,
+            20.585959000000003, 6.063040999999885, 9.572749999999814,
+            6.288417000000209, 13.221417000000201, 6.97662500000024,
+            6.630415999999968, 111.66545799999994, 12.65270799999962,
+            6.862625000000207, 22.90274999999974, 6.648624999999811,
+            9.214874999999665, 6.596291999999721, 14.438707999999679,
+            6.553209000000152, 6.371082999999999, 124.82879100000036,
+            8.775250000000142, 6.495624999999563, 21.92574999999988
+          ],
+          "meanMs": 22.880690949999977,
+          "maxMs": 201.0322920000001,
+          "p95Ms": 111.66545799999994
+        },
+        "daily": {
+          "samples": [
+            201.0322920000001, 164.86908299999982, 105.00195900000017,
+            103.27399999999989, 111.66545799999994, 124.82879100000036
+          ],
+          "meanMs": 135.11193050000006,
+          "maxMs": 201.0322920000001,
+          "p95Ms": 201.0322920000001
+        },
+        "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+        "buildingEventCount": 72,
+        "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+        "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+      },
+      "schoolRetention": [
+        {
+          "interleaved": false,
+          "pupils": 100000,
+          "samples": [
+            6.502540999999994, 3.248958000000002, 3.235083000000003,
+            3.4945419999999956, 2.9571249999999907, 3.0600409999999982,
+            2.9174579999999963, 2.950000000000003, 2.892458000000005
+          ],
+          "meanMs": 3.072386714285713,
+          "hashes": [
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        },
+        {
+          "interleaved": true,
+          "pupils": 100000,
+          "samples": [
+            5.760917000000006, 3.3618330000000043, 3.795415999999989,
+            3.4847090000000094, 3.6486670000000174, 3.427917000000008,
+            3.5583339999999737, 3.5293330000000083, 3.4984169999999892
+          ],
+          "meanMs": 3.563256142857142,
+          "hashes": [
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        }
+      ],
+      "bundled": {
+        "runtime": "v24.19.0",
+        "note": "Minified Vite SSR bundle, Node CPU only. Same workloads as the Vitest kernels; excludes build, browser IPC, rendering and GPU. This is not a browser performance budget acceptance test.",
+        "pollution": {
+          "size": 300,
+          "steps": 20,
+          "samples": [
+            0.7266520999999984, 0.2770792, 0.2740041999999988,
+            0.28298959999999906, 0.2732500000000016, 0.337020849999999,
+            0.28404790000000163
+          ],
+          "meanMs": 0.29026251,
+          "resultSha256": "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+          "note": "Seven runs of twenty evolving field updates; time per update, runs 3–7 mean. Deterministic fractional emissions, kernel only; excludes other simulation and browser work.",
+          "hashes": [
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d"
+          ]
+        },
+        "services": {
+          "population": 100000,
+          "schools": 96,
+          "enrolled": 14872,
+          "coverage": {
+            "firstMs": 54.27016699999996,
+            "samples": [
+              13.37454200000002, 10.909124999999904, 10.467208000000028,
+              11.658791999999949, 10.717375000000061
+            ],
+            "meanMs": 11.425408399999991
+          },
+          "reconcile": {
+            "firstMs": 35.52016599999996,
+            "samples": [
+              22.75520800000004, 31.400541999999973, 16.990499999999997,
+              15.315624999999955, 15.595500000000015
+            ],
+            "meanMs": 20.411474999999996
+          },
+          "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+          "populationEnd": 99066,
+          "tick": {
+            "samples": [
+              16.548457999999982, 25.02170799999999, 6.883041000000048,
+              12.239874999999984, 4.776957999999922, 3.336708999999928,
+              324.64254200000005, 12.909250000000156, 6.195958000000019,
+              26.242833999999903, 12.615166000000045, 13.75845900000013,
+              8.784249999999929, 16.562165999999934, 8.71166600000015,
+              5.010792000000038, 156.73420800000008, 7.433665999999903,
+              8.16662499999984, 21.38995900000009, 8.974999999999909,
+              11.361832999999933, 6.265542000000096, 12.1997080000001,
+              12.27099999999973, 10.470084000000043, 184.8097499999999,
+              7.559834000000137, 4.357457999999951, 18.309541999999965,
+              4.056166999999732, 5.736124999999902, 5.827959000000192,
+              6.573957999999948, 3.4904999999998836, 5.582292000000052,
+              113.00149999999985, 8.747834000000239, 4.779042000000118,
+              14.142041000000063, 7.584375000000364, 7.720040999999583,
+              4.658332999999857, 8.04216600000018, 3.2959169999999176,
+              3.7487090000004173, 98.18550000000005, 4.847667000000001,
+              3.224416999999903, 10.873458999999912, 3.246458999999959,
+              5.731999999999971, 2.8671669999998812, 5.570000000000164,
+              3.4770410000000993, 3.146958999999697, 94.29720799999996,
+              5.303833999999824, 4.204125000000204, 12.084790999999768
+            ],
+            "meanMs": 23.97652711666666,
+            "maxMs": 324.64254200000005,
+            "p95Ms": 113.00149999999985
+          },
+          "daily": {
+            "samples": [
+              324.64254200000005, 156.73420800000008, 184.8097499999999,
+              113.00149999999985, 98.18550000000005, 94.29720799999996
+            ],
+            "meanMs": 161.94511799999998,
+            "maxMs": 324.64254200000005,
+            "p95Ms": 324.64254200000005
+          },
+          "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+          "buildingEventCount": 72,
+          "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+          "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+        },
+        "schoolRetention": [
+          {
+            "interleaved": false,
+            "pupils": 100000,
+            "samples": [
+              7.4312919999997575, 3.3784169999998994, 3.35537499999964,
+              3.3270000000002256, 3.6824579999997695, 3.6728330000000824,
+              3.2239589999999225, 3.590041999999812, 3.2590829999999187
+            ],
+            "meanMs": 3.444392857142767,
+            "hashes": [
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          },
+          {
+            "interleaved": true,
+            "pupils": 100000,
+            "samples": [
+              6.567042000000129, 4.533957999999984, 4.274666000000252,
+              3.8242079999999987, 6.710040999999819, 3.5762500000000728,
+              3.7220830000001115, 3.6484580000001188, 3.5455830000000788
+            ],
+            "meanMs": 4.185898428571493,
+            "hashes": [
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          }
+        ]
+      }
+    }
+  ],
+  "after": [
+    {
+      "services": {
+        "population": 100000,
+        "schools": 96,
+        "enrolled": 14872,
+        "coverage": {
+          "firstMs": 83.14670799999999,
+          "samples": [
+            20.057957999999985, 15.519917000000078, 17.131917000000044,
+            17.487583000000086, 17.005540999999994
+          ],
+          "meanMs": 17.440583200000038
+        },
+        "reconcile": {
+          "firstMs": 39.347666000000004,
+          "samples": [
+            34.88787500000001, 27.395250000000033, 21.96529200000009,
+            21.798041999999896, 23.481250000000045
+          ],
+          "meanMs": 25.905541800000016
+        },
+        "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+        "populationEnd": 99066,
+        "tick": {
+          "samples": [
+            10.605834000000186, 13.266667000000098, 8.201292000000194,
+            15.081334000000197, 6.548042000000123, 6.424040999999988,
+            172.90800000000013, 17.478917000000138, 8.864499999999907,
+            26.24087499999996, 7.255832999999939, 10.57224999999994,
+            7.104916999999887, 19.881208000000015, 6.489458000000013,
+            6.635084000000006, 190.121083, 12.940707999999631,
+            7.193958000000293, 35.910167, 9.306540999999925, 13.122417000000041,
+            7.810249999999996, 14.63620899999978, 6.787917000000107,
+            6.970584000000144, 131.6064580000002, 9.729334000000108,
+            6.866875000000164, 23.856249999999818, 6.61850000000004,
+            11.808457999999973, 8.190500000000156, 13.933999999999742,
+            6.677000000000135, 7.240499999999884, 113.27154200000041,
+            11.186416000000008, 6.396584000000075, 20.818415999999615,
+            6.385916000000179, 9.61700000000019, 6.3777500000001055,
+            16.04654100000016, 6.663708999999926, 7.048499999999876,
+            117.98308399999996, 9.996292000000267, 6.428917000000183,
+            22.047374999999647, 7.0267909999997755, 20.054834000000028,
+            273.128792, 56.75983300000007, 63.979207999999744,
+            16.21324999999979, 254.50166599999966, 10.466416999999637,
+            7.338749999999891, 24.309041999999863
+          ],
+          "meanMs": 32.8155431,
+          "maxMs": 273.128792,
+          "p95Ms": 172.90800000000013
+        },
+        "daily": {
+          "samples": [
+            172.90800000000013, 190.121083, 131.6064580000002,
+            113.27154200000041, 117.98308399999996, 254.50166599999966
+          ],
+          "meanMs": 163.3986388333334,
+          "maxMs": 254.50166599999966,
+          "p95Ms": 254.50166599999966
+        },
+        "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+        "buildingEventCount": 72,
+        "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+        "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+      },
+      "schoolRetention": [
+        {
+          "interleaved": false,
+          "pupils": 100000,
+          "samples": [
+            4.051208000000003, 3.1119999999999948, 1.9522079999999846,
+            1.8496250000000032, 2.5224159999999927, 1.6975830000000087,
+            1.735666999999978, 2.109999999999985, 1.751958000000002
+          ],
+          "meanMs": 1.9456367142857078,
+          "hashes": [
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        },
+        {
+          "interleaved": true,
+          "pupils": 100000,
+          "samples": [
+            10.182041999999996, 6.109375, 5.281958000000003, 4.821416999999997,
+            4.563999999999993, 6.0524580000000014, 6.1542499999999905,
+            7.600291999999996, 10.20233300000001
+          ],
+          "meanMs": 6.382386857142856,
+          "hashes": [
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        }
+      ],
+      "bundled": {
+        "runtime": "v24.19.0",
+        "note": "Minified Vite SSR bundle, Node CPU only. Same workloads as the Vitest kernels; excludes build, browser IPC, rendering and GPU. This is not a browser performance budget acceptance test.",
+        "pollution": {
+          "size": 300,
+          "steps": 20,
+          "samples": [
+            0.6520187499999992, 0.29010624999999945, 0.303925000000001,
+            0.32132080000000085, 0.30264789999999947, 0.33470624999999926,
+            0.3619749999999982
+          ],
+          "meanMs": 0.3249149899999998,
+          "resultSha256": "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+          "note": "Seven runs of twenty evolving field updates; time per update, runs 3–7 mean. Deterministic fractional emissions, kernel only; excludes other simulation and browser work.",
+          "hashes": [
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d"
+          ]
+        },
+        "services": {
+          "population": 100000,
+          "schools": 96,
+          "enrolled": 14872,
+          "coverage": {
+            "firstMs": 68.3241250000001,
+            "samples": [
+              21.935374999999908, 15.803750000000036, 22.20216700000003,
+              16.34904199999994, 17.172375000000102
+            ],
+            "meanMs": 18.692541800000004
+          },
+          "reconcile": {
+            "firstMs": 47.013000000000034,
+            "samples": [
+              31.32304099999999, 43.46112500000004, 20.233165999999983,
+              26.72729199999992, 21.541124999999965
+            ],
+            "meanMs": 28.657149799999978
+          },
+          "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+          "populationEnd": 99066,
+          "tick": {
+            "samples": [
+              9.147292000000107, 11.628958000000011, 2.9759170000002086,
+              14.776916000000028, 3.138500000000022, 5.611165999999912,
+              181.80708400000003, 10.523125000000164, 4.543916999999965,
+              17.41562500000009, 6.384792000000061, 6.897834000000103,
+              3.954833000000008, 10.674499999999853, 3.8097919999997885,
+              3.420708000000104, 144.92037500000015, 5.692833999999948,
+              4.111625000000004, 12.181708000000071, 5.420624999999745,
+              6.011917000000267, 3.6138750000000073, 8.167833000000428,
+              3.459375000000364, 3.8507919999997284, 99.31870800000024,
+              5.022542000000158, 3.113582999999835, 10.059207999999671,
+              3.471541999999772, 5.796624999999949, 3.1198749999998654,
+              5.231874999999945, 3.8027909999996155, 3.709834000000228,
+              101.3253749999999, 6.397540999999819, 4.9943749999997635,
+              15.495792000000165, 4.091957999999977, 12.218875000000025,
+              6.787582999999813, 6.027166999999736, 4.932833000000301,
+              4.241207999999915, 104.43337500000007, 6.131083000000217,
+              3.760041999999885, 12.818459000000075, 6.348458000000392,
+              8.548833000000286, 3.5817500000002838, 6.56270799999993,
+              3.711707999999817, 3.3552910000003067, 102.76549999999997,
+              5.742957999999817, 4.036874999999782, 11.935417000000143
+            ],
+            "meanMs": 18.117227750000016,
+            "maxMs": 181.80708400000003,
+            "p95Ms": 102.76549999999997
+          },
+          "daily": {
+            "samples": [
+              181.80708400000003, 144.92037500000015, 99.31870800000024,
+              101.3253749999999, 104.43337500000007, 102.76549999999997
+            ],
+            "meanMs": 122.4284028333334,
+            "maxMs": 181.80708400000003,
+            "p95Ms": 181.80708400000003
+          },
+          "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+          "buildingEventCount": 72,
+          "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+          "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+        },
+        "schoolRetention": [
+          {
+            "interleaved": false,
+            "pupils": 100000,
+            "samples": [
+              2.741041000000223, 1.8448339999999916, 2.2759579999997186,
+              1.9090409999998883, 1.9207499999997708, 1.1010840000003554,
+              1.27475000000004, 1.2277920000001359, 0.9621669999996811
+            ],
+            "meanMs": 1.5245059999999415,
+            "hashes": [
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          },
+          {
+            "interleaved": true,
+            "pupils": 100000,
+            "samples": [
+              5.2699579999998605, 4.558790999999928, 4.314958999999817,
+              4.416874999999891, 4.547833000000082, 4.327624999999898,
+              4.20279199999959, 4.231584000000112, 4.957915999999841
+            ],
+            "meanMs": 4.42851199999989,
+            "hashes": [
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          }
+        ]
+      }
+    },
+    {
+      "services": {
+        "population": 100000,
+        "schools": 96,
+        "enrolled": 14872,
+        "coverage": {
+          "firstMs": 88.799083,
+          "samples": [
+            20.09754099999998, 18.295792000000006, 16.938499999999976,
+            16.67700000000002, 15.885582999999997
+          ],
+          "meanMs": 17.578883199999996
+        },
+        "reconcile": {
+          "firstMs": 41.71916600000009,
+          "samples": [
+            28.71320800000001, 26.303749999999923, 22.353250000000003,
+            22.93679099999997, 23.19749999999999
+          ],
+          "meanMs": 24.70089979999998
+        },
+        "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+        "populationEnd": 99066,
+        "tick": {
+          "samples": [
+            10.120416999999861, 13.889457999999877, 5.971332999999959,
+            14.884083000000146, 5.891417000000047, 5.762042000000065,
+            461.6333750000001, 48.56970799999999, 7.553458999999748,
+            27.511625000000095, 7.228958000000148, 10.733083000000079,
+            6.910417000000052, 18.577166000000034, 7.34395799999993,
+            6.956875000000309, 135.61283300000014, 10.383124999999836,
+            6.9675000000002, 22.486833999999817, 7.055791000000227,
+            9.629707999999937, 6.77475000000004, 14.263750000000073,
+            6.374041000000034, 6.337666999999783, 127.97108399999979,
+            10.38254199999983, 6.58520899999985, 24.792042000000038, 6.875,
+            10.233707999999751, 7.924209000000246, 13.831791000000067,
+            6.865083000000141, 6.5915829999999005, 114.91949999999997,
+            8.707124999999905, 6.841167000000041, 24.590625000000273,
+            6.555374999999913, 12.33587499999976, 6.727499999999964,
+            13.20245900000009, 6.44170800000029, 6.697042000000238,
+            110.35954200000015, 9.002084000000195, 6.999582999999802,
+            22.188250000000153, 7.778457999999773, 8.853041000000303,
+            6.350417000000107, 12.909250000000156, 6.2979999999997744,
+            6.341374999999971, 115.42729199999985, 8.609458999999788,
+            6.496333999999933, 22.91608300000007
+          ],
+          "meanMs": 27.750386133333343,
+          "maxMs": 461.6333750000001,
+          "p95Ms": 115.42729199999985
+        },
+        "daily": {
+          "samples": [
+            461.6333750000001, 135.61283300000014, 127.97108399999979,
+            114.91949999999997, 110.35954200000015, 115.42729199999985
+          ],
+          "meanMs": 177.65393766666668,
+          "maxMs": 461.6333750000001,
+          "p95Ms": 461.6333750000001
+        },
+        "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+        "buildingEventCount": 72,
+        "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+        "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+      },
+      "schoolRetention": [
+        {
+          "interleaved": false,
+          "pupils": 100000,
+          "samples": [
+            2.6471659999999986, 2.7211659999999966, 1.7880830000000003,
+            1.7640829999999994, 1.9327499999999986, 1.5831249999999955,
+            1.6557500000000118, 1.6437919999999906, 1.7037499999999994
+          ],
+          "meanMs": 1.7244761428571422,
+          "hashes": [
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        },
+        {
+          "interleaved": true,
+          "pupils": 100000,
+          "samples": [
+            6.818124999999995, 3.681416999999996, 4.03370799999999,
+            4.007209000000017, 4.0950420000000065, 3.664999999999992,
+            3.9052499999999952, 4.021250000000009, 3.7483330000000024
+          ],
+          "meanMs": 3.925113142857145,
+          "hashes": [
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        }
+      ],
+      "bundled": {
+        "runtime": "v24.19.0",
+        "note": "Minified Vite SSR bundle, Node CPU only. Same workloads as the Vitest kernels; excludes build, browser IPC, rendering and GPU. This is not a browser performance budget acceptance test.",
+        "pollution": {
+          "size": 300,
+          "steps": 20,
+          "samples": [
+            0.6494354000000001, 0.2691896, 0.2707624999999979,
+            0.27241249999999867, 0.27932710000000044, 0.27654164999999864,
+            0.26678540000000056
+          ],
+          "meanMs": 0.2731658299999992,
+          "resultSha256": "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+          "note": "Seven runs of twenty evolving field updates; time per update, runs 3–7 mean. Deterministic fractional emissions, kernel only; excludes other simulation and browser work.",
+          "hashes": [
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d"
+          ]
+        },
+        "services": {
+          "population": 100000,
+          "schools": 96,
+          "enrolled": 14872,
+          "coverage": {
+            "firstMs": 50.34662500000002,
+            "samples": [
+              11.64970900000003, 11.832167000000027, 11.821790999999962,
+              11.262542000000053, 11.515166999999906
+            ],
+            "meanMs": 11.616275199999995
+          },
+          "reconcile": {
+            "firstMs": 32.82054099999999,
+            "samples": [
+              24.591083000000026, 25.162459000000013, 21.395541999999978,
+              18.674125000000004, 16.83812499999999
+            ],
+            "meanMs": 21.332266800000003
+          },
+          "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+          "populationEnd": 99066,
+          "tick": {
+            "samples": [
+              7.679458999999952, 12.574958999999808, 5.075667000000067,
+              13.12116600000013, 2.831666999999925, 3.2009590000000117,
+              145.44391700000006, 9.558250000000044, 3.7812920000001213,
+              25.729790999999977, 13.974749999999858, 23.272665999999845,
+              5.372541999999839, 13.841875000000073, 3.6520000000000437,
+              4.6917090000001735, 141.34508400000004, 6.34133299999985,
+              3.8945830000000115, 16.641875000000027, 3.677167000000054,
+              9.0143750000002, 3.9329170000000886, 7.635666000000128,
+              3.6175000000000637, 4.4544160000000375, 98.016208,
+              6.510582999999997, 3.517749999999978, 14.37412500000005,
+              3.7375419999998485, 5.542208000000073, 4.1245000000001255,
+              7.7878749999999854, 3.7970829999999296, 3.2630410000001575,
+              94.19854200000009, 4.931084000000055, 3.2173750000001746,
+              22.86158400000022, 10.107708000000002, 6.2255410000002485,
+              3.3409999999998945, 5.704250000000229, 3.285374999999931,
+              3.1230000000000473, 98.15533300000016, 4.863958999999795,
+              3.4754579999998896, 10.864583999999923, 4.443207999999686,
+              4.807957999999871, 3.2214160000003176, 5.631082999999762,
+              2.965875000000324, 3.057958000000326, 89.94966699999986,
+              5.0214169999999285, 3.3234159999997246, 10.863917000000129
+            ],
+            "meanMs": 17.54448680000002,
+            "maxMs": 145.44391700000006,
+            "p95Ms": 98.016208
+          },
+          "daily": {
+            "samples": [
+              145.44391700000006, 141.34508400000004, 98.016208,
+              94.19854200000009, 98.15533300000016, 89.94966699999986
+            ],
+            "meanMs": 111.18479183333336,
+            "maxMs": 145.44391700000006,
+            "p95Ms": 145.44391700000006
+          },
+          "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+          "buildingEventCount": 72,
+          "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+          "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+        },
+        "schoolRetention": [
+          {
+            "interleaved": false,
+            "pupils": 100000,
+            "samples": [
+              3.3353329999999914, 2.438542000000325, 4.163375000000087,
+              1.0424579999998969, 0.9540419999998448, 1.027875000000222,
+              1.3804159999999683, 1.0372500000003129, 1.0300830000001042
+            ],
+            "meanMs": 1.5193570000000622,
+            "hashes": [
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          },
+          {
+            "interleaved": true,
+            "pupils": 100000,
+            "samples": [
+              5.508374999999887, 4.982042000000092, 4.376415999999608,
+              4.262541999999939, 4.355833999999959, 4.286542000000281,
+              4.269665999999688, 4.091457999999875, 4.14712499999996
+            ],
+            "meanMs": 4.255654714285616,
+            "hashes": [
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          }
+        ]
+      }
+    },
+    {
+      "services": {
+        "population": 100000,
+        "schools": 96,
+        "enrolled": 14872,
+        "coverage": {
+          "firstMs": 83.74604199999999,
+          "samples": [
+            26.44829100000004, 22.64941699999997, 19.871582999999987,
+            17.14470899999992, 17.438582999999994
+          ],
+          "meanMs": 20.710516599999984
+        },
+        "reconcile": {
+          "firstMs": 37.988624999999956,
+          "samples": [
+            29.86550000000011, 27.629542000000015, 22.018707999999947,
+            19.689457999999945, 19.816791999999964
+          ],
+          "meanMs": 23.803999999999995
+        },
+        "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+        "populationEnd": 99066,
+        "tick": {
+          "samples": [
+            12.074292000000014, 15.931792000000087, 6.5485409999998865,
+            15.69929100000013, 6.087999999999965, 5.561374999999998,
+            171.07508300000018, 15.260292000000163, 7.391708999999992,
+            26.314082999999982, 6.893332999999984, 10.253917000000001,
+            6.548208000000159, 17.418833000000177, 6.4385829999998805,
+            7.020833000000039, 131.51654200000007, 10.532250000000204,
+            6.802792000000409, 22.783042000000023, 7.503207999999631,
+            9.476124999999683, 6.44983400000001, 12.915875000000142,
+            7.003917000000001, 6.153291999999965, 108.25508300000001,
+            10.353125000000091, 6.483167000000321, 21.8259579999999,
+            6.949457999999595, 12.159333999999944, 12.561375000000226,
+            20.661415999999917, 7.959290999999666, 7.395708999999897,
+            140.922916, 11.568417000000409, 7.717874999999822,
+            23.250416999999743, 7.087332999999944, 10.718374999999924,
+            8.147334000000228, 13.291291000000001, 6.854041000000052,
+            6.717083000000002, 117.81966699999975, 8.87479200000007,
+            6.77566700000034, 22.462249999999585, 6.414291999999932,
+            8.769582999999784, 7.408374999999978, 12.924125000000004,
+            6.5179580000003625, 6.296541000000161, 116.24387500000012,
+            8.452458000000206, 6.427791999999954, 22.575624999999945
+          ],
+          "meanMs": 22.774950666666676,
+          "maxMs": 171.07508300000018,
+          "p95Ms": 117.81966699999975
+        },
+        "daily": {
+          "samples": [
+            171.07508300000018, 131.51654200000007, 108.25508300000001,
+            140.922916, 117.81966699999975, 116.24387500000012
+          ],
+          "meanMs": 130.97219433333336,
+          "maxMs": 171.07508300000018,
+          "p95Ms": 171.07508300000018
+        },
+        "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+        "buildingEventCount": 72,
+        "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+        "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+      },
+      "schoolRetention": [
+        {
+          "interleaved": false,
+          "pupils": 100000,
+          "samples": [
+            4.142750000000007, 3.487624999999994, 2.129374999999996,
+            1.8819579999999974, 2.3628750000000025, 1.9983339999999998,
+            1.8221249999999998, 1.752207999999996, 2.03262500000001
+          ],
+          "meanMs": 1.9970714285714288,
+          "hashes": [
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+            "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        },
+        {
+          "interleaved": true,
+          "pupils": 100000,
+          "samples": [
+            8.266083000000009, 4.238334000000009, 4.30812499999999,
+            3.7933330000000183, 3.97758300000001, 3.925582999999989,
+            3.782375000000002, 4.183250000000015, 4.01279199999999
+          ],
+          "meanMs": 3.997577285714288,
+          "hashes": [
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+            "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+          ],
+          "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+        }
+      ],
+      "bundled": {
+        "runtime": "v24.19.0",
+        "note": "Minified Vite SSR bundle, Node CPU only. Same workloads as the Vitest kernels; excludes build, browser IPC, rendering and GPU. This is not a browser performance budget acceptance test.",
+        "pollution": {
+          "size": 300,
+          "steps": 20,
+          "samples": [
+            0.5825520499999997, 0.2761645999999985, 0.2703895500000016,
+            0.27352710000000113, 0.2736999999999995, 0.2669562500000012,
+            0.2713937499999986
+          ],
+          "meanMs": 0.2711933300000004,
+          "resultSha256": "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+          "note": "Seven runs of twenty evolving field updates; time per update, runs 3–7 mean. Deterministic fractional emissions, kernel only; excludes other simulation and browser work.",
+          "hashes": [
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d",
+            "1441b1c1e13a6280a0c8eda8c9c6a52ced0d71fecd91110fa278f6e56f7bee1d"
+          ]
+        },
+        "services": {
+          "population": 100000,
+          "schools": 96,
+          "enrolled": 14872,
+          "coverage": {
+            "firstMs": 45.790332999999976,
+            "samples": [
+              13.779375000000073, 10.529291999999941, 11.159416999999962,
+              12.317791000000057, 14.239916999999991
+            ],
+            "meanMs": 12.405158400000005
+          },
+          "reconcile": {
+            "firstMs": 36.103792,
+            "samples": [
+              25.704250000000002, 25.109083000000055, 18.698292000000038,
+              15.287791999999968, 16.18775000000005
+            ],
+            "meanMs": 20.197433400000023
+          },
+          "stateSha256": "bef14a9e65bfbce7b67e0122e022a1aa0e1e9644ad10e29adf79e47de777d255",
+          "populationEnd": 99066,
+          "tick": {
+            "samples": [
+              6.722459000000072, 8.3471669999999, 3.158332999999857,
+              7.46570799999995, 2.571666999999934, 2.6855829999999514,
+              132.5994159999998, 10.063333000000057, 4.164042000000109,
+              17.0502919999999, 3.821916999999985, 5.950459000000137,
+              3.948666000000003, 9.063292000000047, 4.057750000000169,
+              3.6256249999999, 108.17904099999987, 5.634416999999985,
+              5.05033299999991, 11.092583999999988, 3.7861250000000837,
+              5.457209000000148, 3.381167000000005, 7.590708000000177,
+              4.437750000000051, 4.870083000000022, 98.98620899999992,
+              5.071040999999923, 3.4642079999998714, 12.427791999999954,
+              3.2352500000001783, 4.883082999999942, 3.6702090000001135,
+              5.491042000000107, 3.0254999999999654, 3.4757090000000517,
+              90.02695799999992, 4.602374999999938, 3.7805829999999787,
+              11.560958000000028, 3.4908750000001874, 5.403416000000107,
+              3.588124999999991, 5.750625000000127, 3.7648329999999532,
+              3.2927499999998417, 102.546875, 5.428916999999956,
+              3.8256659999999556, 11.036375000000135, 5.034124999999676,
+              5.401541999999608, 3.5605829999999514, 5.84341699999959,
+              3.214915999999903, 3.435207999999875, 115.9399999999996,
+              5.067833000000064, 7.05074999999988, 21.240707999999813
+            ],
+            "meanMs": 16.039893033333303,
+            "maxMs": 132.5994159999998,
+            "p95Ms": 102.546875
+          },
+          "daily": {
+            "samples": [
+              132.5994159999998, 108.17904099999987, 98.98620899999992,
+              90.02695799999992, 102.546875, 115.9399999999996
+            ],
+            "meanMs": 108.04641649999985,
+            "maxMs": 132.5994159999998,
+            "p95Ms": 132.5994159999998
+          },
+          "buildingEventsSha256": "6ad3f815ab9ec98a0af5fd392ba86e5cbca8ad08433213cd14a6dfea5097f48e",
+          "buildingEventCount": 72,
+          "simulationSha256": "e3f9479b9ab619a150b6c7b6ea4f1130ded177647aea210c639ece083716b75e",
+          "note": "Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools."
+        },
+        "schoolRetention": [
+          {
+            "interleaved": false,
+            "pupils": 100000,
+            "samples": [
+              4.02804100000003, 2.0324580000001333, 1.7526249999996253,
+              1.7338330000002316, 1.834292000000005, 1.7964999999999236,
+              1.7189580000003843, 2.020625000000109, 1.7300420000001395
+            ],
+            "meanMs": 1.7981250000000597,
+            "hashes": [
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a",
+              "bf0e9295d4b7dee47105953f5d2bdca020e7f422770bc9aee7361116bf4e5d0a"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          },
+          {
+            "interleaved": true,
+            "pupils": 100000,
+            "samples": [
+              5.7245419999999285, 5.60674999999992, 4.759707999999591,
+              5.119000000000142, 6.8527500000000146, 4.6157499999999345,
+              4.590624999999818, 4.530999999999949, 4.528458000000228
+            ],
+            "meanMs": 4.999612999999954,
+            "hashes": [
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268",
+              "7c8ef497cf98700e26e9e3e211bbd0a6f7f009a1fd0307f1688470e785062268"
+            ],
+            "note": "Existing pupil reservation only. Nine runs, mean of runs 3–9; excludes fixture, reset and hashes. 1000 homes, 96 schools, two disconnected roads, 750 seats per school and 600m radius; grouped and interleaved IDs measured separately."
+          }
+        ]
+      }
+    }
+  ]
+}
