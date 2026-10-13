@@ -1,3 +1,4 @@
+import type { SimEvent } from '../../src/bridge/protocol';
 import { Simulation } from '../../src/sim/simulation';
 import { hourTicks } from '../../src/world/schedules';
 import { test, expect } from 'vitest';
@@ -53,7 +54,15 @@ test('measure service coverage and school assignment with 100k residents and 96 
   s.clock.ticks = hourTicks(5);
   s.clock.day = Math.floor(s.clock.ticks / 10);
   s.clock.tickInDay = s.clock.ticks % 10;
-  const sim = new Simulation(s.settings, () => {}, s);
+  const buildingEvents: SimEvent[] = [];
+  const sim = new Simulation(
+    s.settings,
+    (event) => {
+      if (event.t === 'buildingsChanged') buildingEvents.push(event);
+    },
+    s,
+  );
+  buildingEvents.length = 0;
   sim.setSpeed(1);
   const ticks: number[] = [],
     daily: number[] = [];
@@ -90,10 +99,14 @@ test('measure service coverage and school assignment with 100k residents and 96 
     populationEnd: snapshot.stats.population,
     tick: summary(ticks),
     daily: summary(daily),
+    buildingEventsSha256: createHash('sha256')
+      .update(JSON.stringify(buildingEvents))
+      .digest('hex'),
+    buildingEventCount: buildingEvents.length,
     simulationSha256: createHash('sha256')
       .update(JSON.stringify(snapshot))
       .digest('hex'),
-    note: 'Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Empty sink excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools.',
+    note: 'Authored 100k fixture plus 96 schools; 32 disconnected roads; Coverage and reconcile measured separately (first run retained, mean of runs 3–7); then full Simulation.tick at 05:00 for 60 ticks / 6 day boundaries. Sink retains building events for hashing outside timing; excludes browser IPC/GPU. Reconcile includes household/job summaries, not only schools.',
   };
   expect(report.population).toBe(100000);
   expect(report.enrolled).toBeGreaterThan(0);

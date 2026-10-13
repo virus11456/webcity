@@ -1,3 +1,4 @@
+import { mergeBuildingPatches } from './buildingPatches';
 import {
   CAMERA_LESSONS,
   TUTORIAL,
@@ -105,12 +106,7 @@ import type { Unsubscribe } from '../core/events';
 import { TimeSystem, type DayBoundary } from './systems/time';
 import { TIME, type SimSpeed } from '../data/config';
 import { SIM_RUNTIME } from '../data/simRuntime';
-import type {
-  BuildingPatch,
-  CitySettings,
-  SimClock,
-  WorldSnapshot,
-} from '../world/snapshot';
+import type { CitySettings, SimClock, WorldSnapshot } from '../world/snapshot';
 import { createState, type SimState } from './state';
 
 const tickMs = (TIME.secondsPerDay[1] * 1000) / TIME.ticksPerDay;
@@ -390,8 +386,7 @@ export class Simulation {
         );
       const happiness = updateHappiness(this.state);
       updateDemand(this.state);
-      const updates = new Map<number, BuildingPatch>();
-      for (const p of [
+      const updated = mergeBuildingPatches([
         ...industries,
         ...garbage,
         ...priorHappiness,
@@ -408,9 +403,7 @@ export class Simulation {
         ...reconciliation,
         ...levels,
         ...happiness,
-      ])
-        updates.set(p.id, { ...updates.get(p.id), ...p });
-      const updated = [...updates.values()];
+      ]);
       if (updated.some((p) => p.landValue !== undefined)) {
         this.emit({
           t: 'fields',
@@ -597,9 +590,7 @@ export class Simulation {
       ...updateHappiness(this.state),
       ...updateLevels(this.state),
     );
-    const merged = new Map<number, BuildingPatch>();
-    for (const p of patches) merged.set(p.id, { ...merged.get(p.id), ...p });
-    const updated = [...merged.values()];
+    const updated = mergeBuildingPatches(patches);
     if (updated.length)
       this.emit({
         t: 'buildingsChanged',
