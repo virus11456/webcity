@@ -432,6 +432,8 @@ M5-03 第十批：parkField 在 WeakMap 按 SimState 保留單一場，使用來
 
 M5-03 第十一批：hasPolicy 每次查詢只呼叫一次 districtAt，再按 ID 找行政區；空 collection 直接使用全市政策。沒有新增跨查詢快取，明確 false 覆寫、繼承與既有 collection 替換失效契約不變。64 區／10 萬查詢單項及無行政區城市非回歸數據見 PERFORMANCE.md，不能以單項提升推定全城已達標。
 
+M5-03 第十二批：ServiceSystem 每次 update 依接入道路分組活躍建築。只排除非來源路段且兩端均不在 reach.distances 的組，其餘仍跑原精確 coverage；保留目標按原建築索引排序，需求加總順序不變。覆蓋值以當次 Float64Array 共用至效率套用，分組與暫存不跨更新、空間 O(建築數)，不進存檔。道路網路仍由 networkChanged 重建；不可排除兩端都在半徑外的來源路段。
+
 ---
 
 ## 11. PWA
