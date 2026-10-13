@@ -180,3 +180,33 @@ describe('bounded service raster geometry cache', () => {
     expect(actual).toEqual(expected);
   });
 });
+
+describe('cached service raster direct loop', () => {
+  it.each([97, 300])(
+    'preserves each Float32 write across provider changes on a %i grid',
+    (size) => {
+      const { network } = fixture(),
+        expected = Float32Array.from(
+          { length: size * size },
+          (_, i) => (i % 13) / 7,
+        ),
+        actual = expected.slice();
+      // First populate every eligible link; subsequent passes take the cached path.
+      compare(network, size);
+      const bytes = network.cachedRasterBytes;
+      for (const fraction of [0, 0.43, 1])
+        for (const radius of [1e-6, 75, 1300])
+          for (const efficiency of [0, 1 / 3, 1.5]) {
+            const link = [...network.links.values()][0]!;
+            const reach = network.reach(
+              { road: link.segment.id, distance: link.length * fraction },
+              radius,
+            );
+            reference(network, reach, expected, size, efficiency);
+            network.raster(reach, actual, size, efficiency);
+            expect(actual).toEqual(expected);
+          }
+      expect(network.cachedRasterBytes).toBe(bytes);
+    },
+  );
+});

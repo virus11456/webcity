@@ -442,6 +442,8 @@ M5-03 第十五批：原校名額保留由 reserveSchoolPlaces 按既有 eligibl
 
 M5-03 第十六批：Pathfinder.access 以接入半徑與當前最近道路距離的較小值建立查詢方框，加上 ROAD_GRAPH_PRECISION.positionM 保守餘裕，只排除線段兩端都在方框同一側之外的樣本。其餘保留原精確投影、frontage 門檻、迭代次序與 ID 平手規則；車道投影、路網 revision 及接入快取不變，沒有額外持久資料。短／長道路冷查詢、快取命中及初始化分開量測，完整城市沒有證明穩定提升。
 
+M5-03 第十七批：ServiceNetwork.raster 的暖幾何快取直接逐筆讀取 indices／distances，在同一迴圈套用當次 radius、效率、兩端可達距離與來源道路距離；不經逐樣本回呼。冷建構與超額 fallback 保留原回呼。兩條路徑的 Math.min／除法／Math.max 及每次 Float32 寫入順序必須一致，不能去重樣本或提前改變捨入；快取容量、失效與存檔契約不變。冷／暖／禁用快取及完整城市分開量測，資料見 PERFORMANCE.md。
+
 ---
 
 ## 11. PWA

@@ -343,8 +343,22 @@ export class ServiceNetwork {
         field[index] = Math.max(field[index]!, value);
       };
       if (cached) {
-        for (let i = 0; i < cached.indices.length; i++)
-          apply(cached.indices[i]!, cached.distances[i]!);
+        // Keep this hot loop direct. Match apply()'s arithmetic and Float32
+        // write order exactly, including repeated indices from adjacent samples.
+        const indices = cached.indices,
+          distances = cached.distances,
+          radius = reach.radius;
+        for (let i = 0; i < indices.length; i++) {
+          const index = indices[i]!,
+            along = distances[i]!;
+          const distance = Math.min(
+            origin === undefined ? Infinity : Math.abs(along - origin),
+            fromStart + along,
+            endDistance - along,
+          );
+          const value = Math.max(0, 1 - distance / radius) * efficiency;
+          field[index] = Math.max(field[index]!, value);
+        }
         continue;
       }
       const bytesPerSample =
