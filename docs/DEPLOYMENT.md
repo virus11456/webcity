@@ -39,3 +39,15 @@
 - 本機檢查：121 個測試檔、1,172 項單元測試、10 項效能測試、lint、typecheck、production build 通過。Vercel 遠端建置通過，保留既有 chunk 大於 500 kB 提醒。
 - 實際瀏覽器驗證：套用 PWA 更新後，DOM 腳本為 `/webcity/assets/index-BM6BLGm8.js`，與本次建置一致。新城市地形預覽、遊戲畫面、教學與工具列成功載入；×1 運行時日期從 1/1 推進，最後在 3/22 暫停。瀏覽器未記錄 error／warn，沒有覆寫既有存檔。
 - 此次只驗證發布載入及空城市基本運行，不能替代自然成長城市、GPU、其他畫質、iPhone 真機記憶體或每 tick 30 ms 的驗收；M5-03 仍未完成。
+
+## 2026-10-13 第二次正式部署（瀏覽器驗證待補）
+
+- 台北 21:27:27 建立、21:27:54 Ready，遠端建置約 26 秒。當日第 2 次嘗試；發布前當日清單一筆、發布後兩筆且無下一頁，本機嘗試記錄也恰為兩筆，今日不再部署。
+- 發布 commit：`54033b1cdc8acd11606b4cf29261b77a5af50d6e`（PR #121 合併），tree `e1123443c94eaad52ca4c517add394fb780489a1`，乾淨 checkout 與本機測試內容一致。Vercel metadata 的 githubCommitSha 也一致，包含第十四至十六批。此發布紀錄不再部署。
+- 既有 `virus11456s-projects/webcity`、project `prj_6yhBx3NgKW44C4bMJWBgKd8MsULy`，使用已登入 CLI；MCP 唯讀查詢仍回覆 scope 403，CLI 同 team／project 查詢成功。沒有更換專案、別名或部署保護，沒有建立排程。
+- Deployment：`dpl_4yTn9SNMQ1nou7hdzpTRY4PYeH6m`；API 回報 **READY**、target **production**，別名包含 `webcity-theta.vercel.app`。
+- 正式網址：https://webcity-theta.vercel.app/webcity/
+- 本次版本網址：https://webcity-ohjpfki4e-virus11456s-projects.vercel.app/webcity/
+- 本機 123 個檔案／1,183 項單元測試、12 項效能測試、lint、typecheck、production build 通過；遠端 build 通過，仍有既有 chunk 超過 500 kB 提醒。
+- **遊戲頁面與 PWA 更新未驗證**：瀏覽器工具回報管理員安全檢查服務無法驗證政策，拒絕存取正式站。没有使用其他瀏覽器、HTTP 抓取或間接方式繞過。此次只確認 Vercel 控制平面 READY、commit 與別名；不可將它當作正式站實際載入／城市運行 smoke check 通過，也未取得瀏覽器錯誤紀錄。
+- 待工具安全檢查恢復後補做既有頁面 PWA 更新、新城市載入與時鐘推進的唯讀／暫存 smoke check，不需要再部署。M5-03 的每 tick 30 ms、自然城市、GPU、其他畫質及 iPhone 真機記憶體仍未完成驗收。
