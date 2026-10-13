@@ -62,3 +62,33 @@ it.each([1, 2, 3, 17, 300])(
     );
   },
 );
+
+it('preserves reflected mass for a source at every corner, edge and interior cell', () => {
+  const size = 9;
+  for (let index = 0; index < size * size; index++) {
+    const source = new Float32Array(size * size);
+    source[index] = 80;
+    const emissions = new Float32Array(source.length);
+    const next = diffusePollution(source, size, emissions);
+    expect(next).toEqual(reference(source, size, emissions));
+    expect(next.reduce((sum, value) => sum + value, 0)).toBeCloseTo(
+      80 * (1 - E.decay),
+      5,
+    );
+  }
+});
+
+it('reads offset views without changing backing buffers and returns independent storage', () => {
+  const size = 7;
+  const backing = Float32Array.from({ length: 100 }, (_, i) => i / 7);
+  const source = backing.subarray(5, 54);
+  const emissions = backing.subarray(20, 69);
+  const before = backing.slice();
+  const expected = reference(source, size, emissions);
+  const next = diffusePollution(source, size, emissions);
+  expect(next).toEqual(expected);
+  expect(backing).toEqual(before);
+  next.fill(0);
+  expect(backing).toEqual(before);
+  expect(diffusePollution(new Float32Array(), 0)).toEqual(new Float32Array());
+});

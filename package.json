@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "perf:sim": "vitest run --config vitest.perf.config.ts",
+    "perf:bundle": "node scripts/runSimulationBenchmark.ts",
     "e2e": "playwright test",
     "icons": "node scripts/generateIcons.ts",
     "test:coverage": "vitest run --coverage",

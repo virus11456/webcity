@@ -28,41 +28,64 @@ export function diffusePollution(
   size: number,
   emissions = new Float32Array(source.length),
 ): Float32Array {
-  const next = new Float32Array(source.length);
-  for (let z = 0; z < size; z++)
-    for (let x = 0; x < size; x++) {
-      const i = z * size + x;
-      let neighbors = 0;
-      if (z > 0 && z < size - 1 && x > 0 && x < size - 1) {
-        // Eight interior neighbors need no border checks; retain the exact summation order.
-        neighbors =
-          source[i - size - 1]! +
-          source[i - size]! +
-          source[i - size + 1]! +
-          source[i - 1]! +
-          source[i + 1]! +
-          source[i + size - 1]! +
-          source[i + size]! +
-          source[i + size + 1]!;
-      } else {
-        for (let dz = -1; dz <= 1; dz++)
-          for (let dx = -1; dx <= 1; dx++) {
-            if (!dx && !dz) continue;
-            neighbors +=
-              source[
-                z + dz < 0 || z + dz >= size || x + dx < 0 || x + dx >= size
-                  ? i
-                  : (z + dz) * size + x + dx
-              ]!;
-          }
-      }
-      next[i] = clamp(
-        (source[i]! * (1 - E.diffusion) +
-          (neighbors * E.diffusion) / 8 +
-          emissions[i]!) *
-          (1 - E.decay),
+  const next = new Float32Array(source.length),
+    diffusion = E.diffusion,
+    retained = 1 - diffusion,
+    decay = 1 - E.decay,
+    maxValue = E.maxValue;
+  // Keep the interior loop free of edge checks; borders reflect absent neighbors below.
+  for (let z = 1; z < size - 1; z++) {
+    const end = z * size + size - 1;
+    for (let i = z * size + 1; i < end; i++) {
+      const neighbors =
+        source[i - size - 1]! +
+        source[i - size]! +
+        source[i - size + 1]! +
+        source[i - 1]! +
+        source[i + 1]! +
+        source[i + size - 1]! +
+        source[i + size]! +
+        source[i + size + 1]!;
+      next[i] = Math.max(
+        0,
+        Math.min(
+          maxValue,
+          (source[i]! * retained +
+            (neighbors * diffusion) / 8 +
+            emissions[i]!) *
+            decay,
+        ),
       );
     }
+  }
+  for (let z = 0; z < size; z++) {
+    // Top/bottom rows visit every cell; other rows visit only the two edge cells.
+    const stride = z === 0 || z === size - 1 ? 1 : Math.max(1, size - 1);
+    for (let x = 0; x < size; x += stride) {
+      const i = z * size + x;
+      let neighbors = 0;
+      for (let dz = -1; dz <= 1; dz++)
+        for (let dx = -1; dx <= 1; dx++) {
+          if (!dx && !dz) continue;
+          neighbors +=
+            source[
+              z + dz < 0 || z + dz >= size || x + dx < 0 || x + dx >= size
+                ? i
+                : (z + dz) * size + x + dx
+            ]!;
+        }
+      next[i] = Math.max(
+        0,
+        Math.min(
+          maxValue,
+          (source[i]! * retained +
+            (neighbors * diffusion) / 8 +
+            emissions[i]!) *
+            decay,
+        ),
+      );
+    }
+  }
   return next;
 }
 /** Field-centre rasterization visits only the source's affected rectangle. */
