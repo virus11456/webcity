@@ -438,6 +438,8 @@ M5-03 第十三批：每日與 refreshPower 建築 patch 以 mergeBuildingPatche
 
 M5-03 第十四批：污染擴散把內部格與邊界格分開遍歷，每格只寫入一次；八鄰格加總、邊界反射、排放、衰減及 Float32 輸出順序不變。固定係數在呼叫內讀取一次，沒有跨 tick 快取或額外網格。`npm run perf:bundle` 使用既有 Vite 產生 minified SSR bundle，與 Vitest 共用污染及 10 萬人口量測流程；兩種 runner 分開報告，打包時間不列入。它仍是 Node CPU 資料，不能取代瀏覽器 Worker／IPC／GPU 或真機預算驗收。
 
+M5-03 第十五批：原校名額保留由 reserveSchoolPlaces 按既有 eligible ID 順序處理，只重用上一筆住宅／學校／教育程度相同的可達性答案（含不可達）。distance 在單次分配內須只依賴這三項；剩餘名額每位學生即時檢查與扣除，不可快取。只保留三個數字及一個布林，呼叫結束即釋放，不跨分配、換日或讀檔。新生分配及原校優先次序不變；集中與交錯住家 ID 的單項資料分開報告。
+
 ---
 
 ## 11. PWA

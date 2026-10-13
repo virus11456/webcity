@@ -270,3 +270,64 @@ it('separates all three education levels while retaining valid original schools 
   new CitizenSystem(s).reconcile();
   expect([...c.schoolId.slice(10, 20)]).toEqual(Array(10).fill(0));
 });
+
+it('keeps per-school seat limits for interleaved original-school reservations', () => {
+  const { s, c, school } = fixture(30);
+  s.buildings.push({ ...structuredClone(school), id: 3 });
+  for (const b of s.buildings) if (b.kind === 'service') b.pos.x = 0;
+  s.budgets.education = 0.02; // Six seats per school, with the home inside the scaled radius.
+  for (let i = 0; i < c.count; i++) c.schoolId[i] = i % 2 ? 3 : 2;
+  new CitizenSystem(s).reconcile();
+  expect([...c.schoolId.slice(0, 12)]).toEqual(
+    Array.from({ length: 12 }, (_, i) => (i % 2 ? 3 : 2)),
+  );
+  expect([...c.schoolId.slice(12, 30)]).toEqual(Array(18).fill(0));
+});
+
+it('does not reuse a reach answer for a different education level at the same home', () => {
+  const { s, c, school } = fixture(30);
+  s.buildings.push(
+    { ...structuredClone(school), id: 3, defId: 'school_high' },
+    { ...structuredClone(school), id: 4, defId: 'university' },
+  );
+  for (let i = 0; i < c.count; i++) {
+    const level = (i + 1) % 3;
+    c.education[i] = level;
+    c.age[i] = [6, 13, 19][level]!;
+    c.schoolId[i] = school.id;
+  }
+  new CitizenSystem(s).reconcile();
+  expect([...c.schoolId.slice(0, c.count)]).toEqual(
+    Array.from({ length: 30 }, (_, i) => 2 + ((i + 1) % 3)),
+  );
+});
+
+it('separates home reach and recomputes it after moving homes, removing roads and restoring roads', () => {
+  const { s, home, school } = fixture(30);
+  const farHome = {
+    ...structuredClone(home),
+    id: 10,
+    pos: { x: 0, z: 500 },
+  };
+  s.buildings.push(farHome);
+  new CitizenSystem(s).reconcile();
+  const c = s.citizens;
+  expect(c.count).toBe(60);
+  c.education.fill(0, 0, c.count);
+  c.age.fill(6, 0, c.count);
+  c.schoolId.fill(school.id, 0, c.count);
+  const system = new CitizenSystem(s);
+  system.reconcile();
+  for (let i = 0; i < c.count; i++)
+    expect(c.schoolId[i]).toBe(c.homeId[i] === home.id ? school.id : 0);
+  farHome.pos.z = 9;
+  system.reconcile();
+  expect([...c.schoolId.slice(0, c.count)]).toEqual(Array(60).fill(school.id));
+  const roads = s.segments;
+  s.segments = [];
+  system.reconcile();
+  expect([...c.schoolId.slice(0, c.count)]).toEqual(Array(60).fill(0));
+  s.segments = roads;
+  system.reconcile();
+  expect([...c.schoolId.slice(0, c.count)]).toEqual(Array(60).fill(school.id));
+});

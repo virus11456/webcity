@@ -1,3 +1,4 @@
+import { reserveSchoolPlaces } from '../schoolRetention';
 import { DEATHCARE } from '../../data/deathcare';
 import { policyValue } from '../../world/policies';
 import { ServiceNetwork } from '../../world/services';
@@ -567,12 +568,7 @@ export class CitizenSystem {
     }
     eligible.sort((a, b) => c.id[a]! - c.id[b]!);
     // Reserve eligible existing pupils before admitting newcomers; capacity cuts use stable IDs.
-    for (const i of eligible) {
-      const old = c.schoolId[i]!;
-      if ((slots.get(old) ?? 0) > 0 && Number.isFinite(distance(i, old)))
-        slots.set(old, slots.get(old)! - 1);
-      else c.schoolId[i] = 0;
-    }
+    reserveSchoolPlaces(c, eligible, slots, distance);
     for (const i of eligible) {
       if (c.schoolId[i]) continue;
       let chosen = 0,
