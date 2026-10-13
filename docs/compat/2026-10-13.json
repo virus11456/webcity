@@ -1,0 +1,41 @@
+{
+  "counts": {
+    "iPhone 15": {
+      "passed": 91,
+      "failed": 11,
+      "skipped": 4
+    },
+    "iPad Pro 11": {
+      "passed": 91,
+      "failed": 10,
+      "skipped": 5
+    },
+    "Desktop": {
+      "passed": 95,
+      "failed": 9,
+      "skipped": 2
+    }
+  },
+  "total": 318,
+  "failed": {
+    "buildingGallery.spec.ts": ["iPhone 15", "iPad Pro 11", "Desktop"],
+    "budget.spec.ts": ["iPhone 15", "iPad Pro 11", "Desktop"],
+    "curvedRoads.spec.ts": ["iPhone 15"],
+    "growth.spec.ts": ["iPhone 15", "iPad Pro 11", "Desktop"],
+    "population.spec.ts": ["iPhone 15", "iPad Pro 11", "Desktop"],
+    "roadTool.spec.ts": ["iPhone 15"],
+    "problems.spec.ts": ["iPhone 15", "iPad Pro 11", "Desktop"],
+    "save.spec.ts": ["iPhone 15", "iPad Pro 11", "Desktop"],
+    "topBar.spec.ts": ["iPhone 15", "iPad Pro 11", "Desktop"],
+    "vehicles.spec.ts": ["iPhone 15", "iPad Pro 11", "Desktop"],
+    "integration.spec.ts": ["iPhone 15", "iPad Pro 11", "Desktop"],
+    "disasters.spec.ts": ["iPad Pro 11"]
+  },
+  "baseline_commit": "354e5aae97737610a197c99a7a31cdfb61b17ef0",
+  "environment": "macOS Chrome, Playwright Chromium device emulation; not physical iOS Safari",
+  "targeted_final": {
+    "passed": 33,
+    "skipped": 3,
+    "note": "Includes corrected mobileToolbar iPhone recheck; full audit failure totals above are unchanged."
+  }
+}

@@ -125,6 +125,11 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
     [metro, 'bus'],
     [tram, 'bus'],
     [district, 'zone'],
+    [policy, 'settings'],
+    [terraform, 'layers'],
+    [bulldoze, 'bulldoze'],
+    [explore, 'explore'],
+    [demo, 'tower'],
   ] as const)
     button.prepend(catalogIcon(category));
   tabs.append(
@@ -309,12 +314,46 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
   const content = document.createElement('div');
   content.className = 'toolbar-content';
   content.append(...Array.from(body.childNodes));
-  body.append(content, tabs);
+  const navigation = document.createElement('div');
+  navigation.className = 'toolbar-navigation';
+  tabs.id = 'construction-tool-tabs';
+  let expanded = false;
+  const toggleTools = button('toolbar.allTools', () => setExpanded(!expanded));
+  toggleTools.className = 'toolbar-toggle';
+  toggleTools.setAttribute('aria-controls', tabs.id);
+  const setExpanded = (value: boolean) => {
+    expanded = value;
+    panel.dataset.toolsExpanded = String(value);
+    toggleTools.setAttribute('aria-expanded', String(value));
+    toggleTools.replaceChildren(
+      catalogIcon(value ? 'close' : 'zone'),
+      t(value ? 'toolbar.closeTools' : 'toolbar.allTools'),
+    );
+  };
+  setExpanded(false);
+  tabs.addEventListener('click', (event) => {
+    const selected = (event.target as Element).closest('button');
+    if (!expanded || !selected || selected.disabled) return;
+    setExpanded(false);
+    requestAnimationFrame(() =>
+      selected.scrollIntoView({ block: 'nearest', inline: 'nearest' }),
+    );
+  });
+  navigation.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && expanded) {
+      event.stopPropagation();
+      setExpanded(false);
+      toggleTools.focus();
+    }
+  });
+  navigation.append(toggleTools, tabs);
+  body.append(content, navigation);
   panel.append(enter, body);
   parent.append(panel);
   const stopLayout = observeLayout();
   const stopSignal = layout.subscribe((value) => {
     panel.dataset.layout = value;
+    setExpanded(false);
   });
   const shortcut = (event: KeyboardEvent) => {
     const target = event.target;
