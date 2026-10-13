@@ -652,6 +652,8 @@ export const ZH_TW = {
   'inspect.none': '目前無問題',
 
   'toolbar.catalog': '建造項目',
+  'toolbar.allTools': '全部工具',
+  'toolbar.closeTools': '收起工具',
   'toolbar.categories': '建造分類',
   'toolbar.upkeep': '維護',
   'toolbar.per8m': ' / 8m',

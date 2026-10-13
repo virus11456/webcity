@@ -14,6 +14,7 @@
 .road-controls .road-tabs {
   display: flex;
   flex-wrap: nowrap;
+  align-items: stretch;
   gap: 6px;
   padding: 8px;
   margin: 0;
@@ -119,6 +120,9 @@
   min-height: 48px;
   min-width: 48px;
 }
+.road-controls[data-layout='tablet'] .toolbar-content {
+  max-height: min(208px, calc(100dvh - 320px));
+}
 .road-controls[data-layout='phone-portrait'][data-construction='true'] {
   left: max(8px, env(safe-area-inset-left));
   right: max(8px, env(safe-area-inset-right));
@@ -128,7 +132,7 @@
   overflow: visible;
 }
 .road-controls[data-layout='phone-portrait'] .toolbar-content {
-  max-height: min(260px, calc(100dvh - 410px));
+  max-height: min(200px, calc(100dvh - 410px));
   padding: 8px;
 }
 .road-controls[data-layout='phone-portrait'] .road-heading,
@@ -299,4 +303,131 @@
 }
 .terraform-controls select {
   max-width: 100%;
+}
+
+/* Touch navigation: stable card rows plus an explicit overview of every tool. */
+.undo-short-label {
+  display: none;
+}
+.road-controls:not([data-layout='desktop']) .undo-full-label {
+  display: none;
+}
+.road-controls:not([data-layout='desktop']) .undo-short-label {
+  display: block;
+}
+.road-controls .toolbar-toggle {
+  display: none;
+}
+.road-controls:not([data-layout='desktop']) .toolbar-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  font-size: 12px;
+}
+.road-controls:not([data-layout='desktop']) .road-tabs {
+  scroll-snap-type: x mandatory;
+  scroll-padding: 8px;
+}
+.road-controls:not([data-layout='desktop']) .road-tabs button {
+  display: grid;
+  grid-template-rows: 24px 18px 16px;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  height: 76px;
+  padding: 6px 4px;
+  scroll-snap-align: start;
+}
+.road-controls .road-tabs button > .ui-icon {
+  margin: 0;
+}
+.road-controls[data-layout='phone-portrait'] .road-tabs button {
+  flex: 0 0 calc((100% - 18px) / 4);
+  min-width: 0;
+}
+@media (max-width: 359px) {
+  .road-controls[data-layout='phone-portrait'] .road-tabs button {
+    flex-basis: calc((100% - 12px) / 3);
+  }
+  .road-controls[data-layout='phone-portrait'][data-tools-expanded='true']
+    .road-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.road-controls[data-tools-expanded='true'] .toolbar-content {
+  display: none;
+}
+.road-controls[data-tools-expanded='true'] {
+  z-index: 12;
+}
+.road-controls[data-tools-expanded='true'] .road-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-height: calc(
+    100dvh - var(--topbar-bottom, 180px) - 72px - env(safe-area-inset-bottom)
+  );
+  overflow-x: hidden;
+  overflow-y: auto;
+  touch-action: pan-y;
+  scroll-snap-type: none;
+}
+.road-controls[data-layout='tablet'][data-tools-expanded='true'] .road-tabs {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.road-controls[data-tools-expanded='true'] .road-tabs button {
+  min-width: 0;
+}
+.road-controls[data-layout='phone-landscape'] .toolbar-navigation {
+  pointer-events: auto;
+  position: fixed;
+  top: var(--topbar-bottom, 88px);
+  bottom: max(8px, env(safe-area-inset-bottom));
+  left: max(8px, env(safe-area-inset-left));
+  width: 84px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-panel);
+  overflow: hidden;
+}
+.road-controls[data-layout='phone-landscape'] .toolbar-toggle {
+  flex: 0 0 44px;
+}
+.road-controls[data-layout='phone-landscape'] .road-tabs {
+  position: static;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  flex: 1;
+  scroll-snap-type: y mandatory;
+}
+.road-controls[data-layout='phone-landscape'] .road-tabs button {
+  flex-shrink: 0;
+}
+.road-controls[data-layout='phone-landscape'][data-tools-expanded='true'] {
+  width: 0;
+  border: 0;
+  background: transparent;
+}
+.road-controls[data-layout='phone-landscape'][data-tools-expanded='true']
+  .toolbar-navigation {
+  width: min(
+    420px,
+    calc(
+      100vw - max(8px, env(safe-area-inset-left)) -
+        max(8px, env(safe-area-inset-right))
+    )
+  );
+}
+.road-controls[data-layout='phone-landscape'][data-tools-expanded='true']
+  .road-tabs {
+  max-height: none;
+  scroll-snap-type: none;
 }

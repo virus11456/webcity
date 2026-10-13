@@ -33,10 +33,18 @@ export function createUndoControls(
     button.disabled = pending || v.count === 0 || sim.mirror.gameOver;
     button.dataset.count = String(v.count);
     button.dataset.refund = String(refund);
-    button.replaceChildren(
-      createIcon('back'),
-      `${t('undo.title')} (${v.count})${v.action ? ` · ${t(`undo.${v.action}`)} · $${refund.toLocaleString('zh-TW')}` : ''}`,
-    );
+    const description = `${t('undo.title')} (${v.count})${v.action ? ` · ${t(`undo.${v.action}`)} · $${refund.toLocaleString('zh-TW')}` : ''}`;
+    const fullLabel = document.createElement('span');
+    fullLabel.className = 'undo-full-label';
+    fullLabel.textContent = description;
+    const shortLabel = document.createElement('span');
+    shortLabel.className = 'undo-short-label';
+    shortLabel.textContent = t('undo.title');
+    const count = document.createElement('span');
+    count.className = 'undo-short-label';
+    count.textContent = `(${v.count})`;
+    button.replaceChildren(createIcon('back'), fullLabel, shortLabel, count);
+    button.dataset.tooltip = `${description}\n${t('undo.hint')}`;
     button.title = t('undo.hint');
   }
   async function undo() {
