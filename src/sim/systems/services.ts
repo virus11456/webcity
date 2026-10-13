@@ -7,6 +7,7 @@ import {
   serviceDemand,
 } from '../../world/services';
 import type { BuildingPatch } from '../../world/snapshot';
+import type { Building } from '../../world/types';
 import type { SimState } from '../state';
 /** Authoritative daily/structural service evaluation; no coverage is read back from the UI. */
 export class ServiceSystem {
@@ -72,6 +73,20 @@ export class ServiceSystem {
         {} as Partial<Record<ServiceType, number>>,
       ]),
     );
+    // Only the origin road or a road with a reached endpoint can have coverage.
+    // Rebuild groups each update so activation, movement and access changes are immediate.
+    const byRoad = new Map<number, number[]>();
+    for (let i = 0; i < s.buildings.length; i++) {
+      const b = s.buildings[i]!,
+        entry = access.get(b.id);
+      if (b.state !== 'active' || !entry) continue;
+      let indices = byRoad.get(entry.road);
+      if (!indices) byRoad.set(entry.road, (indices = []));
+      indices.push(i);
+    }
+    const targetIndices: number[] = [],
+      targets: Building[] = [],
+      coverageValues = new Float64Array(s.buildings.length);
     for (const provider of providers) {
       const def = serviceDefinition(provider.defId);
       if (!def?.service) continue;
@@ -80,13 +95,31 @@ export class ServiceSystem {
         capacity = serviceCapacity(def, budget),
         origin = access.get(provider.id);
       const reach = origin ? this.network.reach(origin, radius) : undefined;
-      const targets = reach
-        ? s.buildings.filter(
-            (b) =>
-              b.state === 'active' &&
-              this.network.coverage(reach, access.get(b.id)) > 0,
+      targetIndices.length = targets.length = 0;
+      if (reach) {
+        for (const [road, indices] of byRoad) {
+          const link = this.network.links.get(road)!;
+          if (
+            road !== reach.origin.road &&
+            !reach.distances.has(link.segment.start) &&
+            !reach.distances.has(link.segment.end)
           )
-        : [];
+            continue;
+          for (const i of indices) {
+            const value = this.network.coverage(
+              reach,
+              access.get(s.buildings[i]!.id),
+            );
+            if (value > 0) {
+              targetIndices.push(i);
+              coverageValues[i] = value;
+            }
+          }
+        }
+        // Preserve the original building order, including demand's floating-point sum.
+        targetIndices.sort((a, b) => a - b);
+        for (const i of targetIndices) targets.push(s.buildings[i]!);
+      }
       const level = def.capacity?.educationLevel;
       const students = level
         ? targets.reduce(
@@ -114,11 +147,12 @@ export class ServiceSystem {
         changed.push({ id: provider.id, serviceStatus: status });
       }
       if (!reach || !efficiency) continue;
-      for (const b of targets) {
+      for (const i of targetIndices) {
+        const b = s.buildings[i]!;
         const values = covers.get(b.id)!;
         values[def.service] = Math.max(
           values[def.service] ?? 0,
-          this.network.coverage(reach, access.get(b.id)) * efficiency,
+          coverageValues[i]! * efficiency,
         );
       }
       this.network.raster(
