@@ -27,3 +27,15 @@
 - 本機檢查：1,124 項單元測試、5 項效能測試、lint、typecheck、production build 通過。Vercel 遠端建置也通過；仍有既有 chunk 大於 500 kB 提醒。
 - 台北 20:30–20:32 實際瀏覽器驗證：先套用既有 PWA 的更新提示，DOM 腳本確認為 `/webcity/assets/index-BrlTIqP2.js`，與本機 dist／正式站 HTTP 回應一致。新遊戲地形預覽、新手教學、3D 地形與工具列成功載入；測試城市以 ×1 運行，日期由 1/1 前進到 1/15，之後暫停。瀏覽器未記錄 error／warn。沒有覆寫既有存檔。
 - 此次為發布 smoke check，不代表 iPhone 真機效能、完整自然城市或 M5-03 所有效能預算已驗收；M5-03 保留未完成。
+
+## 2026-10-13 正式發布
+
+- 台北 19:54:13 建立、19:54:44 Ready。今日第 1 次部署嘗試；發布前同 team／project 的當日清單為空、無下一頁，發布後清單只有本次一筆，本機嘗試紀錄也只有一筆。
+- 發布 commit：`b154ff3a5110418a6933dd9e8e8c227da9bd82e6`（PR #117 合併），tree `8ed07c9b047e510c9d8490510e62089fc3553856`，與本機通過測試的 tree 一致。包含 M5-03 第九至十三批；此段發布紀錄不另外部署。
+- 使用既有已登入 CLI 從乾淨 checkout 發布至既有 `virus11456s-projects/webcity`。MCP 唯讀查詢仍回覆 scope 403，CLI 已確認專案；未更換專案或部署保護，未建立排程。
+- Deployment：`dpl_4NE1VbqSNj5zaUuMtKYXZa5hinHF`；狀態 **Ready**，target **production**，遠端建置約 30 秒。
+- 正式網址：https://webcity-theta.vercel.app/webcity/
+- 本次版本網址：https://webcity-pk4revi6t-virus11456s-projects.vercel.app/webcity/
+- 本機檢查：121 個測試檔、1,172 項單元測試、10 項效能測試、lint、typecheck、production build 通過。Vercel 遠端建置通過，保留既有 chunk 大於 500 kB 提醒。
+- 實際瀏覽器驗證：套用 PWA 更新後，DOM 腳本為 `/webcity/assets/index-BM6BLGm8.js`，與本次建置一致。新城市地形預覽、遊戲畫面、教學與工具列成功載入；×1 運行時日期從 1/1 推進，最後在 3/22 暫停。瀏覽器未記錄 error／warn，沒有覆寫既有存檔。
+- 此次只驗證發布載入及空城市基本運行，不能替代自然成長城市、GPU、其他畫質、iPhone 真機記憶體或每 tick 30 ms 的驗收；M5-03 仍未完成。
