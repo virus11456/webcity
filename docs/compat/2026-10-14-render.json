@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-14",
+  "task": "M5-05",
+  "base_commit": "a9bb50555c6a14961f5e2d32cce8c2f40a3783f9",
+  "environment": "macOS Chrome, Playwright Chromium device and touch emulation; not physical iOS Safari",
+  "projects": ["iPhone 15", "iPad Pro 11", "Desktop"],
+  "verification_batches": [
+    {
+      "scope": "growth, topBar, vehicles; initial test edits",
+      "passed": 2,
+      "failed": 1,
+      "interrupted": 1,
+      "not_run": 8,
+      "note": "Runner had loaded outdated button labels before correction. Stopped that run and restarted; no product failure inferred."
+    },
+    {
+      "scope": "growth, topBar, vehicles",
+      "workers": 1,
+      "passed": 12,
+      "failed": 0,
+      "duration_note": "1.9 minutes as reported by Playwright"
+    },
+    {
+      "scope": "topBar and vehicles after disabling panel entrance animation in screenshots",
+      "workers": 1,
+      "passed": 9,
+      "failed": 0
+    }
+  ],
+  "final_verified_scenarios": {
+    "growth.spec.ts": 3,
+    "vehicles.spec.ts": 3,
+    "topBar.spec.ts": 6
+  },
+  "quality_vehicle_limits": {
+    "low": 300,
+    "medium": 1000
+  },
+  "paused_individual_trips_preserved": 1001,
+  "moving_agents_checked": [
+    "visible commuting car",
+    "hidden commuting car",
+    "pedestrian"
+  ],
+  "traffic_benchmarks": [
+    {
+      "viewport": "iPhone 15",
+      "fps": 60.00132599615462,
+      "p95": 16.700000000000728,
+      "modelsLoaded": 16,
+      "agents": 1001,
+      "lightPairs": 600,
+      "visible": 300,
+      "batches": 6
+    },
+    {
+      "viewport": "iPad Pro 11",
+      "fps": 60.000659347904936,
+      "p95": 16.700000000000728,
+      "modelsLoaded": 16,
+      "agents": 1001,
+      "lightPairs": 600,
+      "visible": 300,
+      "batches": 6
+    },
+    {
+      "viewport": "Desktop",
+      "fps": 60.00331510028178,
+      "p95": 16.700000000000728,
+      "modelsLoaded": 16,
+      "agents": 1001,
+      "lightPairs": 600,
+      "visible": 300,
+      "batches": 6
+    }
+  ],
+  "benchmark_scope": "One second warmup then three seconds measured RAF; low quality, 1001 agents, 300 visible vehicles, FPS >=30 retained.",
+  "production_code_changed": false,
+  "full_e2e_suite_rerun": false,
+  "vercel_deployment_attempted": false,
+  "m5_05_complete": false,
+  "unit_verification": {
+    "command": "npm test -- --maxWorkers=1",
+    "files_passed": 125,
+    "passed": 1193,
+    "failed": 0,
+    "duration_seconds": 128.27,
+    "performance_thresholds_changed": false
+  },
+  "checks": {
+    "lint": "passed",
+    "typecheck": "passed",
+    "production_build": "passed via E2E webServer build",
+    "build_warning": "Existing chunk exceeds 500 kB"
+  }
+}

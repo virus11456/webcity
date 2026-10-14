@@ -36,15 +36,22 @@ test('top bar reflects real worker days, funds and demand on every layout', asyn
     String(stats.population),
   );
   await expect(details.locator('[data-field="happiness"]')).toHaveText(
-    `${Math.round(stats.happiness)}%`,
+    `◉ ${Math.round(stats.happiness)}%`,
   );
+  // An empty city's neutral value includes a labelled status symbol (GDD §12).
+  expect(stats.happiness).toBe(50);
+  await expect(
+    details
+      .locator('[data-field="happiness"]')
+      .getByLabel('普通', { exact: true }),
+  ).toBeVisible();
   for (const [i, key] of (['R', 'C', 'I', 'O'] as const).entries())
     await expect(details.getByRole('meter').nth(i)).toHaveAttribute(
       'aria-valuenow',
       String(stats.demand[key]),
     );
   if (phone) {
-    await page.keyboard.press('Escape');
+    await details.getByRole('button', { name: '關閉面板', exact: true }).tap();
     await expect(
       page.getByRole('button', { name: '展開城市詳細資訊' }),
     ).toBeFocused();
@@ -105,8 +112,12 @@ test('top bar reflects real worker days, funds and demand on every layout', asyn
     await page.screenshot({
       path: 'docs/screenshots/m1-20/iphone-details.png',
       scale: 'css',
+      animations: 'disabled',
     });
-    await page.keyboard.press('Escape');
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: '關閉面板', exact: true })
+      .tap();
     await page.setViewportSize({ width: 852, height: 393 });
     await expect(hud).toHaveAttribute('data-layout', 'phone-landscape');
     await measure();
