@@ -1,4 +1,7 @@
+import { utilityCity } from '../fixtures/utilityCity';
+import { loadFixture } from './loadFixture';
 import { test, expect, type Page } from '@playwright/test';
+test.use({ actionTimeout: 10000 });
 async function fly(page: Page, x: number, z: number, distance = 850) {
   await page.evaluate(
     ({ x, z, distance }) => window.__webcityCamera!.flyTo({ x, z }, distance),
@@ -43,29 +46,11 @@ test('shows building warnings, clears repaired timers, abandons and collapses wi
   const touch = !!info.project.use.hasTouch,
     errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('./?play=1&quality=high&debug=1');
-  await page.waitForSelector('.road-controls[data-ready="true"]');
-  await page.getByRole('button', { name: '暫停', exact: true }).click();
-  await expect(page.locator('.sim-controls')).toHaveAttribute(
-    'data-speed',
-    '0',
-  );
-  await page.getByRole('button', { name: '開始鋪路', exact: true }).click();
-  await fly(page, -120, -80);
-  await tap(page, -240, -80, touch);
-  await tap(page, -80, -80, touch);
-  if (touch)
-    await page.getByRole('button', { name: '確認建造', exact: true }).tap();
-  await page.waitForSelector('.road-controls[data-segments="1"]');
-  await page.getByRole('button', { name: '分區', exact: true }).click();
-  await tap(page, -200, -100, touch);
-  await page.getByRole('button', { name: '×4', exact: true }).click();
-  await page.waitForFunction(() => window.__webcityStats!()!.population > 0);
-  await page.getByRole('button', { name: '暫停', exact: true }).click();
-  await expect(page.locator('.sim-controls')).toHaveAttribute(
-    'data-speed',
-    '0',
-  );
+  // Start with an inhabited, unserved home; new residents correctly refuse an unserved city.
+  await loadFixture(page, await utilityCity());
+  expect(
+    await page.evaluate(() => window.__webcityStats!()!.population),
+  ).toBeGreaterThan(0);
   await page.getByRole('button', { name: '水務', exact: true }).click();
   await tap(page, -80, -200, touch);
   await expect(page.locator('.water-controls')).toHaveAttribute(
@@ -195,12 +180,15 @@ test('shows building warnings, clears repaired timers, abandons and collapses wi
   await page.getByRole('combobox', { name: '電力設施' }).selectOption('line');
   await fly(page, -80, -140);
   await tap(page, -80, -210, touch);
-  await tap(page, -200, -100, touch);
+  await tap(page, -160, -96, touch);
   await page.getByRole('button', { name: '確認設置', exact: true }).click();
-  await page.waitForFunction(() =>
-    window.__webcityBuildings!()
-      .filter((b) => b.kind === 'zoned')
-      .every((b) => b.flags === 7 && b.problemTimers.noPower === 0),
+  await page.waitForFunction(
+    () =>
+      window.__webcityBuildings!()
+        .filter((b) => b.kind === 'zoned')
+        .every((b) => b.flags === 7 && b.problemTimers.noPower === 0),
+    null,
+    { timeout: 10000 },
   );
   await page.getByRole('button', { name: '拆除', exact: true }).click();
   await page.locator('.bulldoze-controls select').selectOption('building');
@@ -209,11 +197,13 @@ test('shows building warnings, clears repaired timers, abandons and collapses wi
   await page.waitForFunction(
     () => window.__webcityStats!()!.power.produced === 0,
   );
-  await page.getByRole('button', { name: '探索城市', exact: true }).click();
+  await page.getByRole('button', { name: '分區', exact: true }).click();
   await fly(page, -180, -90, 500);
   await page.waitForFunction(() => window.__webcityProblemIcons!().visible > 0);
   await page.locator('.problem-summary').click();
   await page.getByRole('button', { name: '查看問題建築', exact: true }).click();
+  // Focusing a building enters exploration; reopen the tool panel to read its warning.
+  await page.getByRole('button', { name: '分區', exact: true }).click();
   await expect(page.locator('.problem-detail')).toContainText('缺電');
   await page.locator('.problem-summary').click();
   await fly(page, -180, -90, 500);
@@ -265,17 +255,6 @@ test('shows building warnings, clears repaired timers, abandons and collapses wi
     path: info.outputPath('problems-abandoned.png'),
     scale: 'css',
   });
-  await page.getByRole('button', { name: '×4', exact: true }).click();
-  await page.waitForFunction(
-    (id) => !window.__webcityBuildings!().some((b) => b.id === id),
-    target,
-    { timeout: 60000 },
-  );
-  await page.getByRole('button', { name: '暫停', exact: true }).click();
-  await expect(page.locator('.sim-controls')).toHaveAttribute(
-    'data-speed',
-    '0',
-  );
   if (info.project.name === 'iPhone 15') {
     await page.setViewportSize({ width: 852, height: 393 });
     await page.locator('.problem-summary').click();
@@ -288,6 +267,17 @@ test('shows building warnings, clears repaired timers, abandons and collapses wi
       scale: 'css',
     });
   }
+  await page.getByRole('button', { name: '×4', exact: true }).click();
+  await page.waitForFunction(
+    (id) => !window.__webcityBuildings!().some((b) => b.id === id),
+    target,
+    { timeout: 60000 },
+  );
+  await page.getByRole('button', { name: '暫停', exact: true }).click();
+  await expect(page.locator('.sim-controls')).toHaveAttribute(
+    'data-speed',
+    '0',
+  );
   expect(
     await page.evaluate(
       () =>
@@ -296,4 +286,17 @@ test('shows building warnings, clears repaired timers, abandons and collapses wi
     ),
   ).toBe(true);
   expect(errors).toEqual([]);
+});
+
+test.afterEach(async ({ page }, info) => {
+  if (info.status !== info.expectedStatus) {
+    const state = await page.evaluate(() => ({
+      stats: window.__webcityStats?.(),
+      buildings: window.__webcityBuildings?.(),
+    }));
+    await info.attach('city-state', {
+      body: JSON.stringify(state, null, 2),
+      contentType: 'application/json',
+    });
+  }
 });

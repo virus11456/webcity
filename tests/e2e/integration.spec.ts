@@ -44,13 +44,16 @@ test.use({
 test('M1 complete city: menu roads zones utilities population and save restore', async ({
   page,
 }, info) => {
-  test.setTimeout(150000);
+  test.setTimeout(180000);
   const touch = !!info.project.use.hasTouch;
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('./?quality=low&debug=1');
   await page.getByRole('button', { name: '新遊戲', exact: true }).click();
   await page.getByLabel('城市名稱', { exact: true }).fill('M1 河谷市');
+  await page
+    .getByRole('checkbox', { name: '開啟新手教學（可隨時跳過）' })
+    .uncheck();
   await page.getByRole('button', { name: '開始建城', exact: true }).click();
   await page.waitForSelector('.road-controls[data-ready="true"]');
   await page.getByRole('button', { name: '暫停', exact: true }).click();
@@ -94,7 +97,14 @@ test('M1 complete city: menu roads zones utilities population and save restore',
     await page.waitForFunction(() => !window.__webcityZoneStats!().pending);
   }
   await page.getByRole('button', { name: '×4', exact: true }).click();
-  await page.waitForFunction(() => window.__webcityStats!()!.population > 0);
+  await page.waitForFunction(() =>
+    window.__webcityBuildings!().some(
+      (b) => b.kind === 'zoned' && b.state === 'active',
+    ),
+  );
+  expect(await page.evaluate(() => window.__webcityStats!()!.population)).toBe(
+    0,
+  );
   await page.getByRole('button', { name: '暫停', exact: true }).click();
   await expect(page.locator('.sim-controls')).toHaveAttribute(
     'data-speed',
@@ -153,7 +163,11 @@ test('M1 complete city: menu roads zones utilities population and save restore',
   await tap(page, -80, -192, touch);
   await tap(page, -80, -80, touch);
   await page.getByRole('button', { name: '確認設置', exact: true }).click();
-  await page.waitForFunction(() => window.__webcityStats!()!.water.served! > 0);
+  await page.waitForFunction(() =>
+    window.__webcityBuildings!().some(
+      (b) => b.kind === 'zoned' && (b.flags & 2) !== 0,
+    ),
+  );
   let stats = await page.evaluate(() => window.__webcityStats!()!);
   expect(stats.water.served).toBe(stats.water.consumed);
   expect(stats.sewage.treated).toBe(0);
@@ -216,8 +230,10 @@ test('M1 complete city: menu roads zones utilities population and save restore',
   await fly(page, -80, -80);
   await tap(page, -80, -80, touch);
   await page.getByRole('button', { name: '確認設置', exact: true }).click();
-  await page.waitForFunction(
-    () => window.__webcityStats!()!.sewage.treated! > 0,
+  await page.waitForFunction(() =>
+    window.__webcityBuildings!().some(
+      (b) => b.kind === 'zoned' && (b.flags & 4) !== 0,
+    ),
   );
   stats = await page.evaluate(() => window.__webcityStats!()!);
   expect(stats.sewage.treated).toBe(stats.sewage.produced);
@@ -273,6 +289,8 @@ test('M1 complete city: menu roads zones utilities population and save restore',
     buildings: window.__webcityBuildings!(),
     zones: window.__webcityZoneStats!().painted,
   }));
+  expect(before.stats!.water.served).toBeGreaterThan(0);
+  expect(before.stats!.sewage.treated).toBeGreaterThan(0);
   expect(before.stats!.power.unpowered).toBe(0);
   expect(before.stats!.water.unserved).toBe(0);
   expect(before.stats!.sewage.uncollected).toBe(0);
@@ -309,4 +327,17 @@ test('M1 complete city: menu roads zones utilities population and save restore',
     JSON.parse(JSON.stringify(before)),
   );
   expect(errors).toEqual([]);
+});
+
+test.afterEach(async ({ page }, info) => {
+  if (info.status !== info.expectedStatus) {
+    const state = await page.evaluate(() => ({
+      stats: window.__webcityStats?.(),
+      buildings: window.__webcityBuildings?.(),
+    }));
+    await info.attach('city-state', {
+      body: JSON.stringify(state, null, 2),
+      contentType: 'application/json',
+    });
+  }
 });

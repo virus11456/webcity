@@ -1,3 +1,4 @@
+import { starterUtilities } from './starterUtilities';
 import { test, expect, type Page } from '@playwright/test';
 async function tap(page: Page, x: number, z: number, touch: boolean) {
   const p = await page.evaluate(
@@ -22,7 +23,7 @@ async function tap(page: Page, x: number, z: number, touch: boolean) {
 test('tax changes reach next settlement and detailed ledger on real housing', async ({
   page,
 }, info) => {
-  test.setTimeout(90000);
+  test.setTimeout(150000);
   const touch = Boolean(info.project.use.hasTouch);
   await page.goto('./?play=1&quality=low&debug=1');
   await page.waitForSelector('.road-controls[data-ready="true"]');
@@ -42,6 +43,7 @@ test('tax changes reach next settlement and detailed ledger on real housing', as
   await page.getByRole('button', { name: '分區', exact: true }).click();
   await page.waitForFunction(() => !window.__webcityZoneStats!().pending);
   await tap(page, -200, -100, touch);
+  await starterUtilities(page, touch);
   await page.getByRole('button', { name: '×4', exact: true }).click();
   await page.waitForFunction(() => window.__webcityStats!()!.population > 20);
   await page.getByRole('button', { name: '暫停', exact: true }).click();

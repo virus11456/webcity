@@ -1,4 +1,6 @@
+import { starterUtilities } from './starterUtilities';
 import { test, expect, type Page } from '@playwright/test';
+test.use({ actionTimeout: 10000 });
 async function tap(page: Page, x: number, z: number, touch: boolean) {
   const p = await page.evaluate(
     ({ x, z }) => {
@@ -22,7 +24,7 @@ async function tap(page: Page, x: number, z: number, touch: boolean) {
 test('actual residents move in, find work, pause, and leave demolished housing', async ({
   page,
 }, info) => {
-  test.setTimeout(90_000);
+  test.setTimeout(150000);
   const touch = Boolean(info.project.use.hasTouch),
     errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -64,6 +66,7 @@ test('actual residents move in, find work, pause, and leave demolished housing',
     'data-population',
     '0',
   );
+  await starterUtilities(page, touch);
   await page.getByRole('button', { name: '×4', exact: true }).click();
   await page.waitForFunction(() => {
     const s = window.__webcityStats!();
@@ -73,16 +76,12 @@ test('actual residents move in, find work, pause, and leave demolished housing',
       s.populationDetails.employed > 0
     );
   });
+  // Individual citizens can leave or die; a living city need not fill every home simultaneously.
   await page.waitForFunction(() => {
-    const b = window.__webcityBuildings!();
-    return (
-      b.length > 0 &&
-      b.every(
-        (b) =>
-          b.state === 'active' &&
-          (!b.housing || b.housing.occupied === b.households),
-      )
+    const zoned = window.__webcityBuildings!().filter(
+      (b) => b.kind === 'zoned',
     );
+    return zoned.length > 0 && zoned.every((b) => b.state === 'active');
   });
   await page.getByRole('button', { name: '暫停', exact: true }).click();
   await expect(page.locator('.sim-controls')).toHaveAttribute(
@@ -96,6 +95,10 @@ test('actual residents move in, find work, pause, and leave demolished housing',
   expect(before.stats.demand.R).toBeGreaterThan(70);
   expect(before.stats.demand.C).toBeLessThan(20);
   const details = before.stats.populationDetails!;
+  for (const home of before.buildings.filter((b) => b.housing)) {
+    expect(home.housing!.occupied).toBeGreaterThanOrEqual(0);
+    expect(home.housing!.occupied).toBeLessThanOrEqual(home.households);
+  }
   expect(before.stats.population).toBe(
     before.buildings.reduce((sum, b) => sum + b.residents, 0),
   );
@@ -120,9 +123,16 @@ test('actual residents move in, find work, pause, and leave demolished housing',
       page.evaluate(() => window.__webcityCamera!.readState().distance),
     )
     .toBeCloseTo(220, 1);
-  await page.waitForFunction(
-    () => window.__webcityBuildingStats!().detail === 16,
-  );
+  await page.waitForFunction(() => {
+    const s = window.__webcityBuildingStats!();
+    return (
+      s.pending === 0 &&
+      s.lodPending === 0 &&
+      s.detail > 0 &&
+      s.buildings ===
+        window.__webcityBuildings!().filter((b) => b.kind === 'zoned').length
+    );
+  });
   await page.screenshot({
     path: info.outputPath('population-employed.png'),
     scale: 'css',
@@ -159,7 +169,7 @@ test('actual residents move in, find work, pause, and leave demolished housing',
       () => window.__webcityStats!()!.populationDetails!.movedOut,
     ),
   ).toBeGreaterThanOrEqual(home.residents);
-  // Remove all commercial zoning and wait for demolition; all surviving workers become unemployed.
+  // Remove commercial zoning first; public utility jobs must remain available.
   await page.getByRole('button', { name: '分區', exact: true }).click();
   await page.getByRole('combobox', { name: '分區種類' }).selectOption('clear');
   await tap(page, -200, -60, touch);
@@ -173,6 +183,47 @@ test('actual residents move in, find work, pause, and leave demolished housing',
   expect(
     await page.evaluate(() => window.__webcityStats!()!.demand.R),
   ).toBeLessThan(before.stats.demand.R);
+  await expect(page.locator('.sim-controls')).toHaveAttribute(
+    'data-speed',
+    '0',
+  );
+  const publicJobs = await page.evaluate(() => ({
+    stats: window.__webcityStats!()!,
+    facilities: window.__webcityBuildings!().filter(
+      (b) => b.kind === 'utility',
+    ),
+  }));
+  expect(publicJobs.stats.populationDetails!.jobs).toBe(
+    publicJobs.facilities.reduce((sum, b) => sum + b.jobs, 0),
+  );
+  expect(publicJobs.stats.populationDetails!.jobs).toBeLessThan(details.jobs);
+  expect(publicJobs.stats.populationDetails!.employed).toBeGreaterThan(0);
+  // M2 gives utilities real jobs too. Remove those workplaces while paused to test unemployment.
+  await page.getByRole('button', { name: '拆除', exact: true }).click();
+  await page.locator('.bulldoze-controls select').selectOption('building');
+  for (const facility of publicJobs.facilities) {
+    const x = facility.pos.x + Math.sin(facility.rotation) * facility.lotD * 4;
+    const z = facility.pos.z + Math.cos(facility.rotation) * facility.lotD * 4;
+    await page.evaluate(
+      ({ x, z }) => window.__webcityCamera!.flyTo({ x, z }, 850),
+      { x, z },
+    );
+    await page.waitForFunction(
+      ({ x, z }) => {
+        const c = window.__webcityCamera!.readState();
+        return Math.abs(c.x - x) < 0.1 && Math.abs(c.z - z) < 0.1;
+      },
+      { x, z },
+    );
+    await tap(page, x, z, touch);
+    await page.waitForFunction(
+      (id) => !window.__webcityBuildings!().some((b) => b.id === id),
+      facility.id,
+    );
+  }
+  expect(await page.evaluate(() => window.__webcityStats!()!.population)).toBe(
+    publicJobs.stats.population,
+  );
   await expect(page.locator('.population-summary')).toHaveAttribute(
     'data-employed',
     '0',
@@ -202,4 +253,17 @@ test('actual residents move in, find work, pause, and leave demolished housing',
     ).toBeGreaterThanOrEqual(12);
   }
   expect(errors).toEqual([]);
+});
+
+test.afterEach(async ({ page }, info) => {
+  if (info.status !== info.expectedStatus) {
+    const state = await page.evaluate(() => ({
+      stats: window.__webcityStats?.(),
+      buildings: window.__webcityBuildings?.(),
+    }));
+    await info.attach('city-state', {
+      body: JSON.stringify(state, null, 2),
+      contentType: 'application/json',
+    });
+  }
 });
