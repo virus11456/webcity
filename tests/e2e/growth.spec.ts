@@ -129,9 +129,28 @@ test('roadside zones grow, pause, finish construction and rezone through native 
       window.__webcityBuildings!().some((b) => b.defId === 'CL'),
     ),
   ).toBe(true);
-  await page.waitForFunction(
-    () => window.__webcityBuildingStats!().detail === 16,
+  // Completed buildings use distance-based LOD, not the old 16-detail cap.
+  await page.waitForFunction(() => {
+    const s = window.__webcityBuildingStats!();
+    return (
+      s.pending === 0 &&
+      s.lodPending === 0 &&
+      s.transitioning === 0 &&
+      s.detail > 0 &&
+      s.construction === 0 &&
+      s.buildings ===
+        window.__webcityBuildings!().filter((b) => b.kind === 'zoned').length
+    );
+  });
+  const rendered = await page.evaluate(() => window.__webcityBuildingStats!());
+  expect(rendered.lods.reduce((sum, count) => sum + count, 0)).toBe(
+    rendered.buildings,
   );
+  expect(rendered.detail).toBe(rendered.lods[0]! + rendered.lods[1]!);
+  await info.attach('completed-building-lod', {
+    body: JSON.stringify(rendered, null, 2),
+    contentType: 'application/json',
+  });
   await page.screenshot({
     path: info.outputPath('growth-complete.png'),
     scale: 'css',

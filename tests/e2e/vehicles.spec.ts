@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { trafficCity } from '../fixtures/trafficCity';
+import { QUALITY } from '../../src/data/config';
 test('renders and inspects individual moving commuters across device viewports', async ({
   page,
 }, info) => {
@@ -46,6 +47,65 @@ test('renders and inspects individual moving commuters across device viewports',
       Math.abs(window.__webcityCamera!.readState().distance - 650) < 0.1 &&
       !window.__webcityRoadStats!().pending,
   );
+  const trips = await page.evaluate(() =>
+    window
+      .__webcityVehicles!.samples(1500)
+      .map(({ id, citizenId, destinationId, kind, x, z }) => ({
+        id,
+        citizenId,
+        destinationId,
+        kind,
+        x,
+        z,
+      })),
+  );
+  expect(trips).toHaveLength(1001);
+  expect(new Set(trips.map((a) => a.citizenId)).size).toBe(1001);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window
+            .__webcityVehicles!.samples(1500)
+            .filter((a) => a.kind !== 8 && a.visible).length,
+      ),
+    )
+    .toBe(QUALITY.low.maxVehicles);
+  // Graphics limits must never remove or reassign individual simulation trips.
+  await page.getByRole('button', { name: '暫停選單', exact: true }).click();
+  await page.locator('.pause-dialog summary').click();
+  const quality = page.getByRole('combobox', { name: '畫質', exact: true });
+  for (const level of ['medium', 'low'] as const) {
+    await quality.selectOption(level);
+    await expect
+      .poll(() => page.evaluate(() => window.__webcityGraphics!().quality))
+      .toBe(level);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            window
+              .__webcityVehicles!.samples(1500)
+              .filter((a) => a.kind !== 8 && a.visible).length,
+        ),
+      )
+      .toBe(QUALITY[level].maxVehicles);
+    expect(
+      await page.evaluate(() =>
+        window
+          .__webcityVehicles!.samples(1500)
+          .map(({ id, citizenId, destinationId, kind, x, z }) => ({
+            id,
+            citizenId,
+            destinationId,
+            kind,
+            x,
+            z,
+          })),
+      ),
+    ).toEqual(trips);
+  }
+  await page.getByRole('button', { name: '返回城市', exact: true }).click();
   const name =
     info.project.name === 'Desktop'
       ? 'desktop'
@@ -94,6 +154,7 @@ test('renders and inspects individual moving commuters across device viewports',
   await page.screenshot({
     path: `docs/screenshots/m2-11/${name}-inspect.png`,
     scale: 'css',
+    animations: 'disabled',
   });
   await page.getByRole('button', { name: '查看工作地點', exact: true }).click();
   await expect(page.locator('.inspect-data')).toHaveCount(0);
@@ -118,6 +179,14 @@ test('renders and inspects individual moving commuters across device viewports',
       path: 'docs/screenshots/m2-11/pedestrian.png',
       scale: 'css',
     });
+  const commuters = await page.evaluate(() => {
+    const agents = window.__webcityVehicles!.samples(1500);
+    return [
+      agents.find((a) => a.kind === 0 && a.visible),
+      agents.find((a) => a.kind === 0 && !a.visible),
+    ];
+  });
+  expect(commuters.every(Boolean)).toBe(true);
   await page.getByRole('button', { name: '×1', exact: true }).click();
   await page.waitForFunction((p) => {
     const a = window
@@ -125,6 +194,23 @@ test('renders and inspects individual moving commuters across device viewports',
       .find((a) => a.id === p.id);
     return a && Math.hypot(a.x - p.x, a.z - p.z) > 2;
   }, walker!);
+  for (const commuter of commuters) {
+    await expect
+      .poll(() =>
+        page.evaluate((p) => {
+          const a = window
+            .__webcityVehicles!.samples(1500)
+            .find((a) => a.id === p.id);
+          return (
+            a &&
+            a.citizenId === p.citizenId &&
+            a.destinationId === p.destinationId &&
+            Math.hypot(a.x - p.x, a.z - p.z) > 2
+          );
+        }, commuter!),
+      )
+      .toBe(true);
+  }
   await page.evaluate(() => window.__webcityCamera!.flyTo({ x: 0, z: 0 }, 450));
   await page.waitForFunction(
     () => Math.abs(window.__webcityCamera!.readState().distance - 450) < 0.1,
@@ -163,7 +249,7 @@ test('renders and inspects individual moving commuters across device viewports',
     contentType: 'application/json',
   });
   expect(benchmark.agents).toBeGreaterThanOrEqual(1000);
-  expect(benchmark.visible).toBeGreaterThanOrEqual(1000);
+  expect(benchmark.visible).toBe(QUALITY.low.maxVehicles);
   expect(benchmark.fps).toBeGreaterThanOrEqual(30);
   if (info.project.name === 'iPhone 15') {
     await page.setViewportSize({ width: 852, height: 393 });
