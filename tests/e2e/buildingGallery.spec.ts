@@ -7,6 +7,10 @@ test('shows six building families and plays foundation, structure, finishing and
 }, info) => {
   test.setTimeout(90000);
   const errors: string[] = [];
+  const musicRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().endsWith('.m4a')) musicRequests.push(request.url());
+  });
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
     if (m.type() === 'error') errors.push(m.text());
@@ -128,11 +132,63 @@ test('shows six building families and plays foundation, structure, finishing and
     navigator.serviceWorker.ready.then(() => undefined),
   );
   await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+  // Simulate evicted media / first-visit audio loaded before SW took control.
+  await page.evaluate(() => caches.delete('webcity-media'));
   await context.setOffline(true);
+  const requestsBeforeOffline = musicRequests.length;
   await page.reload();
   await expect(canvas).toHaveAttribute('data-ready', 'true');
-  await page.getByRole('button', { name: '蓋到一半', exact: true }).click();
+  const construction = page.getByRole('button', {
+    name: '蓋到一半',
+    exact: true,
+  });
+  if (info.project.use.hasTouch) await construction.tap();
+  else await construction.click();
   await expect(canvas).toHaveAttribute('data-progress', '50');
+  await page.getByRole('button', { name: '向右旋轉', exact: true }).click();
+  expect(musicRequests.length).toBe(requestsBeforeOffline);
+  expect(await page.evaluate(() => window.__webcityMusic!())).toMatchObject({
+    track: null,
+    paused: true,
+    failures: 0,
+  });
+  expect(await page.evaluate(() => window.__webcityAudio!().loaded)).toBe(0);
+  await page.screenshot({
+    path: info.outputPath('offline-gallery.png'),
+    scale: 'css',
+  });
+  await context.setOffline(false);
+  if (info.project.use.hasTouch) await construction.tap();
+  else await construction.click();
+  await expect
+    .poll(() => page.evaluate(() => window.__webcityMusic!().time))
+    .toBeGreaterThan(0.2);
+  expect(musicRequests.length).toBe(requestsBeforeOffline + 1);
+  await expect
+    .poll(() => page.evaluate(() => window.__webcityAudio!().loaded))
+    .toBe(12);
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        const cache = await caches.open('webcity-media');
+        return (await cache.keys()).filter((r) =>
+          /\/audio\/[^/]+\.(ogg|mp3)$/.test(r.url),
+        ).length;
+      }),
+    )
+    .toBe(12);
+  // Cached effects remain available after a second offline reload.
+  await context.setOffline(true);
+  const requestsBeforeWarmOffline = musicRequests.length;
+  await page.reload();
+  await expect(canvas).toHaveAttribute('data-ready', 'true');
+  if (info.project.use.hasTouch) await construction.tap();
+  else await construction.click();
+  await expect(canvas).toHaveAttribute('data-progress', '50');
+  await expect
+    .poll(() => page.evaluate(() => window.__webcityAudio!().loaded))
+    .toBe(12);
+  expect(musicRequests.length).toBe(requestsBeforeWarmOffline);
   await context.setOffline(false);
   await page.getByRole('link', { name: '返回主選單', exact: true }).click();
   await expect(page.locator('.main-menu')).toBeVisible();

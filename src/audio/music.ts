@@ -12,12 +12,21 @@ export class MusicPlayer {
   private failures = 0;
   private started = false;
   private next = () => {
-    if (!this.element || !this.playlist || this.closed) return;
+    if (
+      !this.element ||
+      !this.playlist ||
+      this.closed ||
+      navigator.onLine === false
+    )
+      return;
     this.track = this.playlist.next();
     this.element.src = `${import.meta.env.BASE_URL}assets/audio/music/${this.track}.m4a`;
     this.resume();
   };
   private error = () => {
+    // Streaming music is intentionally not precached. Keep the current track
+    // during an outage instead of exhausting the playlist with failed requests.
+    if (this.closed || navigator.onLine === false) return;
     if (++this.failures < MUSIC_TRACKS.length) this.next();
   };
   private playing = () => {
@@ -25,7 +34,7 @@ export class MusicPlayer {
   };
   /** Must run in the same gesture as AudioContext creation, before any await. */
   unlock() {
-    if (this.closed || this.hidden) return;
+    if (this.closed || this.hidden || navigator.onLine === false) return;
     if (!this.element) {
       this.element = document.createElement('audio');
       this.element.preload = 'none';
@@ -48,10 +57,20 @@ export class MusicPlayer {
     } else this.resume();
   }
   private resume() {
-    if (this.started && this.enabled && !this.hidden && !this.closed)
-      void this.element?.play().catch(() => {
+    if (
+      this.element &&
+      this.started &&
+      this.enabled &&
+      !this.hidden &&
+      !this.closed &&
+      navigator.onLine !== false
+    ) {
+      // A media element with a network error needs a fresh load after reconnect.
+      if (this.element.error) this.element.load();
+      void this.element.play().catch(() => {
         /* Retry on next gesture; no autoplay error loop. */
       });
+    }
   }
   setLevels(levels: Pick<AudioLevels, 'volume' | 'musicVolume'>) {
     this.enabled =
