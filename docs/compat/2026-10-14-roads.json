@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-14",
+  "task": "M5-05",
+  "base_commit": "12f427138598dd401b0f5bd19e41cbb54dee0b80",
+  "environment": "macOS Chrome, Playwright Chromium device and native touch emulation; not physical iOS Safari",
+  "projects": ["iPhone 15", "iPad Pro 11", "Desktop"],
+  "verification_batches": [
+    {
+      "scope": "Unmodified iPhone curvedRoads and roadTool baseline",
+      "passed": 2,
+      "failed": 2,
+      "workers": 1,
+      "duration_seconds": 28.9
+    },
+    {
+      "scope": "iPhone curvedRoads and roadTool after native touch and framing corrections, including landscape construction",
+      "passed": 4,
+      "failed": 0,
+      "workers": 1,
+      "duration_seconds": 28.8
+    },
+    {
+      "scope": "Final curvedRoads, roadTool, input, tooltips including two-finger pan assertions",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 3,
+      "workers": 1,
+      "duration_note": "1.7 minutes as reported by Playwright"
+    }
+  ],
+  "original_failure_causes": {
+    "curvedRoads": "iPhone curve endpoint projected to y=506.55 px over the construction panel; phone focus adjusted while preserving all world-space road points and visible UI.",
+    "roadTool": "Mouse click in a touch project produced a road-card hover tooltip before the first ground tap; tool buttons now use native touch on touch devices."
+  },
+  "final_verified_scenarios": {
+    "curvedRoads.spec.ts": 3,
+    "roadTool.spec.ts": 9,
+    "input.spec.ts": 3,
+    "tooltips.spec.ts": 9
+  },
+  "condition_skips": [
+    "iPhone desktop keyboard/mouse case",
+    "iPad desktop keyboard/mouse case",
+    "Desktop native multitouch case"
+  ],
+  "additional_acceptance": [
+    "Two-finger pan cancels curve draft and changes camera without building or charging",
+    "iPhone landscape builds a third road by ground taps and visible confirmation, with matching cost",
+    "Every tested placement hits CANVAS with original UI visible",
+    "Single-finger free strokes and two-finger pinch remain separate"
+  ],
+  "screenshots": [
+    "docs/screenshots/m2-01/iphone.png",
+    "docs/screenshots/m2-01/iphone-landscape.png",
+    "docs/screenshots/m2-01/ipad.png",
+    "docs/screenshots/m2-01/desktop.png"
+  ],
+  "production_code_changed": false,
+  "full_e2e_suite_rerun": false,
+  "vercel_deployment_attempted": false,
+  "m5_05_complete": false,
+  "remaining": [
+    "Disaster notification dismissal race",
+    "Other browser and physical iOS Safari matrix",
+    "100000 population physical-device stress",
+    "Production and PWA smoke checks"
+  ],
+  "unit_verification": {
+    "command": "npm test -- --maxWorkers=1",
+    "files_passed": 125,
+    "passed": 1193,
+    "failed": 0,
+    "duration_seconds": 128.76,
+    "performance_thresholds_changed": false
+  },
+  "checks": {
+    "lint": "passed",
+    "typecheck": "passed",
+    "production_build": "passed via E2E webServer build",
+    "build_warning": "Existing chunk exceeds 500 kB"
+  }
+}
