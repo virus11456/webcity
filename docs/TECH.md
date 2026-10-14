@@ -460,6 +460,7 @@ M5-03 第十七批：ServiceNetwork.raster 的暖幾何快取直接逐筆讀取 
   ```
 - CSS：`html, body { overscroll-behavior: none; touch-action: none; -webkit-user-select: none; -webkit-touch-callout: none; }`，避免 iOS 拖曳回彈、長按選取、雙擊縮放。
 - Service Worker：預快取 app shell（HTML/JS/CSS/字型），模型與音效用 `CacheFirst` 執行期快取；新版本可用時顯示「有新版本，點此更新」提示（不自動重新載入，避免中斷遊戲）。
+- 離線音訊：串流背景音樂不預載入全曲庫；瀏覽器回報離線時不開始播放或輪替重試，恢復連線後由下一次互動重試中斷曲目。音效／環境音離線只讀既有 Cache Storage，缺少或儲存權限受限時保持安靜；連線恢復後的互動只補載尚未解碼的音效，不重建已存在的環境音迴圈。`navigator.onLine` 無法辨識所有網路故障，線上狀態下仍保留每輪最多六首的失敗上限。
 - iOS 安裝說明：偵測到 iOS Safari 且非 standalone 時，在主選單顯示「分享 → 加入主畫面」圖示說明（可關閉，不再顯示）。
 - 呼叫 `navigator.storage.persist()` 請求持久儲存，降低存檔被系統清除的風險。
 

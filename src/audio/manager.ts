@@ -71,13 +71,17 @@ export class AudioManager {
       // Decode once; OGG preferred, MP3 fallback for Safari or missing decoder support.
       this.loading ??= Promise.all(
         [...SFX, ...AMBIENCE].map(async (id) => {
+          if (this.buffers.has(id)) return;
           for (const ext of ['ogg', 'mp3']) {
             try {
-              const response = await fetch(
-                `${import.meta.env.BASE_URL}assets/audio/${id}.${ext}`,
-                { signal: this.abort.signal },
-              );
-              if (!response.ok) throw Error('audio');
+              const url = `${import.meta.env.BASE_URL}assets/audio/${id}.${ext}`;
+              // First-visit downloads may precede SW control, or the browser
+              // may evict media. Offline misses stay silent and retry online.
+              const response =
+                navigator.onLine === false
+                  ? await globalThis.caches?.match(url)
+                  : await fetch(url, { signal: this.abort.signal });
+              if (!response?.ok) throw Error('audio');
               const buffer = await this.context!.decodeAudioData(
                 await response.arrayBuffer(),
               );
@@ -91,7 +95,9 @@ export class AudioManager {
             }
           }
         }),
-      ).then(() => {});
+      ).then(() => {
+        this.loading = undefined;
+      });
     } catch {
       /* Remain silent and retry on the next gesture. */
     }

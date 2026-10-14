@@ -65,10 +65,13 @@ test('unlocks audio with a gesture, decodes MP3 fallback, mixes the city and per
   await expect
     .poll(() => page.evaluate(() => window.__webcityAudio!().levels.volume))
     .toBe(0);
-  await page.waitForTimeout(160);
-  expect(await page.evaluate(() => window.__webcityAudio!().peak)).toBeLessThan(
-    0.0001,
-  );
+  // Observe the actual audio fade; wall-clock sleeps can precede a render quantum.
+  await expect
+    .poll(() => page.evaluate(() => window.__webcityAudio!().peak), {
+      timeout: 1000,
+      intervals: [50],
+    })
+    .toBeLessThan(0.0001);
   await volume.press('End');
   await expect
     .poll(() => page.evaluate(() => window.__webcityAudio!().state))

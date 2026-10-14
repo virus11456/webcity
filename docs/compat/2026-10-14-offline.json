@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-14",
+  "task": "M5-06",
+  "base_commit": "1cc096621fd402ead3bcc61a37ab1a82eca3713f",
+  "environment": "macOS Chrome, Playwright Chromium device and touch emulation; not physical iOS Safari",
+  "projects": ["iPhone 15", "iPad Pro 11", "Desktop"],
+  "baseline": {
+    "test": "buildingGallery.spec.ts, Desktop, shows six",
+    "failed": 1,
+    "cause": "Six offline requests for streaming music .m4a files; gallery geometry is generated locally."
+  },
+  "verification_batches": [
+    {
+      "scope": "gallery, music, audio, PWA, assets after music-only fix",
+      "workers": 2,
+      "passed": 13,
+      "failed": 3,
+      "skipped": 2,
+      "note": "Gallery on both touch devices exposed missing cached SFX; Desktop audio sampled before mute fade completed."
+    },
+    {
+      "scope": "gallery, music, audio, PWA, PWA update, assets after full audio fix",
+      "workers": 2,
+      "passed": 17,
+      "failed": 2,
+      "skipped": 2,
+      "note": "iPad audio sampled before mute fade completed; iPad PWA hit existing 30-second timeout. All three gallery offline/reconnect scenarios passed."
+    },
+    {
+      "scope": "audio, PWA after replacing fixed mute sleep with peak polling",
+      "workers": 1,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "note": "PWA timeout and audio silence threshold unchanged; mute must reach peak < 0.0001 within one second."
+    }
+  ],
+  "final_verified_scenarios": {
+    "buildingGallery.spec.ts": 4,
+    "music.spec.ts": 3,
+    "audio.spec.ts": 3,
+    "pwa.spec.ts": 3,
+    "pwaUpdate.spec.ts": 3,
+    "assets.spec.ts": 3
+  },
+  "unique_cases_passed_after_fixes": 19,
+  "device_conditional_skips": 2,
+  "new_unit_cases": 8,
+  "unit_verification": {
+    "command": "npm test -- --maxWorkers=1",
+    "files_passed": 125,
+    "passed": 1193,
+    "failed": 0,
+    "duration_seconds": 179.27,
+    "performance_thresholds_changed": false
+  },
+  "checks": {
+    "lint": "passed",
+    "typecheck": "passed",
+    "production_build": "passed",
+    "build_warning": "Existing chunk exceeds 500 kB"
+  },
+  "full_e2e_suite_rerun": false,
+  "production_code_changed": true,
+  "vercel_deployment_attempted": false,
+  "m5_06_complete": false,
+  "pending": [
+    "Physical iOS Safari and installed fullscreen mode",
+    "Lighthouse PWA audit",
+    "Complete city gameplay while offline",
+    "Production browser smoke check"
+  ]
+}
