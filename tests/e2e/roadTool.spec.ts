@@ -1,13 +1,23 @@
-import { expect, test, type Page } from '@playwright/test';
-async function ready(page: Page, quality = 'low') {
+import { expect, test, type Locator, type Page } from '@playwright/test';
+async function activate(control: Locator, touch: boolean) {
+  if (touch) await control.tap();
+  else await control.click();
+}
+async function ready(page: Page, touch: boolean, quality = 'low') {
   await page.goto(`./?play=1&quality=${quality}&debug=1`);
   await expect(page.locator('canvas')).toHaveAttribute('data-ready', 'true');
   await expect(page.locator('.road-controls')).toHaveAttribute(
     'data-ready',
     'true',
   );
-  await page.getByRole('button', { name: '暫停', exact: true }).click();
-  await page.getByRole('button', { name: '開始鋪路', exact: true }).click();
+  await activate(
+    page.getByRole('button', { name: '暫停', exact: true }),
+    touch,
+  );
+  await activate(
+    page.getByRole('button', { name: '開始鋪路', exact: true }),
+    touch,
+  );
   await expect(page.locator('canvas')).toHaveAttribute(
     'data-construction',
     'true',
@@ -17,6 +27,7 @@ async function ready(page: Page, quality = 'low') {
       page.evaluate(() => window.__webcityCamera!.readState().distance),
     )
     .toBeCloseTo(850, 1);
+  if (touch) await expect(page.getByRole('tooltip')).toBeHidden();
 }
 async function project(page: Page, x: number, z: number) {
   return page.evaluate(
@@ -37,7 +48,9 @@ async function tap(page: Page, x: number, z: number, touch: boolean) {
     (p) => document.elementFromPoint(p.x, p.y)?.tagName,
     point,
   );
-  expect(target).toBe('CANVAS');
+  expect(target, `Road point (${x}, ${z}) must reach the canvas`).toBe(
+    'CANVAS',
+  );
   if (touch) await page.touchscreen.tap(point.x, point.y);
   else await page.mouse.click(point.x, point.y);
 }
@@ -48,9 +61,9 @@ test('builds, charges, continues and crosses roads through native pointer contro
   test.setTimeout(90_000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await ready(page);
-  const touch = Boolean(info.project.use.hasTouch),
-    controls = page.locator('.road-controls');
+  const touch = Boolean(info.project.use.hasTouch);
+  await ready(page, touch);
+  const controls = page.locator('.road-controls');
   await tap(page, -240, -80, touch);
   if (touch) await tap(page, -80, -80, true);
   else {
@@ -78,7 +91,10 @@ test('builds, charges, continues and crosses roads through native pointer contro
   if (touch)
     await page.getByRole('button', { name: '確認建造', exact: true }).tap();
   await expect(controls).toHaveAttribute('data-segments', '2');
-  await page.getByRole('button', { name: '✕ 取消路段', exact: true }).click();
+  await activate(
+    page.getByRole('button', { name: '✕ 取消路段', exact: true }),
+    touch,
+  );
   await tap(page, -160, -160, touch);
   await tap(page, -160, 0, touch);
   if (touch)
@@ -115,14 +131,23 @@ test('builds, charges, continues and crosses roads through native pointer contro
     await page.evaluate(() => window.__webcityRoadStats!().batches),
   ).toBeLessThan(30);
   const money = await controls.getAttribute('data-money');
-  await page.getByRole('button', { name: '探索城市', exact: true }).click();
+  await activate(
+    page.getByRole('button', { name: '探索城市', exact: true }),
+    touch,
+  );
   await expect(controls).toHaveAttribute('data-active', 'false');
-  await page.getByRole('button', { name: '展示街區', exact: true }).click();
+  await activate(
+    page.getByRole('button', { name: '展示街區', exact: true }),
+    touch,
+  );
   await expect(page.locator('canvas')).toHaveAttribute(
     'data-construction',
     'false',
   );
-  await page.getByRole('button', { name: '開始鋪路', exact: true }).click();
+  await activate(
+    page.getByRole('button', { name: '開始鋪路', exact: true }),
+    touch,
+  );
   await expect(controls).toHaveAttribute('data-segments', '5');
   await page.waitForFunction(() => window.__webcityZoneStats?.().blocks === 10);
   expect(
@@ -137,9 +162,9 @@ test('rejects unowned land, cancels drafts and keeps touch camera gestures separ
   context,
 }, info) => {
   test.setTimeout(90_000);
-  await ready(page);
-  const touch = Boolean(info.project.use.hasTouch),
-    controls = page.locator('.road-controls');
+  const touch = Boolean(info.project.use.hasTouch);
+  await ready(page, touch);
+  const controls = page.locator('.road-controls');
   await tap(page, -160, -80, touch);
   if (touch) {
     const session = await context.newCDPSession(page),
@@ -222,7 +247,10 @@ test('rejects unowned land, cancels drafts and keeps touch camera gestures separ
       ),
     ).toBe(true);
   }
-  await page.getByRole('button', { name: '✕ 取消路段', exact: true }).click();
+  await activate(
+    page.getByRole('button', { name: '✕ 取消路段', exact: true }),
+    touch,
+  );
   await expect(controls).toHaveAttribute('data-phase', 'start');
 });
 
@@ -235,7 +263,7 @@ test('keeps detailed roads after restoring the WebGL context with shadows enable
     if (message.type() === 'error') errors.push(message.text());
   });
   const touch = Boolean(info.project.use.hasTouch);
-  await ready(page, touch ? 'medium' : 'high');
+  await ready(page, touch, touch ? 'medium' : 'high');
   await tap(page, -240, -80, touch);
   await tap(page, -80, -80, touch);
   if (touch)
