@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-14",
+  "task": "M5-05",
+  "base_commit": "73e0cd17ee29face4a937574d41781664bbc5b5c",
+  "environment": "macOS Chrome, Playwright Chromium device and touch emulation; not physical iOS Safari",
+  "projects": ["iPhone 15", "iPad Pro 11", "Desktop"],
+  "final_verified_scenarios": {
+    "budget.spec.ts": 3,
+    "save.spec.ts": 3,
+    "integration.spec.ts": 3,
+    "problems.spec.ts": 3,
+    "population.spec.ts": 3
+  },
+  "unique_cases_passed_after_fixes": 15,
+  "verification_batches": [
+    {
+      "command": "playwright test budget.spec.ts population.spec.ts save.spec.ts integration.spec.ts problems.spec.ts --workers=2",
+      "passed": 9,
+      "failed": 6,
+      "note": "Budget, save and integration passed on all projects; population and problems required subsequent corrections."
+    },
+    {
+      "command": "playwright test population.spec.ts problems.spec.ts --workers=2",
+      "passed": 3,
+      "failed": 3,
+      "note": "Problems passed on all projects; population still incorrectly expected zero employment while utility workplaces remained."
+    },
+    {
+      "command": "playwright test population.spec.ts --workers=2",
+      "passed": 3,
+      "failed": 0,
+      "note": "Final population tests verify remaining utility jobs, then remove all workplaces and verify unemployment without population loss."
+    }
+  ],
+  "full_suite_rerun": false,
+  "previous_full_audit": "2026-10-13.json",
+  "production_code_changed": false,
+  "vercel_deployment_attempted": false,
+  "m5_05_complete": false,
+  "unit_verification": {
+    "default_parallel": {
+      "passed": 1171,
+      "failed": 14
+    },
+    "full_single_worker": {
+      "passed": 1184,
+      "failed": 1,
+      "population_p95_ms": 31.299624999999992
+    },
+    "isolated_population_scale": {
+      "passed": 1,
+      "failed": 0
+    },
+    "thresholds_changed": false,
+    "full_batch_zero_failures": false
+  }
+}
