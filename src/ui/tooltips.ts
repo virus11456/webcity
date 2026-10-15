@@ -173,7 +173,11 @@ export function attachTooltips(root: HTMLElement): () => void {
     if (bubble.contains(e.target as Node)) return;
     hide();
     const target = resolve(e.target);
-    if (!target || e.pointerType !== 'touch') return;
+    if (
+      !target ||
+      (e.pointerType !== 'touch' && target.dataset.locked !== 'true')
+    )
+      return;
     press = {
       id: e.pointerId,
       x: e.clientX,
@@ -205,6 +209,12 @@ export function attachTooltips(root: HTMLElement): () => void {
     pointers.delete(e.pointerId);
     if (press?.id !== e.pointerId) return;
     cancelTimer();
+    // Locked controls stay disabled; a short tap exposes their requirements.
+    // Movement and multi-touch clear press before reaching this branch.
+    if (!press.shown && press.target.dataset.locked === 'true') {
+      press.shown = true;
+      show(press.target, true);
+    }
     if (press.shown)
       guard = {
         target: press.target,

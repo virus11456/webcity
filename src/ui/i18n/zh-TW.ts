@@ -181,6 +181,7 @@ export const ZH_TW = {
   'err.tileLimit': '已達此裝置的土地數量上限',
 
   'milestone.title': '城市里程碑',
+  'toolbar.unlockAt': '人口達到 {population} 人解鎖',
   'milestone.reward': '已發放獎金',
   'milestone.unlocks': '新解鎖內容',
   'milestone.saved': '解鎖永久保留；人口下降或讀檔不會重複發獎。',

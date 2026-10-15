@@ -1,4 +1,15 @@
 import { t } from './i18n/t';
+import { MILESTONES } from '../data/milestones';
+
+export function unlockHint(unlock: number): string {
+  const milestone = MILESTONES.find((m) => m.id === unlock);
+  return milestone
+    ? t('toolbar.unlockAt').replace(
+        '{population}',
+        milestone.population.toLocaleString('zh-TW'),
+      )
+    : t('road.locked');
+}
 type Key = Parameters<typeof t>[0];
 /** Existing native controls retain their labels; descriptions explain the action. */
 const groups: [Key[], Key][] = [
@@ -46,10 +57,7 @@ export function helpText(
   // Icon buttons repeat their accessible name in title; that is not help text.
   const detail = nativeTitle?.trim() === label ? undefined : nativeTitle;
   const text = descriptions.get(label);
-  // Locked toolbar controls include a changing milestone suffix after the label.
-  const prefix =
-    text ??
-    [...descriptions].find(([name]) => label.startsWith(name + ' MS'))?.[1];
+  const prefix = text;
   return prefix
     ? [...new Set([prefix, detail].filter(Boolean))].join('\n')
     : detail || undefined;

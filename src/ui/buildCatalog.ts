@@ -4,6 +4,7 @@ import { BUILDINGS, NETWORKS } from '../data/buildings';
 import { ROADS, type RoadTypeId } from '../data/roads';
 import { GROWTH, ZONES } from '../data/zones';
 import { t } from './i18n/t';
+import { unlockHint } from './helpText';
 
 type Category = 'road' | 'zone' | 'power' | 'water' | 'service' | 'park';
 const money = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 2 });
@@ -57,7 +58,8 @@ export function createBuildCatalog(
     maintenance.textContent = `${t('toolbar.upkeep')} $${money.format(upkeep)}${perLength ? t('toolbar.per8m') : ''}${t('toolbar.perWeek')}`;
     const lock = document.createElement('small');
     lock.className = 'build-lock';
-    lock.append(createIcon('lock'), ` MS${unlock} · ${t('road.locked')}`);
+    lock.setAttribute('aria-hidden', 'true');
+    lock.append(createIcon('lock'));
     button.append(
       createIcon(
         ITEM_ICONS[id] ?? (facility?.kind === 'park' ? 'park' : category),
@@ -68,12 +70,12 @@ export function createBuildCatalog(
       lock,
     );
     const unique = uniqueDefinition(id);
+    let requirement = '';
     if (unique) {
       const effect = document.createElement('small');
       effect.textContent = `${t('unique.effect')} +${unique.landValueBonus} · ${unique.radiusM} m`;
-      const requirement = document.createElement('small');
-      requirement.textContent = `MS${unique.unlock} · ${t('unique.requires')} ${t(unique.requires === 'water_treatment' ? 'water.water_treatment' : `service.${unique.requires}`)}`;
-      button.append(effect, requirement);
+      requirement = `\n${unlockHint(unique.unlock)}\n${t('unique.requires')} ${t(unique.requires === 'water_treatment' ? 'water.water_treatment' : `service.${unique.requires}`)}`;
+      button.append(effect);
     }
     button.onclick = () => {
       if (select.disabled || option.disabled) return;
@@ -84,7 +86,7 @@ export function createBuildCatalog(
         ?.querySelector('canvas')
         ?.focus({ preventScroll: true });
     };
-    const description = `${name.textContent}\n${t(`help.catalog.${category}`)}\n${price.textContent}\n${maintenance.textContent}`;
+    const description = `${name.textContent}\n${t(`help.catalog.${category}`)}\n${price.textContent}\n${maintenance.textContent}${requirement}`;
     button.dataset.tooltip = description;
     host.append(button);
     return { option, button, lock, unlock, description };
@@ -98,17 +100,17 @@ export function createBuildCatalog(
       for (const { option, button, lock, unlock, description } of entries) {
         if (unlocked) option.disabled = !unlocked.includes(unlock);
         if (reasons[option.value]) option.disabled = true;
-        lock.textContent = reasons[option.value]
+        const reason = reasons[option.value]
           ? t(reasons[option.value]!)
-          : `MS${unlock} · ${t('road.locked')}`;
+          : `${t('road.locked')} · ${unlockHint(unlock)}`;
+        button.dataset.locked = String(option.disabled);
         button.disabled = select.disabled || option.disabled;
         button.setAttribute(
           'aria-pressed',
           String(select.value === option.value),
         );
         lock.hidden = !option.disabled;
-        const help =
-          description + (option.disabled ? `\n${lock.textContent}` : '');
+        const help = description + (option.disabled ? `\n${reason}` : '');
         if (button.dataset.tooltip !== help) button.dataset.tooltip = help;
       }
     },

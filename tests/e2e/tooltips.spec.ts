@@ -102,7 +102,7 @@ test('help shows real costs and locks without selecting on hold, normal activati
   const locked = page.locator('.build-card[data-item="road_medium"]');
   await expect(locked).toBeDisabled();
   await help(page, context, locked, touch);
-  await expect(tip).toContainText('MS');
+  await expect(tip).toContainText('人口達到 500 人解鎖');
   await expect(tip).toContainText('未解鎖');
   await fits(page);
   if (info.project.name === 'iPhone 15') {

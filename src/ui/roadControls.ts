@@ -5,6 +5,7 @@ import type { RoadMode, RoadToolState } from '../tools/roadTool';
 import { t } from './i18n/t';
 import { catalogIcon, createBuildCatalog } from './buildCatalog';
 import { layout, observeLayout } from './store';
+import { unlockHint } from './helpText';
 
 interface RoadActions {
   enter(): void;
@@ -162,7 +163,7 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       lock = document.createElement('span');
     lock.className = 'toolbar-feature-lock';
     lock.setAttribute('aria-hidden', 'true');
-    lock.append(catalogIcon('lock'), ` MS${unlock}`);
+    lock.append(catalogIcon('lock'));
     button.append(lock);
     return { button, lock, unlock };
   });
@@ -668,8 +669,9 @@ export function createRoadControls(parent: HTMLElement, actions: RoadActions) {
       for (const { button, lock, unlock } of featureLocks) {
         const locked = !state.unlocked.includes(unlock);
         button.disabled ||= locked;
+        button.dataset.locked = String(locked);
         lock.hidden = !locked;
-        button.title = locked ? `${t('road.locked')} · MS${unlock}` : '';
+        button.title = locked ? unlockHint(unlock) : '';
       }
       panel.dataset.ready = String(state.ready);
       panel.dataset.phase = state.phase;
