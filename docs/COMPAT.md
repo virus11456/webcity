@@ -140,3 +140,15 @@ lint、typecheck 及正式 build 通過，build 保留既有大 chunk 提示。�
 `compactLocks`、`tooltips`、`milestones`、`mobileToolbar` 三裝置共 **18 項全部通過**（單一 worker，1.2 分鐘）。涵蓋短按查看道路／行政區／警察局門檻但不切換、不扣款、不施工，iPhone 橫式說明在視窗內，里程碑達標解鎖及讀檔仍正確，工具列可滑動且沒有頁面溢出。截圖見 [compact-locks](screenshots/compact-locks)。這是 macOS Chrome 模擬，未替代 Safari 真機驗收。
 
 提交前 lint、typecheck、正式 build 通過；完整單元測試 `npm test -- --maxWorkers=1` 為 125 檔／1,193 項通過（194.03 秒）。建置保留既有大於 500 kB chunk 提示，未修改任何模擬規則或效能門檻。
+
+## 2026-10-19：災害與通知回歸（M5-05）
+
+舊災害案例在建築燒毀後列舉通知關閉鈕，再逐一點擊；通知每五秒自然過期，且清單更新時重建 DOM，因此先前取得的索引可能在點擊前失效。改為在暫停後等待通知依正式設定自然退場，再用 `elementFromPoint` 確認建築點選座標命中畫布。沒有隱藏通知、強制點擊、延長通知壽命或修改災害規則。
+
+災害設定、速度控制、重建、存檔及讀檔入口依裝置改用原生 `tap()`／`click()`；保留預警、真實起火、燒毀、重建扣款 $2,000、施工狀態與災害設定讀檔還原，增加重建按鈕至少 44×44 px 的檢查。iPhone 保留橫式設定畫面檢查，截圖等待 CSS 動畫完成。
+
+`disasters` 與 `notifications` 在單一 worker、三種裝置的同一批次 **6 項全部通過**（2.0 分鐘）。通知案例另確認點擊火災訊息可定位真實建築、五秒退場且暫停不重複通知。更新三種裝置的重建截圖，見 [screenshots/m4-14](screenshots/m4-14)；機器可讀摘要見 [2026-10-19-disasters.json](compat/2026-10-19-disasters.json)。
+
+本輪只修改測試、截圖與文件，沒有產品程式變更或 Vercel 部署。以上是 macOS Chrome 裝置／觸控模擬；未重跑全量 E2E，也不代表 Safari 真機、其他瀏覽器矩陣或十萬人口實機壓力已通過，M5-05 保留未完成。
+
+提交前 lint、typecheck 與正式 build 通過；完整單元測試 `npm test -- --maxWorkers=1` 為 **125 檔／1,193 項全部通過**（132.63 秒），未修改效能門檻。建置保留既有大於 500 kB chunk 提示。

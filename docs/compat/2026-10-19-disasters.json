@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-19",
+  "task": "M5-05",
+  "environment": "macOS Chrome; Chromium viewport/touch emulation, not native iOS Safari",
+  "baseCommit": "c99a051fd34b108a5ddb9f41914c24eb251bd35b",
+  "e2e": {
+    "files": ["disasters.spec.ts", "notifications.spec.ts"],
+    "projects": ["iPhone 15", "iPad Pro 11", "Desktop"],
+    "workers": 1,
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "duration": "2.0m"
+  },
+  "productionCodeChanged": false,
+  "deployments": 0,
+  "fullE2ERerun": false,
+  "remaining": [
+    "Native Safari/device matrix",
+    "Other browser matrix",
+    "100k population real-device pressure testing"
+  ],
+  "unit": {
+    "files": 125,
+    "passed": 1193,
+    "failed": 0,
+    "durationSeconds": 132.63,
+    "workers": 1
+  },
+  "checks": ["lint", "typecheck", "production build"]
+}
