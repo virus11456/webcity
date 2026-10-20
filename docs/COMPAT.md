@@ -152,3 +152,13 @@ lint、typecheck 及正式 build 通過，build 保留既有大 chunk 提示。�
 本輪只修改測試、截圖與文件，沒有產品程式變更或 Vercel 部署。以上是 macOS Chrome 裝置／觸控模擬；未重跑全量 E2E，也不代表 Safari 真機、其他瀏覽器矩陣或十萬人口實機壓力已通過，M5-05 保留未完成。
 
 提交前 lint、typecheck 與正式 build 通過；完整單元測試 `npm test -- --maxWorkers=1` 為 **125 檔／1,193 項全部通過**（132.63 秒），未修改效能門檻。建置保留既有大於 500 kB chunk 提示。
+
+## 2026-10-20：歷史存檔相容性（M5-07）
+
+以三個歷史 commit 的程式各自產生並凍結 v1 存檔，專用測試驗證原始雜湊與欄位差異，確認居民、住宅／道路、資金、貸款與稅率保留，升級後可再存及確定性續跑。新增獨立 GitHub Actions `Archived save compatibility` 工作；既有全量驗證門檻不變。樣本來源與範圍見 [固定存檔說明](../tests/fixtures/saves/README.md)。
+
+三裝置 `saveMigration` 同批 **3 項通過**（32.7 秒、單一 worker）：透過真正 Worker 載入 M1 舊檔，還原六位居民與 $90,000，觸控／滑鼠儲存到新槽，重新整理後載入並推進日期。第一次 E2E 啟動前因新單元測試的兩個可選欄位缺少型別收窄而被 typecheck 擋下；修正斷言存取後正式 build 及 E2E 通過，沒有修改產品程式。三裝置截圖見 [m5-07](screenshots/m5-07)。仍是 macOS Chrome 模擬，未宣稱 iOS Safari 真機通過。
+
+另追查上一批 PR #131 的 [GitHub CI](https://github.com/virus11456/webcity/actions/runs/39187802124)：lint／typecheck 通過，單元覆蓋率批次為 1,160 通過、33 失敗，失敗為 5 秒逾時及效能門檻；build／E2E 尚未執行。它與先前本機單一 worker、不加覆蓋率的 1,193 項全過是不同執行條件，不能以本機結果宣稱雲端 CI 成功。全量 CI 差異仍待調查，本輪相容性專用工作不取代該工作。
+
+本輪完整單元測試 `npm test -- --maxWorkers=1` 為 **126 檔／1,197 項全部通過**（152.65 秒）。lint、typecheck 及正式 build 通過，保留既有大於 500 kB chunk 提示。只更新測試、CI 與文件，未新增 Vercel 部署。

@@ -388,10 +388,11 @@ M0-12 已提供 `input/picking.ts` 的 `TerrainPicker`。`pick(clientX, clientY,
 ## 9. 存檔格式
 
 ```
-[4 bytes magic "WCTY"][2 bytes version][gzip(msgpack(SaveData))]
+[4 bytes magic "WCTY"][4 bytes uint32 LE version][gzip(msgpack(SaveData))]
 ```
 - `SaveData` = SimState 的可序列化版本；TypedArray 直接存 `Uint8Array` 視圖。
-- `version` 從 1 開始，每次改變結構 +1，並在 `save/migrations.ts` 新增 `migrate_{n}_to_{n+1}`。
+- 已發布的格式目前只有 v1，檔頭共 8 bytes；以實作與歷史檔為準，早期文件的 2-byte version 為誤記。可選欄位的 v1 缺省遷移沿用 `save/migrations.ts`；未來不相容結構須提升版本並加入逐版遷移，不能改寫歷史檔。
+- M5-07：固定歷史樣本與來源／SHA-256 保存於 `tests/fixtures/saves`，CI 獨立驗證各版本可載入、居民與資產保留、再存檔及確定性續跑。新增版本必須保留舊樣本並擴充 manifest；測試不可動態重建歷史樣本。
 - 存檔槽 metadata（城市名、人口、日期、縮圖 JPEG 320×180 base64）另存在 IndexedDB `slots` store，讀取清單時不需解壓完整存檔。
 
 ---

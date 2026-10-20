@@ -1,0 +1,19 @@
+# Frozen save compatibility fixtures
+
+These are synthetic cities written by the serializer and simulation at each recorded Git commit, not payloads created by the current serializer during a test. All released file headers are currently version 1; three schema eras are retained because optional v1 fields evolved without changing the header. `manifest.json` records the source commit, SHA-256, format version and citizen schema.
+
+| File          | Source                                     | Migration exercised                                                                                                                                   |
+| ------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v1-m1.wcity` | `a270c3f885b13cf903f732c431e46dd8c0505b0e` | Empty reserved citizen array → six individual residents; missing traffic, cargo, fire, garbage, deathcare, disaster, tutorial and tile-limit defaults |
+| `v1-m2.wcity` | `2195fe1afece4347d84d1a54ed0955199b62d3a2` | Six existing resident IDs; missing journey columns, fractional health and later systems                                                               |
+| `v1-m5.wcity` | `b9f64167f2dd3789b53908cf126ee97feb5376d8` | Current v1 round trip with journey and health columns                                                                                                 |
+
+The manual recipe is `scripts/createSaveFixture.ts`. It constructs an artificial flat map, one 160 m road and a six-resident home, then takes a $20,000 loan and sets residential tax to 15%. The final treasury is $90,000. It pauses before any simulation tick. M1's archived HUD population is still zero even though its home contains six residents; the current Worker reconstructs the authoritative six-person population on load. This is a synthetic schema fixture, not an example of a supplied, sustainable playable city.
+
+For provenance, each source was extracted with `git archive <sourceCommit>` into a temporary directory, then the recipe was copied into that directory's `scripts/`. Only dependencies were shared with the current checkout. Vite's SSR build bundled the historical recipe and its historical relative imports (`configFile: false`, `ssr.noExternal: true`); the resulting module was run with the new `.wcity` output path as its argument. The recipe refuses to overwrite existing files. It must **never** run as part of tests or CI.
+
+Do not regenerate existing binaries or change their hashes to make a failing compatibility test pass. Investigate the migration. For a new format, preserve the old files, append a binary from the actual released writer and its provenance to the manifest, and add migration expectations. The coverage assertion fails if any header version from 1 through `SAVE.version` is absent. Historical intermediate v1 variants not represented here can be added as additional fixtures when needed; this set does not claim to archive every commit or every gameplay state.
+
+`tests/unit/saveMigration.test.ts` verifies hashes and original schema shape, loads every binary, preserves assets and finances, expands or preserves residents, re-saves and runs two restored simulations for identical continuation. The independent **Archived save compatibility** GitHub Actions job runs this suite on pushes and PRs, so failures elsewhere cannot prevent the compatibility check from running. The existing full CI job continues unchanged and is not bypassed or marked successful by this job.
+
+`tests/e2e/saveMigration.spec.ts` loads the M1 binary through the real browser Worker on three device profiles, checks six residents and $90,000, saves into a new slot, reloads and advances the calendar. This is Chromium device/touch emulation, not native iOS Safari certification.

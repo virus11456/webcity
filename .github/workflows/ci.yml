@@ -9,6 +9,24 @@ permissions:
   contents: read
 
 jobs:
+  save-compatibility:
+    name: Archived save compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Load every archived save and verify deterministic continuation
+        run: npm test -- tests/unit/saveMigration.test.ts --maxWorkers=1
   verify:
     name: Lint, types, unit tests, build and E2E
     runs-on: ubuntu-latest
