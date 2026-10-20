@@ -11,4 +11,6 @@ export interface SaveActions {
   list(): Promise<SaveMetadata[]>;
   save(id: string): Promise<void>;
   load(id: string): Promise<void>;
+  exportFile(): Promise<File>;
+  importFile(id: string, file: File): Promise<void>;
 }

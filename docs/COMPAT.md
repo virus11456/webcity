@@ -162,3 +162,15 @@ lint、typecheck 及正式 build 通過，build 保留既有大 chunk 提示。�
 另追查上一批 PR #131 的 [GitHub CI](https://github.com/virus11456/webcity/actions/runs/39187802124)：lint／typecheck 通過，單元覆蓋率批次為 1,160 通過、33 失敗，失敗為 5 秒逾時及效能門檻；build／E2E 尚未執行。它與先前本機單一 worker、不加覆蓋率的 1,193 項全過是不同執行條件，不能以本機結果宣稱雲端 CI 成功。全量 CI 差異仍待調查，本輪相容性專用工作不取代該工作。
 
 本輪完整單元測試 `npm test -- --maxWorkers=1` 為 **126 檔／1,197 項全部通過**（152.65 秒）。lint、typecheck 及正式 build 通過，保留既有大於 500 kB chunk 提示。只更新測試、CI 與文件，未新增 Vercel 部署。
+
+## 2026-10-20：存檔匯出／匯入（M5-08）
+
+以真實 Worker 匯出目前城市，Playwright 實際接收下載並反序列化確認 $90,000、六位居民；原槽的 metadata 與內容雜湊不變。從 UI 原生選檔入口選取長檔名、取消、損壞檔與不支援版本，驗證失敗時原槽與現有城市不變。有效備份寫入新槽，再透過正常「讀取」重載並核對資金、人口與建築 ID。
+
+`saveFiles` 兩個情境與既有 `saveMigration` 在 iPhone 15、iPad Pro 11、Desktop 同批 **9 項全部通過**（50.4 秒）。觸控裝置使用 tap，檢查下載入口至少 44×44 px、長檔名與 iPhone 橫式面板不溢出。第二個情境只在作業系統邊界替換 navigator.canShare/share，模擬使用者取消，確認仍能下載、關閉釋放 blob URL、重開沒有過期備份。截圖見 [m5-08](screenshots/m5-08)。這是 macOS Chrome 裝置模擬，未驗證 iOS 原生分享面板／「檔案」App；M5-08 保留未完成。
+
+中間失敗紀錄：首輪六個失敗源自提示文字誤用 save-status 類名造成定位不唯一，已改為 save-hint；下一輪六通過／三失敗是新分享測試使用沒有存檔入口的舊 demo 啟動方式，改為正常存檔載入後，完整九案重跑通過。沒有調高 timeout 或跳過失敗案例。未重跑全量 E2E。
+
+新增 11 項單元案例，涵蓋實際歷史存檔驗證、新版本／壞檔／大小限制、可攜檔名、目前城市匯出、選定槽原子匯入、關閉生命週期、並行操作及配額失敗後重試。完整單元批次 `npm test -- --maxWorkers=1` 為 **128 檔／1,208 項全部通過**（140.58 秒），未更改既有效能門檻。正式 build（含 typecheck）通過，保留既有大 chunk 提示。
+
+上一張卡 PR #132 的 [CI](https://github.com/virus11456/webcity/actions/runs/39442084422) 中 Archived save compatibility 已通過；一般 CI 仍在單元測試階段失敗，build／E2E 未執行，不能以本機通過宣稱雲端完整 CI 全綠。

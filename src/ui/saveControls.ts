@@ -19,17 +19,76 @@ export function createSaveControls(parent: HTMLElement, actions: SaveActions) {
   const message = document.createElement('p');
   message.className = 'save-status';
   message.setAttribute('role', 'status');
+  const transfers = document.createElement('div');
+  transfers.className = 'save-actions save-transfers';
+  const exportButton = document.createElement('button');
+  exportButton.type = 'button';
+  exportButton.textContent = t('save.export');
+  const download = document.createElement('a');
+  download.textContent = t('save.download');
+  download.hidden = true;
+  const share = document.createElement('button');
+  share.type = 'button';
+  share.textContent = t('save.share');
+  share.hidden = true;
+  const hint = document.createElement('p');
+  hint.className = 'save-hint';
+  hint.textContent = t('save.importHint');
+  transfers.append(exportButton, download, share);
   const list = document.createElement('div');
   list.className = 'save-list';
-  dialog.append(title, close, message, list);
+  dialog.append(title, close, transfers, hint, message, list);
   parent.append(dialog);
   (parent.querySelector('.road-tabs') ?? parent).append(trigger);
   let disposed = false,
     busy = false,
     armed: string | null = null;
+  let prepared: File | null = null;
+  let downloadUrl: string | null = null;
+  let pendingImport: { id: string; file: File } | null = null;
+  function clearExport() {
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    downloadUrl = null;
+    prepared = null;
+    download.removeAttribute('href');
+    download.hidden = share.hidden = true;
+  }
+  dialog.addEventListener('cancel', (event) => {
+    if (busy) event.preventDefault();
+  });
+  dialog.addEventListener('close', () => {
+    pendingImport = null;
+    armed = null;
+    clearExport();
+  });
+  exportButton.onclick = () =>
+    void run(
+      async () => {
+        clearExport();
+        const file = await actions.exportFile();
+        if (disposed) return;
+        prepared = file;
+        downloadUrl = URL.createObjectURL(file);
+        download.href = downloadUrl;
+        download.download = file.name;
+        download.hidden = false;
+        share.hidden = !(navigator.canShare?.({ files: [file] }) ?? false);
+      },
+      'save.exportReady',
+      'save.exportFailed',
+    );
+  share.onclick = () => {
+    if (!prepared) return;
+    // Keep the native share invocation inside this user gesture (especially iOS).
+    void navigator.share({ files: [prepared] }).catch((error: unknown) => {
+      if (!(error instanceof DOMException && error.name === 'AbortError'))
+        message.textContent = t('save.exportFailed');
+    });
+  };
   let entries: SaveMetadata[] = [];
   function paint() {
     if (disposed) return;
+    close.disabled = exportButton.disabled = busy;
     list.replaceChildren();
     for (const id of [
       SAVE.autoId,
@@ -78,6 +137,55 @@ export function createSaveControls(parent: HTMLElement, actions: SaveActions) {
           void run(() => actions.save(id));
         };
         buttons.append(save);
+        const picker = document.createElement('input');
+        picker.type = 'file';
+        picker.accept = '.wcity,application/octet-stream';
+        picker.hidden = true;
+        picker.setAttribute('aria-label', t('save.import'));
+        picker.onchange = () => {
+          const file = picker.files?.[0];
+          if (!file || disposed || busy) return;
+          armed = null;
+          pendingImport = { id, file };
+          paint();
+        };
+        const importButton = document.createElement('button');
+        importButton.type = 'button';
+        importButton.disabled = busy;
+        importButton.textContent = t('save.import');
+        importButton.onclick = () => picker.click();
+        buttons.append(importButton, picker);
+        if (pendingImport?.id === id) {
+          const selection = document.createElement('p');
+          selection.className = 'save-import-selection';
+          selection.textContent =
+            t('save.importSelected') + pendingImport.file.name;
+          row.append(selection);
+          const confirm = document.createElement('button');
+          confirm.type = 'button';
+          confirm.textContent = t(
+            entry ? 'save.importReplace' : 'save.importConfirm',
+          );
+          confirm.disabled = busy;
+          confirm.onclick = () => {
+            const file = pendingImport?.file;
+            if (file)
+              void run(
+                () => actions.importFile(id, file),
+                'save.imported',
+                'save.importFailed',
+              );
+          };
+          const cancel = document.createElement('button');
+          cancel.type = 'button';
+          cancel.textContent = t('save.importCancel');
+          cancel.disabled = busy;
+          cancel.onclick = () => {
+            pendingImport = null;
+            paint();
+          };
+          buttons.append(confirm, cancel);
+        }
       }
       const load = document.createElement('button');
       load.type = 'button';
@@ -89,18 +197,23 @@ export function createSaveControls(parent: HTMLElement, actions: SaveActions) {
       list.append(row);
     }
   }
-  async function run(action: () => Promise<void>) {
+  async function run(
+    action: () => Promise<void>,
+    success: Parameters<typeof t>[0] = 'save.saved',
+    failure: Parameters<typeof t>[0] = 'save.failed',
+  ) {
     if (busy) return;
     busy = true;
     armed = null;
+    pendingImport = null;
     message.textContent = t('save.busy');
     paint();
     try {
       await action();
       entries = await actions.list();
-      message.textContent = t('save.saved');
+      message.textContent = t(success);
     } catch {
-      message.textContent = t('save.failed');
+      message.textContent = t(failure);
     } finally {
       busy = false;
       paint();
@@ -128,6 +241,8 @@ export function createSaveControls(parent: HTMLElement, actions: SaveActions) {
     },
     dispose() {
       disposed = true;
+      pendingImport = null;
+      clearExport();
       trigger.remove();
       dialog.remove();
     },

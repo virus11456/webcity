@@ -763,3 +763,5 @@ M4-18：Simulation 在成功建造邊界記錄 constructionUndo 差異，最多 
 M5-01：新增可選 `CitySettings.tutorial` 與 `WorldSnapshot.tutorial`，沿用 v1 存檔的缺欄位遷移。`tutorial` 命令僅允許 pan/rotate/zoom/finance/skip/dismiss；Worker 控制 step/status 與固定獎勵，事件更新防禦複製 mirror。建造完畢檢查現存道路、分區、管線，成長步驟才在 tick 檢查；非教學城市不掃描。輸入 callback 與財政開啟 callback 由 game 接 UI，沒有 UI/sim 或 input/UI 模組相依。詳見 TUTORIAL.md。
 
 M5-02：`main.ts` 掛接單一 UI 委派提示控制器，讀取 `data-tooltip`／明確標籤字典；建造卡片沿用資料表費用與當前鎖定狀態。只觀察顯示中的提示，不在 render loop 掃描，不接管畫布 pointer capture。原生 dialog 內使用相同頂層容器；保留既有 aria-describedby，pagehide 清理事件、計時器與 DOM。不新增 Worker 命令、存檔欄位或 runtime 依賴。見 TOOLTIPS.md。
+
+M5-08：`save/fileWorker` 是獨立、短生命週期的輸入驗證 Worker，僅呼叫既有 deserialize／migrations，不建立或修改遊戲世界。`fileTransfer` 先限制大小，再轉移 ArrayBuffer 並於完成／錯誤／逾時終止 Worker。`SaveActions` 增加 exportFile/importFile；UI 僅持有 File／blob URL，controller 沿用真實遊戲 Worker 的 save 指令匯出，驗證成功後才原子寫入選定手動槽。格式仍為 v1，載入沿用既有重新建立城市流程。詳見 SAVES.md。
