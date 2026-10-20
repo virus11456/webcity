@@ -63,3 +63,15 @@
 - 本機 18 項 E2E、125 檔／1,193 項完整單元測試、lint、typecheck、production build 通過；遠端 build 通過，保留既有大於 500 kB chunk 提示。
 - 瀏覽器安全檢查已恢復可用。在獨立暫存分頁點擊 PWA「有新版本，點此更新」後，DOM 腳本為 `/webcity/assets/index-C9Pwi47N.js`，與本機 dist 一致。新城市正常載入及推進日期，最後暫停於 1/8；工具分類與公共服務卡片不再顯示 MS 字樣，點鎖定墓園顯示「人口達到 1,200 人解鎖」，仍為 disabled。未手動儲存測試城市，完成後關閉暫存分頁，保留原遊戲分頁。
 - 該分頁瀏覽器 error／warn 紀錄為空；此靜態網站未另外執行伺服器日誌、Drains 或長時間監控驗收。本次線上 smoke check 不代表 Safari 真機、十萬人口或 M5 全矩陣通過。這份發布紀錄不再部署。
+
+## 2026-10-20 正式發布：城市備份匯出／匯入
+
+- 台北 23:18:52 建立、23:19:19 Ready；當日第 1 次部署嘗試。發布前同 team／project 的當日清單為空、無下一頁，發布後恰為一筆；本機嘗試紀錄也只有一筆。
+- 發布 commit：`4f48ea9fdbbe8cbeca0a377b29e9ebf849d4c0d0`（PR #133 合併），tree `2ca8377f509cb0c6a286def2cc1b4db04fdfcc68`，乾淨 checkout 與本機測試內容一致。Vercel metadata 的 githubCommitSha 相同。
+- 既有 `virus11456s-projects/webcity`，project `prj_6yhBx3NgKW44C4bMJWBgKd8MsULy`。MCP 唯讀查詢回覆 scope 403，改用已登入 CLI 查詢同 team／project 並發布；沒有新建專案、改動部署保護或建立排程。
+- Deployment：`dpl_HY1XDycBGcxGYdjXwQXq3b6H7kko`；API **READY**、target **production**，CLI 確認正式別名。
+- 正式網址：https://webcity-theta.vercel.app/webcity/
+- 本次版本網址：https://webcity-afubnte2a-virus11456s-projects.vercel.app/webcity/
+- 本機 lint、typecheck、正式 build、128 檔／1,208 項單元測試及三裝置 9 項存檔 E2E 全部通過；Vercel 遠端 build 通過，保留既有大 chunk 提示。這不代表全量 GitHub CI 通過。
+- 正式站獨立暫存分頁套用 PWA 更新後，DOM script 為 `/webcity/assets/index-BGYgo0nF.js`，與本機 dist 相同。從新遊戲建立「備份發布驗證 10/20」，正常運行至 1/9 後暫停；存檔面板成功產生備份，實際下載 `WebCity-備份發布驗證 10_20.wcity`。面板也顯示分享入口與各手動槽匯入入口；沒有手動寫入或覆寫任何槽，驗證時原自動槽仍為先前城市。未執行原生系統分享或以正式站既有槽測試匯入，這些功能由隔離 E2E 覆蓋。
+- 該分頁 error／warn 紀錄為空，驗證後已關閉暫存分頁；未宣稱 Safari 真機「檔案」App、完整瀏覽器矩陣或 M5 全部完成。此發布紀錄只同步 GitHub，不另外部署。
