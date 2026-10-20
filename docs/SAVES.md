@@ -4,7 +4,7 @@
 
 格式為 `WCTY` 四位元組、little-endian uint32 版本、gzip 壓縮的 MessagePack。Float32Array / Int32Array 使用自訂 little-endian extension，Uint8Array 為 MessagePack binary。固定 key 排序與省略 undefined 保證同一快照的存→讀→存二進位一致。
 
-Worker 原子取得快照及對應 metadata。壓縮期間城市可繼續運行；載入期間暫停接收修改指令，完整解壓、版本、型別、數值與拓樸檢查通過後才替換世界。損壞／不支援版本不覆寫現有城市。v1 是第一個正式格式，尚無需遷移的舊版存檔；未來版本由 migrations 擴充。
+Worker 原子取得快照及對應 metadata。壓縮期間城市可繼續運行；載入期間暫停接收修改指令，完整解壓、版本、型別、數值與拓樸檢查通過後才替換世界。損壞／不支援版本不覆寫現有城市。v1 是目前唯一發布的檔頭版本，但已有缺少後續可選欄位的歷史檔；migrations 會補齊居民、行程、公共服務、教學及災害等缺省結構。未來不相容版本需保留舊版讀取與遷移。
 
 IndexedDB 的 metadata / data 寫入使用同一交易，空間不足不會只覆寫一半。縮圖失敗仍可存城市。載入使用明確選取的槽重新建立 Worker 和與城市相同 seed／地圖的 renderer；一般重新整理不會自動覆寫手動槽。資料只保存在目前瀏覽器，不是雲端同步。
 
@@ -15,3 +15,9 @@ IndexedDB 的 metadata / data 寫入使用同一交易，空間不足不會只�
 API 依據：[MessagePack 官方實作](https://github.com/msgpack/msgpack-javascript)、[idb 官方文件](https://github.com/jakearchibald/idb)。
 
 存檔採語意一致的正規格式：數字 `-0` 轉為 `0`，未設定的可選 `undefined` 欄位省略。實際城市數值、地形 typed arrays 與下一步模擬結果不變；整合 E2E 比較城市時正規化這兩類 JavaScript 表示差異。
+
+## M5-07 歷史存檔回歸
+
+保留 M1、M2 居民系統與 M5 三個 commit 的固定 `.wcity` 樣本，來源、SHA-256、產生方式與涵蓋範圍見 [fixtures 說明](../tests/fixtures/saves/README.md)。三個樣本合計約 23 KB；地形為明確人工平地，保存道路、住宅六位居民、貸款及稅率。不能重新產生樣本來掩蓋不相容。
+
+專用單元案例逐檔確認格式、舊欄位確實缺省、居民轉換／ID 保留、資產與資金保留、存讀往返及續跑一致，並檢查版本 1 到最新版都有樣本。GitHub Actions 獨立 `Archived save compatibility` 工作執行此案例，既有完整驗證工作不變。三裝置瀏覽器回歸另載入最早的 M1 檔，經實際 Worker 轉換後保存到新槽、重新載入，再運行遊戲日曆。

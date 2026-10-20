@@ -1,0 +1,23 @@
+[
+  {
+    "file": "v1-m1.wcity",
+    "version": 1,
+    "sourceCommit": "a270c3f885b13cf903f732c431e46dd8c0505b0e",
+    "sha256": "1162aac56f26e9b55b812479074bc400b5b4ebabe2314c5702e7d2f2cbeaa92e",
+    "citizenSchema": "reserved-array"
+  },
+  {
+    "file": "v1-m2.wcity",
+    "version": 1,
+    "sourceCommit": "2195fe1afece4347d84d1a54ed0955199b62d3a2",
+    "sha256": "ec7a2ecdb80f11c9622ef23ece90295293118c5e39a05c935e9d79ff26687640",
+    "citizenSchema": "before-journeys"
+  },
+  {
+    "file": "v1-m5.wcity",
+    "version": 1,
+    "sourceCommit": "b9f64167f2dd3789b53908cf126ee97feb5376d8",
+    "sha256": "9bc8d99b1a6e1df62afa2814935d09b5b848d4f4ecd985360160b799d4a9c2af",
+    "citizenSchema": "journeys-and-health"
+  }
+]
