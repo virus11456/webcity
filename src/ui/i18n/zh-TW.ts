@@ -607,6 +607,21 @@ export const ZH_TW = {
   'menu.saveExit': '儲存並回主選單',
 
   'save.title': '存檔與讀檔',
+  'save.export': '匯出目前城市',
+  'save.download': '下載備份',
+  'save.share': '分享／儲存到檔案',
+  'save.exportReady': '備份已準備好，請下載或儲存到檔案。',
+  'save.import': '匯入檔案',
+  'save.importConfirm': '確認匯入',
+  'save.importReplace': '確認匯入並覆寫',
+  'save.importCancel': '取消匯入',
+  'save.importHint':
+    '匯入到此欄位後，按「讀取」切換城市。匯出備份可保留在裝置的檔案中。',
+  'save.importSelected': '待匯入：',
+  'save.imported': '匯入成功。按此欄位的「讀取」開啟城市。',
+  'save.importFailed':
+    '匯入失敗：檔案可能損壞、版本不支援、過大或儲存空間不足。原城市與存檔仍保留。',
+  'save.exportFailed': '備份未完成，請重新準備或下載備份。',
   'save.close': '關閉存檔',
   'save.slot': '存檔槽',
   'save.auto': '自動存檔',

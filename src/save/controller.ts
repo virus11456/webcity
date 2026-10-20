@@ -1,4 +1,5 @@
 import type { SimClient } from '../bridge/simClient';
+import { readSaveFile, saveFileName } from './fileTransfer';
 import { SAVE } from '../data/persistence';
 import { listSaves, putSave, getSave } from './storage';
 /** Persist worker snapshots and serialize writes; background failures leave existing slots intact. */
@@ -52,6 +53,36 @@ export function createSaveController(
   return {
     list: listSaves,
     save,
+    async exportFile() {
+      if (saving || disposed) throw new Error('Save already in progress');
+      saving = true;
+      try {
+        const response = await client.send({ t: 'save' });
+        if (response.t !== 'saved') throw new Error('Save failed');
+        return new File(
+          [response.data],
+          saveFileName(response.metadata.settings.cityName),
+          { type: 'application/octet-stream' },
+        );
+      } finally {
+        saving = false;
+      }
+    },
+    async importFile(id: string, file: File) {
+      if (saving || disposed || id === SAVE.autoId)
+        throw new Error('Import unavailable');
+      saving = true;
+      try {
+        const imported = await readSaveFile(file);
+        if (disposed) throw new Error('Save controller closed');
+        await putSave(
+          { ...imported.metadata, id, savedAt: Date.now(), thumbnail: null },
+          imported.data,
+        );
+      } finally {
+        saving = false;
+      }
+    },
     async load(id: string) {
       await getSave(id);
       sessionStorage.setItem('webcity-load', id);

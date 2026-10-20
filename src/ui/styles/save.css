@@ -20,7 +20,8 @@
   font-size: 14px;
   margin: 0;
 }
-.save-dialog button {
+.save-dialog button,
+.save-dialog a {
   min-width: 44px;
   min-height: 44px;
   border: 1px solid var(--color-border);
@@ -50,9 +51,26 @@
 }
 .save-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   clear: both;
 }
-.save-status {
+.save-status,
+.save-hint {
   font-size: 12px;
+}
+
+.save-dialog a:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.save-transfers {
+  margin-top: 12px;
+}
+.save-slot p {
+  overflow-wrap: anywhere;
+}
+.save-actions > button {
+  max-width: 100%;
 }
