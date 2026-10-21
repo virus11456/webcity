@@ -18,6 +18,7 @@
     "e2e": "playwright test",
     "icons": "node scripts/generateIcons.ts",
     "test:coverage": "vitest run --coverage",
+    "test:coverage:core": "vitest run --coverage --config vitest.coverage.config.ts",
     "assets:sample": "node scripts/generateAssetSample.ts",
     "assets:compress": "node scripts/compressAsset.ts",
     "assets:models": "node scripts/runModelBuild.ts",

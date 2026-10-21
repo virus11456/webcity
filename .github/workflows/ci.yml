@@ -28,7 +28,7 @@ jobs:
       - name: Load every archived save and verify deterministic continuation
         run: npm test -- tests/unit/saveMigration.test.ts --maxWorkers=1
   verify:
-    name: Lint, types, unit tests, build and E2E
+    name: Lint, types, unit tests and build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency:
@@ -51,21 +51,91 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
       - name: Unit tests
-        run: npm run test:coverage
+        run: npm test
       - name: Build
         run: npm run build
+  core-coverage:
+    name: Core coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Verify every core file meets the existing coverage thresholds
+        run: npm run test:coverage:core
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: core-coverage
+          path: coverage/
+          retention-days: 14
+          if-no-files-found: warn
+  required-checks:
+    # Keep the existing status-check name, and fail if any independent job fails.
+    name: Lint, types, unit tests, build and E2E
+    needs: [verify, core-coverage, save-compatibility, e2e]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require all verification jobs to succeed
+        env:
+          VERIFY_RESULT: ${{ needs.verify.result }}
+          COVERAGE_RESULT: ${{ needs.core-coverage.result }}
+          SAVES_RESULT: ${{ needs.save-compatibility.result }}
+          E2E_RESULT: ${{ needs.e2e.result }}
+        run: |
+          test "$VERIFY_RESULT" = success
+          test "$COVERAGE_RESULT" = success
+          test "$SAVES_RESULT" = success
+          test "$E2E_RESULT" = success
+  e2e:
+    name: E2E (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ['iPhone 15', 'iPad Pro 11', 'Desktop']
+    concurrency:
+      group: e2e-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.project }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
       - name: Install Chromium
         run: npx playwright install --with-deps chromium ffmpeg
-      - name: E2E on iPhone, iPad and desktop
-        run: npm run e2e
+      # Playwright's webServer builds the production app before starting preview.
+      - name: E2E against the production build
+        run: npm run e2e -- --project="$PLAYWRIGHT_PROJECT"
+        env:
+          PLAYWRIGHT_PROJECT: ${{ matrix.project }}
       - name: Upload screenshots and Playwright report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-results
+          name: playwright-results-${{ matrix.project }}
           path: |
             test-results/
             playwright-report/
-            coverage/
           retention-days: 14
           if-no-files-found: warn

@@ -477,6 +477,10 @@ M5-03 第十七批：ServiceNetwork.raster 的暖幾何快取直接逐筆讀取 
 | UI / 整合 | Playwright | 3 個 viewport：`iPhone 15`（393×852）、`iPad Pro 11`（834×1194）、`Desktop`（1440×900）；主選單 → 新遊戲 → 鋪路 → 分區 → 時間推進 → 存檔 → 重新整理 → 讀檔 |
 | 視覺 | Playwright 截圖 | 每個 PR 附上 3 種 viewport 截圖（CI artifact） |
 
+M5-05 CI 驗證：完整單元測試以單一 worker、不開 coverage 執行，保留原有毫秒門檻與預設 timeout。核心涵蓋率使用 vitest.coverage.config.ts 選取 core 專用測試，沿用所有 core 檔的每檔 91% statements／branches／lines、100% functions 門檻；未載入的新 core 檔仍須計入報告。V8 coverage 會蒐集載入的模組，不能用報告的 include 限制執行期蒐集，因此不在效能測量時啟用，參見 [Vitest 官方 coverage 說明](https://main.vitest.dev/guide/coverage.html)。
+
+CI 的核心涵蓋率、歷史存檔與三裝置 E2E 各自執行，裝置 matrix 不因另一裝置失敗而取消；各自保留報告。原「Lint, types, unit tests, build and E2E」檢查名稱改為彙總門檻，所有工作成功才通過；不使用 continue-on-error。這只改善測試隔離與診斷，不修改遊戲效能預算或代表真機驗收。
+
 ---
 
 ## 13. 程式規範
