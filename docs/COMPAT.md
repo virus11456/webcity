@@ -174,3 +174,17 @@ lint、typecheck 及正式 build 通過，build 保留既有大 chunk 提示。�
 新增 11 項單元案例，涵蓋實際歷史存檔驗證、新版本／壞檔／大小限制、可攜檔名、目前城市匯出、選定槽原子匯入、關閉生命週期、並行操作及配額失敗後重試。完整單元批次 `npm test -- --maxWorkers=1` 為 **128 檔／1,208 項全部通過**（140.58 秒），未更改既有效能門檻。正式 build（含 typecheck）通過，保留既有大 chunk 提示。
 
 上一張卡 PR #132 的 [CI](https://github.com/virus11456/webcity/actions/runs/39442084422) 中 Archived save compatibility 已通過；一般 CI 仍在單元測試階段失敗，build／E2E 未執行，不能以本機通過宣稱雲端完整 CI 全綠。
+
+## 2026-10-21：CI 驗證隔離（M5-05）
+
+PR #133 的 [GitHub CI](https://github.com/virus11456/webcity/actions/runs/39447126739) 最終為 1,184 通過／24 失敗（128 檔，225.02 秒）：20 項為 5 秒逾時，4 項為居民、十萬人口、尋路與交通耗時門檻。lint／typecheck 及歷史存檔相容性通過，原本串接在後方的 build／三裝置 E2E 全部未執行。這不是上一輪回報的本機 1,208 項全過，也不能視為產品功能已完整驗證。
+
+在同一台 Mac 將原指令改成單 worker 的全量 coverage 仍重現一項失敗：1,207 通過／1 失敗，fields 的水污染／健康存檔案例耗時 5,271 ms 超過既有 5 秒，總計 263.33 秒。此結果與雲端硬體不同，不能拿本機單一案例推論雲端全部問題都已解決。V8 不能僅對報告 include 的模組蒐集執行期覆蓋，來源見 [Vitest 官方文件](https://main.vitest.dev/guide/coverage.html)。
+
+完整單元測試改為預設單 worker、不開 coverage，所有 1,208 案例、原有時間門檻與 timeout 都保留。核心 coverage 另跑七個專用測試檔的 73 案例，覆蓋範圍仍是全部 src/core，門檻仍為每檔 statements／branches／lines 91%、functions 100%。七個 core 檔的實際 statements／branches／functions／lines 均為 100%。另以暫存未被 import 的 core 函式確認四類每檔門檻皆會失敗；暫存檔已刪除，再次正式 coverage 通過。
+
+CI 將 core coverage、歷史存檔及每種裝置 E2E 分成獨立工作，單元失敗仍能看到瀏覽器結果；裝置間不互相取消，報告檔名包含裝置。保留原狀態檢查名稱作彙總門檻，任一工作失敗／取消／跳過都不能通過。原本完整 coverage 指令仍保留供診斷；沒有加 continue-on-error、放寬數值門檻或移除測試。未修改遊戲程式，未新增 Vercel 部署，M5-05 真機及完整矩陣仍待完成。
+
+調整後 `npm test` 本機完整批次 **128 檔／1,208 項全部通過**（153.00 秒），原本開 coverage 時逾時的 fields 案例亦保留且通過。核心 coverage 最終 73 項通過；彙總 shell 驗證接受全部成功，拒絕四個相依工作各自 failure／skipped／cancelled 的 12 種組合。本輪無產品 UI 變更，不新增遊戲截圖；雲端完整結果需另看本次 PR，不能以這些本機結果代替。
+
+提交前 lint、typecheck、正式 build 通過，保留既有大 chunk 提示。Playwright 清單確認仍涵蓋三裝置共 330 案例／94 檔；清單檢查並非執行通過紀錄，本機這輪未重跑全量 E2E。

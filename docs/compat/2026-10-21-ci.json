@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-21",
+  "task": "M5-05",
+  "scope": "CI isolation; no product changes or Vercel deployment",
+  "previousCloud": {
+    "runId": 39447126739,
+    "unitPassed": 1184,
+    "unitFailed": 24,
+    "timeoutFailures": 20,
+    "performanceFailures": 4,
+    "seconds": 225.02,
+    "buildAndE2E": "skipped"
+  },
+  "localCoverageBaseline": {
+    "command": "npm run test:coverage -- --maxWorkers=1",
+    "passed": 1207,
+    "failed": 1,
+    "failure": "fields.test.ts:219 timeout (5271 ms > 5000 ms)",
+    "seconds": 263.33
+  },
+  "localUnits": {
+    "command": "npm test",
+    "files": 128,
+    "passed": 1208,
+    "failed": 0,
+    "seconds": 153.0
+  },
+  "coreCoverage": {
+    "command": "npm run test:coverage:core",
+    "files": 7,
+    "passed": 73,
+    "failed": 0,
+    "statementsPercent": 100,
+    "branchesPercent": 100,
+    "functionsPercent": 100,
+    "linesPercent": 100,
+    "unimportedFileNegativeProbe": "correctly rejected; temporary source removed"
+  },
+  "aggregateGate": {
+    "successAccepted": true,
+    "nonSuccessCasesRejected": 12
+  },
+  "limitations": [
+    "Local results are not cloud runner or iOS Safari results",
+    "No timing thresholds, timeouts or test assertions changed",
+    "Full device compatibility remains incomplete"
+  ]
+}

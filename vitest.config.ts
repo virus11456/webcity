@@ -7,6 +7,8 @@ export default mergeConfig(
     test: {
       environment: 'node',
       include: ['tests/unit/**/*.test.ts'],
+      // Timing-budget assertions must not compete with other test files for CPU.
+      maxWorkers: 1,
       coverage: {
         provider: 'v8',
         include: ['src/core/**/*.ts'],

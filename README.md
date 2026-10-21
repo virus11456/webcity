@@ -54,6 +54,8 @@ npm run icons      # 純 Node 產生四種 PNG 圖示；build 也會自動執行
 
 Vitest 由 `vitest.config.ts` 設定，只在 Node 環境執行 `tests/unit/**/*.test.ts`，共用 Vite 的 `@/` 路徑別名。`tests/unit/i18n.test.ts` 為範例，可用 `npm test -- tests/unit/i18n.test.ts` 單獨執行。
 
+`npm test` 預設一個 worker，完整保留功能與效能門檻，避免計時案例與其他測試搶 CPU。`npm run test:coverage:core` 另用核心工具的專用測試檢查所有 `src/core/**/*.ts`；每檔 statements／branches／lines 至少 91%、functions 100%，門檻不變。新增 core 檔也會計入未覆蓋項目，需擴充專用測試清單。原 `npm run test:coverage` 保留為全量診斷指令，但 V8 涵蓋率蒐集會影響執行耗時，不作效能驗收。
+
 Playwright 由 `playwright.config.ts` 設定，執行 `tests/e2e/**/*.spec.ts`。三個專案皆使用 Chromium：
 
 | 專案        | Viewport | 裝置模擬     |
@@ -72,7 +74,7 @@ npm run e2e -- --project='iPhone 15'
 
 若沒有預裝瀏覽器，先自行執行 `npx playwright install chromium ffmpeg`；測試不會自動下載。每次 E2E 都重新建置，管理 `127.0.0.1:4173` 的預覽伺服器生命週期，避免測到其他程序或過期版本；該連接埠必須可用。
 
-每個專案都會產生 `test-results/<測試與專案目錄>/shell.png`，並附在 `playwright-report/` 的 HTML 報告；可用 `npx playwright show-report` 開啟。失敗時另保留截圖與 trace。`CI` 模式禁止 `test.only`，使用一個 worker，失敗重試兩次。GitHub Actions 將截圖、報告與失敗 trace 上傳為 `playwright-results` artifact，保留 14 天。
+每個專案都會產生 `test-results/<測試與專案目錄>/shell.png`，並附在 `playwright-report/` 的 HTML 報告；可用 `npx playwright show-report` 開啟。失敗時另保留截圖與 trace。`CI` 模式禁止 `test.only`，使用一個 worker，失敗重試兩次。GitHub Actions 將每種裝置的截圖、報告與失敗 trace 分別上傳為 `playwright-results-<專案名稱>` artifact，保留 14 天。
 
 E2E 覆蓋鏡頭、道路、分區、水電、人口、經濟、面板、存讀檔、新遊戲與完整城市流程。整合案例錄影需 Playwright ffmpeg。行動裝置是 Chromium 模擬，並非 iOS Safari 實機驗證。
 
@@ -94,6 +96,7 @@ PWA E2E 使用 Chrome DevTools Protocol 檢查 manifest 和可安裝性、實際
 
 - 正式站依使用者指定部署到 Vercel `virus11456s-projects/webcity`，每次發佈以已合併提交建置並驗證 `/webcity/` 資產與互動。
 - 每次 push 與 PR 都執行 `.github/workflows/ci.yml`：`npm ci`、lint、typecheck、unit tests、build、三裝置 E2E，並上傳報告。
+- 核心涵蓋率、歷史存檔與三種裝置 E2E 為獨立工作；單元測試失敗仍會取得瀏覽器結果，一種裝置失敗不取消其餘裝置。沿用原狀態檢查名稱的彙總工作要求所有工作成功，失敗或跳過都不能變成綠燈。完整單元測試不啟用 coverage；coverage 報告獨立上傳為 `core-coverage`。
 - `main` 有新提交時，`.github/workflows/deploy.yml` 先呼叫相同 CI 驗證，成功後才建置並發布 `dist/` 到 GitHub Pages。可手動重新部署 `main`；其他分支不會發布。
 - Vite 的 `base` 設為 `/webcity/`，本機預覽與 E2E 也使用此子路徑，確保部署後資源網址一致。開發網址為 `http://localhost:5173/webcity/`。
 
